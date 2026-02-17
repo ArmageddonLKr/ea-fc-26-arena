@@ -3,172 +3,146 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>EA FC 26 • Ultimate Generator</title>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<title>EA FC 26 • Ultimate Dark</title>
 
 <style>
 :root {
-  --bg: #050505;
-  --card-bg: #0f0f13;
-  --p1: #ff004c;
-  --p2: #00e5ff;
-  --gold: #ffd700;
-  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --bg: #020202; /* Dark Black Real */
+  --surface: #0b0b0e;
+  --p1: #ff004c; /* Neon Red */
+  --p2: #00e5ff; /* Neon Cyan */
+  --gold: #ffcc00;
+  --border: rgba(255, 255, 255, 0.04);
+  --ease: cubic-bezier(0.19, 1, 0.22, 1);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; }
 
 body {
   background-color: var(--bg); color: #fff;
-  font-family: 'Rajdhani', sans-serif; /* Fonte estilo Gamer */
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   min-height: 100vh; display: flex; flex-direction: column; align-items: center;
-  background-image: 
-    radial-gradient(circle at 50% 0%, #1a1a2e 0%, transparent 60%),
-    linear-gradient(0deg, #000 0%, #08080a 100%);
+  background-image: radial-gradient(circle at 50% -20%, #151515 0%, #000000 90%);
 }
 
-.app { width: 100%; max-width: 420px; padding: 20px; text-align: center; padding-bottom: 50px; }
+.app { width: 100%; max-width: 460px; padding: 20px; text-align: center; padding-bottom: 40px; }
 
-h1 {
-  font-size: 1.5rem; font-weight: 700; letter-spacing: 4px; margin: 30px 0;
-  text-transform: uppercase; background: linear-gradient(90deg, #fff, #888);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
+h1 { font-size: 0.8rem; font-weight: 900; letter-spacing: 12px; margin: 35px 0; text-transform: uppercase; color: #fff; opacity: 0.3; }
 
 /* LOBBY */
 #lobby {
-  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
-  padding: 40px 25px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  background: var(--surface); padding: 50px 30px; border-radius: 40px;
+  border: 1px solid var(--border); box-shadow: 0 60px 120px rgba(0,0,0,1);
 }
 
-.input-box { margin-bottom: 20px; text-align: left; }
-.input-label { color: var(--p1); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
-.input-label.blue { color: var(--p2); }
+.input-group { margin-bottom: 25px; text-align: left; }
+.input-group label { font-size: 0.6rem; font-weight: 800; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-left: 15px; margin-bottom: 8px; display: block; }
 
-.field {
-  width: 100%; padding: 18px; background: #000; border: 1px solid #222;
-  color: #fff; border-radius: 12px; font-size: 1.1rem; font-family: 'Rajdhani';
-  transition: 0.3s;
+.input-field {
+  width: 100%; padding: 22px; background: #000; border: 1px solid #1a1a1a;
+  color: #fff; border-radius: 20px; font-size: 1.1rem; font-weight: 600;
+  transition: all 0.4s var(--ease);
 }
-.field:focus { border-color: #555; }
+.input-field:focus { border-color: #444; transform: translateY(-2px); }
 
-.btn-main {
-  width: 100%; padding: 20px; background: linear-gradient(135deg, #fff, #ccc);
-  color: #000; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 800;
-  text-transform: uppercase; letter-spacing: 1px; cursor: pointer; margin-top: 10px;
-  box-shadow: 0 5px 20px rgba(255,255,255,0.1);
-}
+.btn-enter { width: 100%; padding: 24px; background: #fff; color: #000; border: none; border-radius: 20px; font-size: 1rem; font-weight: 900; text-transform: uppercase; cursor: pointer; }
 
 /* ARENA */
-#arena { display: none; width: 100%; animation: slideIn 0.6s var(--ease); }
-@keyframes slideIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: 0; } }
+#arena { display: none; width: 100%; animation: reveal 0.8s var(--ease); }
+@keyframes reveal { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
 
 .btn-draw {
-  width: 100%; padding: 22px; background: #1a1a1a; color: #fff; border: 1px solid #333;
-  border-radius: 16px; font-size: 1.2rem; font-weight: 700; text-transform: uppercase;
-  margin-bottom: 30px; letter-spacing: 2px; cursor: pointer; transition: 0.2s;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  background: #111; color: #fff; border: 1px solid #333; width: 100%; padding: 22px;
+  font-size: 1.1rem; font-weight: 950; text-transform: uppercase; border-radius: 20px;
+  margin-bottom: 40px; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 .btn-draw:active { transform: scale(0.97); background: #222; }
-.btn-draw:disabled { opacity: 0.5; cursor: wait; }
+.btn-draw:disabled { opacity: 0.3; cursor: default; }
 
 /* CARD DESIGN */
 .card {
-  position: relative; background: var(--card-bg); border-radius: 24px; margin-bottom: 25px;
-  overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6); transition: transform 0.3s var(--ease);
+  position: relative; background: #08080a; border-radius: 35px; margin-bottom: 25px;
+  overflow: hidden; border: 1px solid rgba(255,255,255,0.03);
+  box-shadow: 0 40px 90px rgba(0,0,0,0.9); transition: transform 0.4s var(--ease);
 }
 
-/* Identificador P1/P2 discreto na lateral */
-.p-indicator { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; z-index: 2; }
+/* BARRA LATERAL AGORA USA A COR DO TIME */
+.card-bar { position: absolute; top: 0; left: 0; width: 12px; height: 100%; background: var(--team-color); z-index: 10; }
+.card-glow { position: absolute; inset: 0; background: radial-gradient(circle at 0% 0%, var(--team-color), transparent 85%); opacity: 0.18; z-index: 1; }
+.card-content { position: relative; z-index: 5; padding: 35px 30px; text-align: left; }
 
-/* Glow com a cor do time */
-.team-glow {
-  position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-  background: radial-gradient(circle, var(--team-color), transparent 60%);
-  opacity: 0.15; z-index: 1; transition: 0.5s;
+/* BADGE DO DONO COM COR DE FUNDO */
+.owner-badge {
+  background: var(--side-color); padding: 6px 14px; border-radius: 8px;
+  font-size: 0.65rem; font-weight: 900; color: #000; text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 20px; display: inline-block; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
-.card-body { position: relative; z-index: 5; padding: 25px; }
-
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.badge { 
-  font-size: 0.75rem; font-weight: 700; background: rgba(255,255,255,0.05); 
-  padding: 5px 12px; border-radius: 6px; text-transform: uppercase; color: #aaa; letter-spacing: 1px;
+.ovr-box { 
+  float: right; font-size: 1.8rem; font-weight: 1000; color: #fff; 
+  background: #000; padding: 8px 18px; border-radius: 16px; border: 1px solid #1a1a1a;
 }
 
-.ovr { 
-  font-size: 2rem; font-weight: 800; line-height: 1;
-  text-shadow: 0 0 15px currentColor; /* O numero brilha */
-}
+.team-name { font-size: 2.2rem; font-weight: 900; line-height: 0.9; color: #fff; text-transform: uppercase; letter-spacing: -2px; margin-bottom: 8px; }
+.kit-icon { font-size: 1.2rem; margin-right: 10px; vertical-align: middle; }
+.star-player { font-size: 0.85rem; color: #888; font-weight: 700; display: block; text-transform: uppercase; letter-spacing: 1px; }
+.star-highlight { color: var(--gold); }
 
-.info { text-align: left; margin-bottom: 20px; }
-.team-name { 
-  font-size: 1.8rem; font-weight: 800; text-transform: uppercase; line-height: 0.95; 
-  color: #fff; margin-bottom: 8px; display: block;
-}
-.kit { font-size: 1rem; margin-right: 8px; vertical-align: middle; }
-.players { 
-  font-size: 0.85rem; color: #ccc; font-weight: 500; display: block; 
-  border-left: 2px solid var(--gold); padding-left: 10px; margin-top: 10px;
-}
+/* STATS */
+.stats-row { display: flex; gap: 12px; border-top: 1px solid #151515; padding-top: 25px; margin-top: 25px; }
+.stat-box { flex: 1; }
+.stat-title { font-size: 0.5rem; color: #444; font-weight: 900; display: block; margin-bottom: 8px; text-align: center; }
+.track { height: 5px; background: #111; border-radius: 10px; overflow: hidden; }
+.fill { height: 100%; background: var(--team-color); width: 0%; transition: width 1s var(--ease); box-shadow: 0 0 10px var(--team-color); }
+.stat-num { font-size: 1rem; font-weight: 900; display: block; margin-top: 8px; text-align: center; color: #fff; }
 
-/* BARRAS DE STATUS */
-.stats { display: flex; gap: 8px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.08); }
-.stat-box { flex: 1; text-align: center; }
-.label { font-size: 0.6rem; font-weight: 700; color: #666; margin-bottom: 5px; display: block; }
-.track { height: 6px; background: #000; border-radius: 3px; overflow: hidden; }
-.fill { height: 100%; width: 0%; transition: width 1.2s var(--ease); background: var(--team-color); }
-.num { font-size: 1rem; font-weight: 700; margin-top: 5px; display: block; color: #fff; }
+.val-legend { color: #00e5ff; text-shadow: 0 0 20px rgba(0, 229, 255, 0.6); } 
+.val-elite { color: #00ff66; text-shadow: 0 0 20px rgba(0, 255, 102, 0.6); } 
+.val-gold { color: #ffcc00; } 
+.val-base { color: #666; } 
 
-.vs { font-size: 1.5rem; font-weight: 900; font-style: italic; color: #333; margin: -10px 0 20px; }
+.vs { font-size: 1.4rem; font-weight: 900; font-style: italic; color: #1a1a1a; margin: -10px 0 25px; letter-spacing: 4px; }
 
-/* CORES DOS NUMEROS */
-.s-tier { color: #00ffff; } /* 85+ */
-.a-tier { color: #00ff00; } /* 80-84 */
-.b-tier { color: #ffcc00; } /* 75-79 */
-.c-tier { color: #aaaaaa; } /* <75 */
+footer { margin-top: 50px; font-size: 0.6rem; color: #333; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
 
-footer { margin-top: 40px; font-size: 0.7rem; color: #444; font-weight: 700; letter-spacing: 2px; }
-.shuffling .card { filter: blur(10px); opacity: 0.5; transform: scale(0.98); }
+.shuffling .card { opacity: 0.2; filter: blur(20px) grayscale(1); transform: scale(0.96); }
 </style>
 </head>
-<body>
+  <body>
 <div class="app">
-  <h1>EA FC 26 • ULTIMATE</h1>
-
+  <h1>COMPETITIVE ENGINE</h1>
+  
   <div id="lobby">
-    <div class="input-box">
-      <label class="input-label">Jogador 1 (Vermelho)</label>
-      <input type="text" id="p1" class="field" placeholder="Nome...">
+    <div class="input-group">
+      <label>Comandante 01 (Vermelho)</label>
+      <input type="text" id="p1Input" class="input-field" placeholder="Nome...">
     </div>
-    <div class="input-box">
-      <label class="input-label blue">Jogador 2 (Azul)</label>
-      <input type="text" id="p2" class="field" placeholder="Nome...">
+    <div class="input-group">
+      <label>Comandante 02 (Azul)</label>
+      <input type="text" id="p2Input" class="input-field" placeholder="Nome...">
     </div>
-    <button class="btn-main" onclick="startSystem()">ENTRAR NA ARENA</button>
+    <button class="btn-enter" onclick="bootArena()">Sincronizar Arena</button>
   </div>
 
   <div id="arena">
-    <button class="btn-draw" id="btnDraft" onclick="runDraft()">GERAR CONFRONTO</button>
-
-    <div id="grid">
+    <button class="btn-draw" id="btnSortear" onclick="startDraft()">Gerar Matchmaking</button>
+    
+    <div id="cardsGrid">
       <div class="card" id="c1">
-        <div class="p-indicator" style="background: var(--p1)"></div>
-        <div class="team-glow" id="glw1"></div>
-        <div class="card-body">
-          <div class="header">
-            <span class="badge" id="own1">---</span>
-            <div class="ovr" id="ovr1">00</div>
+        <div class="card-bar"></div> 
+        <div class="card-glow" id="g1"></div>
+        <div class="card-content">
+          <div class="ovr-box" id="o1">00</div>
+          <div class="owner-badge" id="n1_owner" style="--side-color: var(--p1)">---</div>
+          
+          <div class="team-block">
+            <div class="team-name"><span class="kit-icon" id="i1"></span><span id="name1">---</span></div>
+            <span class="star-player" id="star1">---</span>
           </div>
-          <div class="info">
-            <span class="team-name"><span class="kit" id="k1"></span><span id="n1">---</span></span>
-            <span class="players" id="s1">---</span>
-          </div>
-          <div class="stats">
-            <div class="stat-box"><span class="label">ATA</span><div class="track"><div class="fill" id="b1a"></div></div><span class="num" id="v1a">0</span></div>
-            <div class="stat-box"><span class="label">MED</span><div class="track"><div class="fill" id="b1m"></div></div><span class="num" id="v1m">0</span></div>
-            <div class="stat-box"><span class="label">DEF</span><div class="track"><div class="fill" id="b1d"></div></div><span class="num" id="v1d">0</span></div>
+          <div class="stats-row">
+            <div class="stat-box"><span class="stat-title">ATA</span><div class="track"><div class="fill" id="f1a"></div></div><span class="stat-num" id="v1a">0</span></div>
+            <div class="stat-box"><span class="stat-title">MED</span><div class="track"><div class="fill" id="f1m"></div></div><span class="stat-num" id="v1m">0</span></div>
+            <div class="stat-box"><span class="stat-title">DEF</span><div class="track"><div class="fill" id="f1d"></div></div><span class="stat-num" id="v1d">0</span></div>
           </div>
         </div>
       </div>
@@ -176,21 +150,20 @@ footer { margin-top: 40px; font-size: 0.7rem; color: #444; font-weight: 700; let
       <div class="vs">VS</div>
 
       <div class="card" id="c2">
-        <div class="p-indicator" style="background: var(--p2)"></div>
-        <div class="team-glow" id="glw2"></div>
-        <div class="card-body">
-          <div class="header">
-            <span class="badge" id="own2">---</span>
-            <div class="ovr" id="ovr2">00</div>
+        <div class="card-bar"></div>
+        <div class="card-glow" id="g2"></div>
+        <div class="card-content">
+          <div class="ovr-box" id="o2">00</div>
+          <div class="owner-badge" id="n2_owner" style="--side-color: var(--p2)">---</div>
+          
+          <div class="team-block">
+            <div class="team-name"><span class="kit-icon" id="i2"></span><span id="name2">---</span></div>
+            <span class="star-player" id="star2">---</span>
           </div>
-          <div class="info">
-            <span class="team-name"><span class="kit" id="k2"></span><span id="n2">---</span></span>
-            <span class="players" id="s2">---</span>
-          </div>
-          <div class="stats">
-            <div class="stat-box"><span class="label">ATA</span><div class="track"><div class="fill" id="b2a"></div></div><span class="num" id="v2a">0</span></div>
-            <div class="stat-box"><span class="label">MED</span><div class="track"><div class="fill" id="b2m"></div></div><span class="num" id="v2m">0</span></div>
-            <div class="stat-box"><span class="label">DEF</span><div class="track"><div class="fill" id="b2d"></div></div><span class="num" id="v2d">0</span></div>
+          <div class="stats-row">
+            <div class="stat-box"><span class="stat-title">ATA</span><div class="track"><div class="fill" id="f2a"></div></div><span class="stat-num" id="v2a">0</span></div>
+            <div class="stat-box"><span class="stat-title">MED</span><div class="track"><div class="fill" id="f2m"></div></div><span class="stat-num" id="v2m">0</span></div>
+            <div class="stat-box"><span class="stat-title">DEF</span><div class="track"><div class="fill" id="f2d"></div></div><span class="stat-num" id="v2d">0</span></div>
           </div>
         </div>
       </div>
@@ -198,14 +171,14 @@ footer { margin-top: 40px; font-size: 0.7rem; color: #444; font-weight: 700; let
   </div>
 
   <footer>
-    EA FC 26 COMPETTITIVE • Direitos reservados a J. Rayan
+    EA FC 26 COMPETTITIVE • Direitos reservados &copy; J. Rayan
   </footer>
 </div>
-<script>
-// SISTEMA DE SOM V8 (FIXO PARA MOBILE)
-const AudioFX = {
+    <script>
+// --- AUDIO ENGINE (MOBILE SAFE) ---
+const SoundSystem = {
   ctx: null,
-  unlock() {
+  init() {
     if(!this.ctx) {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
       const b = this.ctx.createBuffer(1, 1, 22050);
@@ -214,36 +187,29 @@ const AudioFX = {
     }
     if(this.ctx.state === 'suspended') this.ctx.resume();
   },
-  tick() {
+  playTick(f) {
     if(!this.ctx) return;
-    const o = this.ctx.createOscillator();
-    const g = this.ctx.createGain();
-    o.type = 'square';
-    o.frequency.value = 150 + (Math.random()*20);
-    g.gain.value = 0.05;
-    g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
-    o.connect(g); g.connect(this.ctx.destination);
-    o.start(); o.stop(this.ctx.currentTime + 0.05);
+    const o=this.ctx.createOscillator(), g=this.ctx.createGain();
+    o.type='square'; o.frequency.setValueAtTime(f + (Math.random()*10-5), this.ctx.currentTime);
+    g.gain.setValueAtTime(0.05, this.ctx.currentTime); 
+    g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime+0.08);
+    o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+0.08);
   },
-  boom() {
+  playImpact() {
     if(!this.ctx) return;
-    const o = this.ctx.createOscillator();
-    const g = this.ctx.createGain();
-    o.type = 'triangle';
-    o.frequency.setValueAtTime(80, this.ctx.currentTime);
-    o.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.5);
-    g.gain.setValueAtTime(0.3, this.ctx.currentTime);
-    g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.5);
-    o.connect(g); g.connect(this.ctx.destination);
-    o.start(); o.stop(this.ctx.currentTime + 0.5);
+    const o=this.ctx.createOscillator(), g=this.ctx.createGain();
+    o.type='triangle'; o.frequency.setValueAtTime(80, this.ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime+0.5);
+    g.gain.setValueAtTime(0.3, this.ctx.currentTime); 
+    g.gain.linearRampToValueAtTime(0, this.ctx.currentTime+0.5);
+    o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+0.5);
   }
 };
 
-// DATABASE OFICIAL (98 TIMES - DADOS AUDITADOS)
-const db = [
-  // ALEMANHA (1-11)
-  {n:"1. FC Köln", i:"🔴⚪", s:"Marius Bülter", c:"#e30613", a:74, m:73, d:72},
-  {n:"FC Augsburg", i:"🔴🟢", s:"Alexis Claude-Maurice", c:"#ba3733", a:75, m:74, d:74},
+const teamsDB = [
+  // ALEMANHA
+  {n:"FC Köln", i:"🔴⚪", s:"Marius Bülter", c:"#e30613", a:74, m:73, d:72},
+  {n:"Augsburg", i:"🔴🟢", s:"Alexis Claude-Maurice", c:"#ba3733", a:75, m:74, d:74},
   {n:"Bayer Leverkusen", i:"🔴⚫", s:"Patrik Schick", c:"#000000", a:82, m:79, d:78},
   {n:"Bayern München", i:"🔴⚪", s:"Harry Kane", c:"#dd0000", a:89, m:85, d:83},
   {n:"Borussia Dortmund", i:"🟡⚫", s:"Serhou Guirassy", c:"#FDE100", a:81, m:81, d:82},
@@ -251,55 +217,55 @@ const db = [
   {n:"Mainz 05", i:"🔴⚪", s:"Nadiem Amiri", c:"#c3141e", a:73, m:78, d:75},
   {n:"M'gladbach", i:"⚪🟢", s:"Franck Honorat", c:"#ffffff", a:76, m:75, d:75},
   {n:"RB Leipzig", i:"⚪🔴", s:"Péter Gulácsi", c:"#de0039", a:77, m:79, d:79},
-  {n:"VfB Stuttgart", i:"⚪🔴", s:"Angelo Stiller", c:"#e30613", a:80, m:77, d:76},
-  {n:"VfL Wolfsburg", i:"🟢⚪", s:"Mohamed Amoura", c:"#65b32e", a:80, m:76, d:75},
-  // ARÁBIA (12-15)
+  {n:"Stuttgart", i:"⚪🔴", s:"Angelo Stiller", c:"#e30613", a:80, m:77, d:76},
+  {n:"Wolfsburg", i:"🟢⚪", s:"Mohamed Amoura", c:"#65b32e", a:80, m:76, d:75},
+  // ARÁBIA
   {n:"Al-Ahli", i:"🟢⚪", s:"Riyad Mahrez & Edouard Mendy", c:"#006400", a:74, m:74, d:73},
   {n:"Al-Hilal", i:"🔵⚪", s:"Karim Benzema & Milinković-Savić", c:"#3b6eff", a:78, m:80, d:75},
   {n:"Al-Ittihad", i:"⚫🟡", s:"Moussa Diaby & Fabinho Tavares", c:"#fdb912", a:79, m:74, d:72},
   {n:"Al Nassr", i:"🟡🔵", s:"Cristiano Ronaldo & João Félix", c:"#ffe600", a:83, m:74, d:74},
-  // ARGENTINA (16-20)
+  // ARGENTINA
   {n:"Boca Juniors", i:"🔵🟡", s:"Leandro Paredes & Edinson Cavani", c:"#003366", a:74, m:76, d:73},
   {n:"Estudiantes", i:"🔴⚪", s:"Guido Carrillo", c:"#e30613", a:76, m:73, d:72},
   {n:"Racing Club", i:"🔵⚪", s:"Santiago Sosa", c:"#6caee0", a:74, m:73, d:74},
   {n:"River Plate", i:"⚪🔴", s:"Marcos Acuña & Juan Quintero", c:"#ffffff", a:75, m:75, d:75},
   {n:"Rosario Central", i:"🔵🟡", s:"Ángel Di María", c:"#003a70", a:72, m:73, d:72},
-  // ESPANHA (21-34)
+  // ESPANHA
   {n:"Alavés", i:"🔵⚪", s:"Antonio Blanco", c:"#005eb8", a:74, m:73, d:74},
-  {n:"Athletic Bilbao", i:"🔴⚪", s:"Iñaki Williams, Nico Williams & Oihan Sancet", c:"#e30613", a:78, m:81, d:79},
-  {n:"Atlético Madrid", i:"🔴⚪", s:"Antoine Griezmann, Julián Álvarez & Ademola Lookman", c:"#cb3524", a:84, m:81, d:81},
-  {n:"FC Barcelona", i:"🔵🔴", s:"Raphinha Belloli & Lamine Yamal", c:"#004d98", a:85, m:86, d:83},
-  {n:"Celta de Vigo", i:"🔵⚪", s:"Iago Aspas, Óscar Mingueza & Borja Iglesias", c:"#8ac3ee", a:77, m:75, d:77},
-  {n:"Elche CF", i:"🟢⚪", s:"André Silva", c:"#00a550", a:73, m:73, d:75},
-  {n:"Mallorca", i:"🔴⚫", s:"Sergi Darder, Vedat Muriqi & Antonio Raíllo", c:"#e30613", a:80, m:75, d:78},
+  {n:"Athletic Bilbao", i:"🔴⚪", s:"Iñaki Williams & Nico Williams", c:"#e30613", a:78, m:81, d:79},
+  {n:"Atlético Madrid", i:"🔴⚪", s:"Griezmann & Julián Álvarez", c:"#cb3524", a:84, m:81, d:81},
+  {n:"Barcelona", i:"🔵🔴", s:"Raphinha Belloli & Lamine Yamal", c:"#004d98", a:85, m:86, d:83},
+  {n:"Celta Vigo", i:"🔵⚪", s:"Iago Aspas & Óscar Mingueza", c:"#8ac3ee", a:77, m:75, d:77},
+  {n:"Elche", i:"🟢⚪", s:"André Silva", c:"#00a550", a:73, m:73, d:75},
+  {n:"Mallorca", i:"🔴⚫", s:"Sergi Darder & Vedat Muriqi", c:"#e30613", a:80, m:75, d:78},
   {n:"Osasuna", i:"🔴🔵", s:"Aimar Oroz & Javi Galán", c:"#0a346f", a:81, m:76, d:76},
   {n:"Real Betis", i:"🟢⚪", s:"Antony Matheus & Isco Alarcón", c:"#00b140", a:79, m:78, d:77},
-  {n:"Real Madrid", i:"⚪⚪", s:"Vinícius Jr, Kylian Mbappé & Rodrygo Silva", c:"#ffffff", a:85, m:83, d:83},
-  {n:"Real Sociedad", i:"🔵⚪", s:"Takefusa Kubo, Mikel Oyarzabal & Álex Remiro", c:"#0067b1", a:82, m:77, d:75},
+  {n:"Real Madrid", i:"⚪⚪", s:"Vinícius Jr, Kylian Mbappé & Rodrygo", c:"#ffffff", a:85, m:83, d:83},
+  {n:"Real Sociedad", i:"🔵⚪", s:"Takefusa Kubo & Mikel Oyarzabal", c:"#0067b1", a:82, m:77, d:75},
   {n:"Sevilla FC", i:"⚪🔴", s:"Alex Sánchez & Djibril Sow", c:"#ffffff", a:74, m:75, d:76},
   {n:"Valencia CF", i:"⚪⚫", s:"José Gayà & Pepelu", c:"#ffffff", a:76, m:76, d:75},
-  {n:"Villarreal CF", i:"🟡🟡", s:"Dani Parejo, Gerard Moreno & Alberto Moleiro", c:"#fde100", a:80, m:80, d:77},
-  // EUA (35-38)
+  {n:"Villarreal CF", i:"🟡🟡", s:"Dani Parejo & Gerard Moreno", c:"#fde100", a:80, m:80, d:77},
+  // EUA
   {n:"Inter Miami", i:"🌸⚫", s:"Lionel Messi & Luis Suárez", c:"#f7b5cd", a:82, m:70, d:65},
   {n:"LA Galaxy", i:"⚪🔵", s:"Marco Reus", c:"#ffffff", a:69, m:72, d:69},
   {n:"LAFC", i:"⚫🟡", s:"Son Heung-min", c:"#000000", a:75, m:69, d:70},
-  {n:"Whitecaps FC", i:"🔵⚪", s:"Thomas Müller", c:"#ffffff", a:76, m:72, d:68},
-  // FRANÇA (39-45)
+  {n:"Vancouver", i:"🔵⚪", s:"Thomas Müller", c:"#ffffff", a:76, m:72, d:68},
+  // FRANÇA
   {n:"Lille OSC", i:"🔴🔵", s:"Olivier Giroud", c:"#e01e37", a:78, m:77, d:76},
-  {n:"Olympique Lyon", i:"⚪🔵", s:"Endrick Felipe", c:"#ffffff", a:75, m:77, d:76},
+  {n:"Lyon", i:"⚪🔵", s:"Endrick Felipe", c:"#ffffff", a:75, m:77, d:76},
   {n:"Marseille", i:"⚪🔵", s:"Igor Paixão & Mason Greenwood", c:"#ffffff", a:80, m:79, d:79},
   {n:"AS Monaco", i:"🔴⚪", s:"Paul Pogba", c:"#e30613", a:76, m:76, d:78},
   {n:"Paris FC", i:"🔵⚪", s:"Otávio Edmilson", c:"#002d72", a:74, m:75, d:73},
-  {n:"PSG", i:"🔵🔴", s:"Ousmane Dembélé, Khvicha Kvaratskhelia & Désiré Doué", c:"#004170", a:85, m:85, d:86},
+  {n:"PSG", i:"🔵🔴", s:"Dembélé, Kvaratskhelia & Désiré Doué", c:"#004170", a:85, m:85, d:86},
   {n:"Strasbourg", i:"🔵⚪", s:"Valentín Barco & Julio Enciso", c:"#009ddc", a:77, m:74, d:75},
-  // HOLANDA (46-49)
+  // HOLANDA
   {n:"Ajax", i:"⚪🔴", s:"Wout Weghorst", c:"#ffffff", a:77, m:72, d:74},
   {n:"AZ Alkmaar", i:"🔴⚪", s:"Weslley Patati", c:"#db0d0d", a:74, m:72, d:72},
   {n:"Feyenoord", i:"🔴⚪", s:"Quinten Timber", c:"#ffffff", a:75, m:75, d:74},
   {n:"PSV Eindhoven", i:"🔴⚪", s:"Ivan Perisic", c:"#ff0000", a:77, m:78, d:76},
-  // INGLATERRA (50-69)
+  // INGLATERRA
   {n:"Arsenal", i:"🔴⚪", s:"Bukayo Saka & Viktor Gyökeres", c:"#EF0107", a:84, m:85, d:85},
-  {n:"Aston Villa", i:"🟣🔵", s:"Ollie Watkins, Morgan Rogers & Emiliano Martínez", c:"#670E36", a:82, m:79, d:80},
+  {n:"Aston Villa", i:"🟣🔵", s:"Ollie Watkins & Emi Martínez", c:"#670E36", a:82, m:79, d:80},
   {n:"Bournemouth", i:"🔴⚫", s:"Evanilson Lima & Rayan Vitor", c:"#da291c", a:78, m:77, d:77},
   {n:"Brentford", i:"🔴⚪", s:"Igor Thiago & Mikkel Damsgaard", c:"#e30613", a:79, m:78, d:77},
   {n:"Brighton", i:"🔵⚪", s:"Kaoru Mitoma", c:"#0057b8", a:79, m:79, d:78},
@@ -309,16 +275,16 @@ const db = [
   {n:"Everton", i:"🔵⚪", s:"Jordan Pickford", c:"#003399", a:76, m:78, d:77},
   {n:"Fulham", i:"⚪⚫", s:"Bernd Leno", c:"#ffffff", a:77, m:78, d:77},
   {n:"Leeds United", i:"⚪🟡", s:"Lucas Perri", c:"#ffffff", a:76, m:76, d:76},
-  {n:"Liverpool", i:"🔴🔴", s:"Mohamed Salah, Alexander Isak & Florian Wirtz", c:"#c8102e", a:85, m:84, d:83},
+  {n:"Liverpool", i:"🔴🔴", s:"Mohamed Salah & Alexander Isak", c:"#c8102e", a:85, m:84, d:83},
   {n:"Man City", i:"🔵⚪", s:"Erling Haaland & Rayan Cherki", c:"#6fc7ff", a:85, m:85, d:82},
   {n:"Man Utd", i:"🔴⚫", s:"Bruno Fernandes & Matheus Cunha", c:"#da291c", a:82, m:80, d:80},
-  {n:"Newcastle", i:"⚫⚪", s:"Anthony Gordon, Bruno Guimarães & Joelinton", c:"#000000", a:80, m:84, d:79},
+  {n:"Newcastle", i:"⚫⚪", s:"Anthony Gordon & Bruno Guimarães", c:"#000000", a:80, m:84, d:79},
   {n:"Nottm Forest", i:"🔴⚪", s:"Igor Jesus & Chris Wood", c:"#dd0000", a:77, m:78, d:81},
-  {n:"Sunderland", i:"🔴⚪", s:"Granit Xhaka, Montassar Talbi & Nordi Mukiele", c:"#ff0000", a:76, m:77, d:79},
-  {n:"Tottenham", i:"⚪🔵", s:"James Maddison, Dominic Solanke & Richarlison \"O Pombo\"", c:"#ffffff", a:79, m:79, d:81},
-  {n:"West Ham", i:"🟣🔵", s:"Jarrod Bowen & Taty Castellanos", c:"#7a263a", a:76, m:78, d:76},
+  {n:"Sunderland", i:"🔴⚪", s:"Granit Xhaka", c:"#ff0000", a:76, m:77, d:79},
+  {n:"Tottenham", i:"⚪🔵", s:"James Maddison, Solanke & Richarlison \"O Pombo\"", c:"#ffffff", a:79, m:79, d:81},
+  {n:"West Ham", i:"🟣🔵", s:"Jarrod Bowen & Lucas Paquetá", c:"#7a263a", a:76, m:78, d:76},
   {n:"Wolves", i:"🟠⚫", s:"João Gomes & José Sá", c:"#fdb913", a:75, m:75, d:75},
-  // ITÁLIA (70-89)
+  // ITÁLIA
   {n:"Atalanta", i:"🔵⚫", s:"Marten de Roon & Éderson José", c:"#1f2f57", a:77, m:78, d:77},
   {n:"Bologna", i:"🔴🔵", s:"Riccardo Orsolini", c:"#a6192e", a:76, m:77, d:74},
   {n:"Cagliari", i:"🔴🔵", s:"Andrea Belotti", c:"#00236a", a:73, m:73, d:72},
@@ -326,7 +292,7 @@ const db = [
   {n:"Cremonese", i:"🔴🔘", s:"Jamie Vardy", c:"#a4a4a4", a:74, m:72, d:72},
   {n:"Fiorentina", i:"🟣⚪", s:"Moise Kean", c:"#4f2c8f", a:78, m:74, d:75},
   {n:"Genoa", i:"🔴🔵", s:"Ruslan Malinovskyi", c:"#aa0000", a:73, m:73, d:71},
-  {n:"Hellas Verona", i:"🟡🔵", s:"Suat Serdar", c:"#ffff00", a:72, m:73, d:71},
+  {n:"Verona", i:"🟡🔵", s:"Suat Serdar", c:"#ffff00", a:72, m:73, d:71},
   {n:"Inter Milan", i:"🔵⚫", s:"Lautaro Martínez & Nicolò Barella", c:"#0068a8", a:86, m:83, d:82},
   {n:"Juventus", i:"⚫⚪", s:"Gleison Bremer & Kenan Yıldız", c:"#ffffff", a:81, m:80, d:80},
   {n:"Lazio", i:"🔵⚪", s:"Mattia Zaccagni", c:"#87d8f7", a:79, m:76, d:78},
@@ -335,122 +301,118 @@ const db = [
   {n:"Napoli", i:"🔵⚪", s:"Kevin De Bruyne & Scott McTominay", c:"#003e7e", a:79, m:82, d:80},
   {n:"Parma", i:"🟡🔵", s:"Patrick Cutrone", c:"#ffd700", a:71, m:72, d:73},
   {n:"Pisa", i:"🔵⚫", s:"Raúl Albiol", c:"#0057b8", a:72, m:72, d:71},
-  {n:"AS Roma", i:"🟤🟠", s:"Paulo Dybala & Wesley França", c:"#8e1f2f", a:79, m:79, d:80},
+  {n:"Roma", i:"🟤🟠", s:"Paulo Dybala & Wesley França", c:"#8e1f2f", a:79, m:79, d:80},
   {n:"Sassuolo", i:"🟢⚫", s:"Domenico Berardi", c:"#00a859", a:77, m:74, d:72},
   {n:"Torino", i:"🟤⚪", s:"Ivan Ilić & Duván Zapata", c:"#8a1e2b", a:78, m:73, d:75},
   {n:"Udinese", i:"⚫⚪", s:"Nicolò Zaniolo", c:"#000000", a:73, m:72, d:73},
-  // PORTUGAL (90-93)
+  // PORTUGAL
   {n:"Benfica", i:"🔴⚪", s:"Vangelis Pavlidis", c:"#ff3b3b", a:79, m:78, d:78},
   {n:"Braga", i:"🔴⚪", s:"Ricardo Horta", c:"#e00000", a:74, m:75, d:74},
-  {n:"FC Porto", i:"🔵⚪", s:"Alan Varela", c:"#004d9c", a:78, m:77, d:78},
+  {n:"Porto", i:"🔵⚪", s:"Alan Varela", c:"#004d9c", a:78, m:77, d:78},
   {n:"Sporting CP", i:"🟢⚪", s:"Morten Hjulmand", c:"#008057", a:78, m:80, d:77},
-  // SUÍÇA (94-95)
-  {n:"FC Basel", i:"🔴🔵", s:"Xherdan Shaqiri", c:"#ff2e2e", a:68, m:72, d:69},
+  // SUÍÇA
+  {n:"Basel", i:"🔴🔵", s:"Xherdan Shaqiri", c:"#ff2e2e", a:68, m:72, d:69},
   {n:"Young Boys", i:"🟡⚫", s:"Alvyn Sanches", c:"#ffd700", a:71, m:71, d:70},
-  // TURQUIA (96-98)
+  // TURQUIA
   {n:"Beşiktaş", i:"⚫⚪", s:"Orkun Kökçü", c:"#000000", a:74, m:76, d:73},
   {n:"Fenerbahçe", i:"🟡🔵", s:"Ederson Santana", c:"#002d72", a:80, m:79, d:77},
   {n:"Galatasaray", i:"🟡🔴", s:"Victor Osimhen", c:"#a90432", a:82, m:80, d:78}
 ];
 
-let players = { a: "Jogador 1", b: "Jogador 2" };
+let pNames = { a: "Alpha", b: "Beta" };
 let isDrafting = false;
-let history = []; // Memória para não repetir
+let lastTeams = [];
 
-// CALCULO PONDERADO (OVR)
-function getOVR(t) {
-  // Meio campo peso 4, outros peso 3
+// CALCULO PONDERADO (40% MEIO-CAMPO)
+function getWeightedOVR(t) {
   let val = (t.a * 0.3) + (t.m * 0.4) + (t.d * 0.3);
   return Math.min(Math.max(Math.round(val), 60), 99);
 }
 
-function startSystem() {
-  AudioFX.unlock(); // DESBLOQUEIO DE SOM CRUCIAL
-  const n1 = document.getElementById('p1').value.trim();
-  const n2 = document.getElementById('p2').value.trim();
-  if(n1) players.a = n1;
-  if(n2) players.b = n2;
-  
+function bootArena() {
+  SoundSystem.init(); // CLIQUE ESSENCIAL PARA O SOM
+  pNames.a = document.getElementById('p1Input').value || "Jogador 1";
+  pNames.b = document.getElementById('p2Input').value || "Jogador 2";
   document.getElementById('lobby').style.display = 'none';
   document.getElementById('arena').style.display = 'block';
-  shuffleSides();
+  shuffleNames();
 }
 
-function shuffleSides() {
+function shuffleNames() {
   const rev = Math.random() > 0.5;
-  document.getElementById('own1').innerText = "🎮 " + (rev ? players.b : players.a);
-  document.getElementById('own2').innerText = "🎮 " + (rev ? players.a : players.b);
+  document.getElementById('n1_owner').innerText = (rev ? pNames.b : pNames.a);
+  document.getElementById('n2_owner').innerText = (rev ? pNames.a : pNames.b);
+  
+  // Troca a cor do badge
+  document.getElementById('n1_owner').style.setProperty('--side-color', rev ? 'var(--p2)' : 'var(--p1)');
+  document.getElementById('n2_owner').style.setProperty('--side-color', rev ? 'var(--p1)' : 'var(--p2)');
 }
 
-function runDraft() {
-  if(isDrafting) return; isDrafting = true;
-  document.getElementById('btnDraft').disabled = true;
-  AudioFX.unlock();
+function startDraft() {
+  if(isDrafting) return;
+  isDrafting = true;
+  document.getElementById('btnSortear').disabled = true;
+  SoundSystem.init(); 
   document.getElementById('arena').classList.add('shuffling');
-  
   let ticks = 0;
-  const interval = setInterval(() => {
-    renderCard(1, db[Math.floor(Math.random() * db.length)]);
-    renderCard(2, db[Math.floor(Math.random() * db.length)]);
-    AudioFX.tick();
+  const timer = setInterval(() => {
+    updateCard(1, teamsDB[Math.floor(Math.random()*teamsDB.length)]);
+    updateCard(2, teamsDB[Math.floor(Math.random()*teamsDB.length)]);
+    SoundSystem.playTick(160 + (ticks * 10));
     ticks++;
-    if(ticks > 15) { clearInterval(interval); finishDraft(); }
+    if(ticks > 15) { clearInterval(timer); finalize(); }
   }, 90);
 }
 
-function finishDraft() {
-  shuffleSides();
-  // Filtro de repetição
-  let available = db.filter(t => !history.includes(t.n));
-  if(available.length < 20) { history = []; available = db; }
+function finalize() {
+  shuffleNames();
+  let available = teamsDB.filter(t => !lastTeams.includes(t.n));
+  if(available.length < 20) { lastTeams = []; available = teamsDB; }
 
-  const t1 = available[Math.floor(Math.random() * available.length)];
-  const ovr1 = getOVR(t1);
+  const t1 = available[Math.floor(Math.random()*available.length)];
+  const ovr1 = getWeightedOVR(t1);
 
-  // Matchmaking Lógico
+  // MATCHMAKING INTELIGENTE
   let pool = available.filter(t => {
-    const ovr2 = getOVR(t);
+    const ovr2 = getWeightedOVR(t);
     const diff = Math.abs(ovr1 - ovr2);
-    const tolerance = ovr1 > 84 ? 3 : 4; 
-    return diff <= tolerance && t.n !== t1.n;
+    // Tolerância: Top Tier = 3 | Mid = 4
+    const tol = ovr1 > 84 ? 3 : 4; 
+    return diff <= tol && t.n !== t1.n;
   });
 
   if(pool.length === 0) pool = available.filter(t => t.n !== t1.n);
-  const t2 = pool[Math.floor(Math.random() * pool.length)];
+  const t2 = pool[Math.floor(Math.random()*pool.length)];
 
-  history.push(t1.n, t2.n);
-  if(history.length > 14) history.splice(0, 2);
+  lastTeams.push(t1.n, t2.n);
+  if(lastTeams.length > 14) lastTeams.splice(0, 2);
 
-  renderCard(1, t1); renderCard(2, t2);
-  AudioFX.boom();
+  updateCard(1, t1); updateCard(2, t2);
+  SoundSystem.playImpact();
   document.getElementById('arena').classList.remove('shuffling');
-  document.getElementById('btnDraft').disabled = false;
+  document.getElementById('btnSortear').disabled = false;
   isDrafting = false;
 }
 
-function renderCard(id, data) {
+function updateCard(id, data) {
   const c = document.getElementById(`c${id}`);
-  const ovr = getOVR(data);
-  
-  // Cores
+  const ovr = getWeightedOVR(data);
   c.style.setProperty('--team-color', data.c);
-  document.getElementById(`glw${id}`).style.setProperty('--team-color', data.c);
   
-  // OVR Colorido
-  const oBox = document.getElementById(`ovr${id}`);
-  oBox.className = 'ovr'; // Reset
-  if(ovr >= 85) oBox.classList.add('s-tier');
-  else if(ovr >= 80) oBox.classList.add('a-tier');
-  else if(ovr >= 75) oBox.classList.add('b-tier');
-  else oBox.classList.add('c-tier');
+  // SEMÁFORO DE CORES
+  const oBox = document.getElementById(`o${id}`);
+  oBox.className = 'ovr-box'; 
+  if(ovr >= 85) oBox.classList.add('val-legend');
+  else if(ovr >= 80) oBox.classList.add('val-elite');
+  else if(ovr >= 75) oBox.classList.add('val-gold');
+  else oBox.classList.add('val-base');
+
   oBox.innerText = ovr;
-
-  // Textos
-  document.getElementById(`n${id}`).innerText = data.n;
-  document.getElementById(`k${id}`).innerText = data.i;
-  document.getElementById(`s${id}`).innerText = "⭐ " + data.s;
-
-  // Barras
+  document.getElementById(`name${id}`).innerText = data.n;
+  document.getElementById(`i${id}`).innerText = data.i;
+  document.getElementById(`star${id}`).innerText = "<span class='star-highlight'>⭐ " + data.s + "</span>";
+  
+  // BARRAS
   setBar(id, 'a', data.a);
   setBar(id, 'm', data.m);
   setBar(id, 'd', data.d);
@@ -458,8 +420,10 @@ function renderCard(id, data) {
 
 function setBar(id, type, val) {
   document.getElementById(`v${id}${type}`).innerText = val;
-  document.getElementById(`b${id}${type}`).style.width = val + "%";
+  const bar = document.getElementById(`f${id}${type}`);
+  bar.style.width = val + "%";
 }
 </script>
 </body>
 </html>
+
