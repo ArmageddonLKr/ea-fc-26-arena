@@ -1,11 +1,11 @@
 {
-  "name": "EA FC 26 Competitive",
-  "short_name": "FC 26",
+  "name": "FC 26 Arena Competitiva",
+  "short_name": "FC 26 Arena",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#03030a",
-  "description": "Sorteador competitivo EA FC 26",
+  "description": "Sorteador competitivo de times — FC 26 Arena",
   "icons": [
     {
       "src": "./assets/logo.svg",
