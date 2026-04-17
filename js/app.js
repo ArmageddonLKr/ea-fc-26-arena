@@ -1,4 +1,4 @@
-import { getLogoUrl, renderLogo, fetchTeamsData } from './teams.js';
+import { getLogoUrl, renderLogo, fetchTeamsData, PLAYER_IDS, getPlayerFaceUrl } from './teams.js';
 import { loadGlobalStats, saveGlobalStats, recordMatch, clearGlobalStats } from './stats.js';
 import { generateTournament, renderBracket, getNextTournamentMatch, reportTournamentMatchResult, endTournament, tournState } from './tournament.js';
 
@@ -92,7 +92,7 @@ window.finishMatchAndSave = function() {
     document.getElementById('victoryTeamName2').textContent = t2.n;
     
     document.getElementById('victoryOverlay').style.display = 'flex';
-    fireConfetti('#00e676', 150);
+    fireConfetti('#00e676', 40);
     
     if (tournState.active) {
       reportTournamentMatchResult(p1Score, p2Score);
@@ -113,24 +113,27 @@ window.dismissVictory = function() {
   }
 };
 
-function fireConfetti(color, count=50) {
+function fireConfetti(color, count=20) {
   const canvas = document.getElementById('confettiCanvas');
   const ctx = canvas.getContext('2d');
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   let particles = [];
-  for(let i=0; i<count; i++) {
+  const cap = Math.min(count, 40);
+  for(let i=0; i<cap; i++) {
     particles.push({
       x: canvas.width/2, y: canvas.height/2,
-      vx: (Math.random()-0.5)*20, vy: (Math.random()-0.5)*20 - 5,
-      size: Math.random()*8+4, color: Math.random()>0.5?color:'#fff'
+      vx: (Math.random()-0.5)*18, vy: (Math.random()-0.5)*18 - 4,
+      size: Math.random()*7+3, color: Math.random()>0.5?color:'#fff'
     });
   }
+  const maxTime = Date.now() + 2000;
   function draw() {
+    if (Date.now() > maxTime) { ctx.clearRect(0,0,canvas.width,canvas.height); return; }
     ctx.clearRect(0,0,canvas.width,canvas.height);
     let active = false;
     particles.forEach(p => {
-      p.x += p.vx; p.y += p.vy; p.vy += 0.5; // gravity
+      p.x += p.vx; p.y += p.vy; p.vy += 0.5;
       if(p.y < canvas.height) active = true;
       ctx.fillStyle = p.color;
       ctx.fillRect(p.x, p.y, p.size, p.size);
@@ -172,15 +175,33 @@ window.shareToWhatsApp = function() {
 
 window.applyLeagueFilter = function() {
   const val = document.getElementById('leagueFilter').value;
-  if(val === 'clubs') {
-    teamsDB = masterDB.filter(t => t.league !== 'International');
-  } else if(val === 'nations') {
-    teamsDB = masterDB.filter(t => t.league === 'International');
-  } else {
+  if (val === 'all') {
     teamsDB = [...masterDB];
+  } else {
+    teamsDB = masterDB.filter(t => t.league === val);
   }
   updateSummary();
-  showToast(`Filtro Aplicado: ${teamsDB.length} Times Disponíveis`);
+  showToast(`Filtro: ${teamsDB.length} times disponíveis`);
+  updateLeagueModeRow();
+};
+
+function updateLeagueModeRow() {
+  const row = document.getElementById('leagueModeRow');
+  if (!row) return;
+  const val = document.getElementById('leagueFilter').value;
+  const checked = document.getElementById('leagueModeToggle').checked;
+  row.classList.toggle('active', checked && val !== 'all');
+}
+
+window.toggleLeagueMode = function() {
+  updateLeagueModeRow();
+  const checked = document.getElementById('leagueModeToggle').checked;
+  const val = document.getElementById('leagueFilter').value;
+  if (checked && val === 'all') {
+    showToast('Selecione uma liga específica primeiro!');
+    document.getElementById('leagueModeToggle').checked = false;
+    updateLeagueModeRow();
+  }
 };
 
 function assignOwners() {
@@ -265,12 +286,23 @@ function finalizeTournamentMatch(t1, t2) {
 
 function finalize() {
   assignOwners();
-  let available = teamsDB.filter(t=>!lastTeams.includes(t.n) && !bannedTeams.includes(t.n));
-  if(available.length<4){lastTeams=[]; available=teamsDB.filter(t=>!bannedTeams.includes(t.n));}
-  
+
+  // Modo Liga — restrict both teams to the selected league
+  const leagueMode = document.getElementById('leagueModeToggle')?.checked;
+  const selectedLeague = document.getElementById('leagueFilter')?.value || 'all';
+  let basePool = teamsDB.filter(t => !bannedTeams.includes(t.n));
+  if (leagueMode && selectedLeague !== 'all') {
+    const leaguePool = basePool.filter(t => t.league === selectedLeague);
+    if (leaguePool.length >= 2) basePool = leaguePool;
+    else { showToast('Liga com poucos times disponíveis!'); isDrafting=false; document.getElementById('btnSortear').disabled=false; document.getElementById('arena').classList.remove('shuffling'); return; }
+  }
+
+  let available = basePool.filter(t=>!lastTeams.includes(t.n));
+  if(available.length<4){lastTeams=[]; available=basePool;}
+
   let t1=available[Math.floor(Math.random()*available.length)];
   let ovr1=getOVR(t1);
-  const tol=ovr1>84?3:4;
+  const tol = leagueMode ? 6 : (ovr1>84?3:4);
   let pool=available.filter(t=>{const diff=Math.abs(ovr1-getOVR(t));return diff<=tol&&t.n!==t1.n;});
   if(pool.length===0) pool=available.filter(t=>t.n!==t1.n);
   if(pool.length===0) pool=available;
@@ -340,10 +372,26 @@ function updateCard(id, data, animate) {
   
   const logoWrap=document.getElementById(`logoWrap${id}`);
   renderLogo(logoWrap, null, data);
-  
+
   document.getElementById(`league${id}`).textContent=data.league||'';
   document.getElementById(`name${id}`).textContent=data.n;
-  document.getElementById(`star${id}`).textContent=data.s||'';
+
+  // Star player row: face avatar + names
+  const starEl = document.getElementById(`star${id}`);
+  starEl.innerHTML = '';
+  const starText = document.createTextNode(data.s||'');
+  const primaryName = (data.s||'').split(/\s*[&,]\s*/)[0].trim();
+  const pid = data.pid || PLAYER_IDS[primaryName];
+  const faceUrl = getPlayerFaceUrl(pid);
+  if (faceUrl) {
+    const faceImg = document.createElement('img');
+    faceImg.src = faceUrl;
+    faceImg.className = 'star-face';
+    faceImg.loading = 'lazy';
+    faceImg.onerror = () => faceImg.remove();
+    starEl.appendChild(faceImg);
+  }
+  starEl.appendChild(starText);
   ['a','m','d'].forEach(type=>{
     const val=data[type]||0;
     document.getElementById(`v${id}${type}`).textContent=val;
