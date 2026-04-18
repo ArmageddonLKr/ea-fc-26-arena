@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Black circle background -->
+  <circle cx="256" cy="256" r="256" fill="#000000"/>
+
+  <!-- Dark gray cape / mantle flowing below helmet -->
+  <ellipse cx="256" cy="400" rx="145" ry="80" fill="#3a3a3a"/>
+  <path d="M130 310 Q100 420 80 500 Q180 460 256 450 Q332 460 432 500 Q412 420 382 310
+           Q340 360 256 370 Q172 360 130 310 Z" fill="#2d2d2d"/>
+  <!-- Cape highlight edge -->
+  <path d="M130 310 Q172 360 256 370 Q340 360 382 310" fill="none" stroke="#555" stroke-width="2" opacity="0.5"/>
+
+  <!-- Helmet body - main white shape facing right -->
+  <!-- Back of helmet (rounded dome) -->
+  <path d="M160 195 Q155 130 190 100 Q220 75 256 72 Q292 75 322 100 Q357 130 352 195
+           L345 240 Q320 260 256 268 Q192 260 167 240 Z" fill="#ffffff"/>
+
+  <!-- Cheek guard left -->
+  <path d="M160 195 L155 250 Q158 275 175 290 Q192 300 210 295 L220 265 Q200 260 192 245 L167 240 Z" fill="#ffffff"/>
+  <!-- Cheek guard right -->
+  <path d="M352 195 L357 250 Q354 275 337 290 Q320 300 302 295 L292 265 Q312 260 320 245 L345 240 Z" fill="#ffffff"/>
+
+  <!-- Nose guard (vertical bar) -->
+  <rect x="246" y="180" width="20" height="90" rx="5" fill="#cccccc"/>
+
+  <!-- Eye slot left -->
+  <path d="M175 190 L230 185 L235 205 L175 210 Z" fill="#000000" rx="3"/>
+  <!-- Eye slot right -->
+  <path d="M278 185 L333 190 L333 210 L278 205 Z" fill="#000000" rx="3"/>
+
+  <!-- Helmet ridge / crest base -->
+  <rect x="235" y="62" width="42" height="18" rx="6" fill="#dddddd"/>
+
+  <!-- Plume / crest feathers - flowing backward to the right -->
+  <path d="M277 70 Q340 40 420 30 Q400 55 370 70 Q340 85 310 88 Q290 88 277 80 Z" fill="#ffffff"/>
+  <path d="M277 75 Q345 55 430 48 Q408 72 375 84 Q345 94 315 95 Q293 94 277 85 Z" fill="#cccccc" opacity="0.7"/>
+  <path d="M277 80 Q350 68 440 65 Q416 88 380 97 Q350 104 318 103 Q295 100 277 90 Z" fill="#aaaaaa" opacity="0.5"/>
+
+  <!-- Chin guard / bottom chin piece -->
+  <path d="M200 288 Q228 305 256 308 Q284 305 312 288 L305 310 Q280 325 256 327 Q232 325 207 310 Z" fill="#dddddd"/>
+
+  <!-- Subtle shadow inside dome for depth -->
+  <path d="M190 100 Q220 75 256 72 Q292 75 322 100 Q310 95 256 93 Q202 95 190 100 Z" fill="#eeeeee" opacity="0.5"/>
+
+  <!-- "FC 26" text at bottom -->
+  <text x="256" y="468"
+        font-family="Arial Black, Arial, sans-serif"
+        font-size="72"
+        font-weight="900"
+        text-anchor="middle"
+        fill="#ffffff"
+        letter-spacing="3">FC 26</text>
+
+  <!-- Thin accent line above text -->
+  <line x1="110" y1="425" x2="402" y2="425" stroke="#ffffff" stroke-width="2" opacity="0.3"/>
+</svg>

@@ -13,8 +13,7 @@
   <title>EA FC 26 • Competitive</title>
   <link rel="manifest" href="./manifest.json">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon"
-    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%2303030a'/%3E%3Ctext x='256' y='320' font-family='Arial Black' font-size='280' font-weight='900' text-anchor='middle' fill='%2300e676'%3EEA%3C/text%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="./assets/logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Barlow+Condensed:ital,wght@0,300;0,600;0,700;0,900;1,900&display=swap"
@@ -27,7 +26,9 @@
   <!-- SPLASH -->
   <div id="splash">
     <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
-      <div class="splash-ea">EA</div>
+      <img src="./assets/logo.svg" alt="FC 26" style="width:130px;height:130px;border-radius:50%;"
+           onerror="this.style.display='none'; document.getElementById('splashFallback').style.display='block'">
+      <div id="splashFallback" style="display:none;" class="splash-ea">FC</div>
       <div class="splash-fc">FC 26</div>
       <div class="splash-year">COMPETITIVE EDITION</div>
     </div>
@@ -134,7 +135,8 @@
   <div id="app">
     <div class="topbar">
       <div class="topbar-left">
-        <span class="topbar-logo">EA FC</span>
+        <img src="./assets/logo.svg" alt="FC 26" style="width:28px;height:28px;border-radius:50%;"
+             onerror="this.outerHTML='<span class=\'topbar-logo\'>FC 26</span>'">
         <div class="topbar-dot"></div>
         <span class="topbar-tag">Competitive</span>
       </div>
@@ -147,13 +149,28 @@
       <p class="lobby-subtitle">Defina os comandantes</p>
 
       <!-- Filter Selector -->
-      <div style="margin-bottom:28px;">
+      <div style="margin-bottom:20px;">
         <select class="form-select" id="leagueFilter" onchange="applyLeagueFilter()"
-          style="margin-bottom:10px; width:100%; max-width:400px; margin-left:auto; margin-right:auto;">
-          <option value="all">Filtro de Roleta: MISTO (Europa + Seleções)</option>
-          <option value="clubs">Apenas Grandes Clubes</option>
-          <option value="nations">Apenas Seleções Nacionais</option>
+          style="margin-bottom:8px; width:100%;">
+          <option value="all">🌍 Todos os Times (Mix Global)</option>
+          <option value="Premier League">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option>
+          <option value="La Liga">🇪🇸 La Liga</option>
+          <option value="Serie A">🇮🇹 Serie A</option>
+          <option value="Bundesliga">🇩🇪 Bundesliga</option>
+          <option value="Ligue 1">🇫🇷 Ligue 1</option>
+          <option value="Eredivisie">🇳🇱 Eredivisie</option>
+          <option value="Liga Portugal">🇵🇹 Liga Portugal</option>
+          <option value="Saudi Pro League">🇸🇦 Saudi Pro League</option>
+          <option value="MLS">🇺🇸 MLS</option>
+          <option value="Argentina">🇦🇷 Argentina</option>
+          <option value="Süper Lig">🇹🇷 Süper Lig</option>
+          <option value="Super League CH">🇨🇭 Super League CH</option>
         </select>
+
+        <div class="league-mode-row" id="leagueModeRow">
+          <input type="checkbox" id="leagueModeToggle" onchange="toggleLeagueMode()">
+          <label for="leagueModeToggle">🏆 Modo Liga — sorteio exclusivo dentro da liga selecionada</label>
+        </div>
       </div>
 
       <div class="player-slots">
@@ -410,8 +427,9 @@
   animation:slideUp 0.4s cubic-bezier(0.19,1,0.22,1);">
       <div style="display:flex;align-items:center;gap:14px;max-width:460px;margin:0 auto;">
         <div
-          style="width:48px;height:48px;border-radius:12px;background:#03030a;border:1px solid rgba(0,230,118,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1rem;color:#00e676;">EA</span>
+          style="width:48px;height:48px;border-radius:12px;background:#000;border:1px solid rgba(0,230,118,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">
+          <img src="./assets/logo.svg" alt="FC 26" style="width:44px;height:44px;border-radius:50%;"
+               onerror="this.outerHTML='<span style=\'font-family:Rajdhani,sans-serif;font-weight:700;font-size:1rem;color:#00e676;\'>FC</span>'">
         </div>
         <div style="flex:1;">
           <div

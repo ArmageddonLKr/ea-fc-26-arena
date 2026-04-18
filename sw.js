@@ -1,4 +1,4 @@
-const CACHE = 'eafc26-v1';
+const CACHE = 'eafc26-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -6,7 +6,10 @@ const ASSETS = [
   './styles/main.css',
   './js/teams.js',
   './js/app.js',
-  './teams.json'
+  './js/stats.js',
+  './js/tournament.js',
+  './teams.json',
+  './assets/logo.svg'
 ];
 
 self.addEventListener('install', e => {
