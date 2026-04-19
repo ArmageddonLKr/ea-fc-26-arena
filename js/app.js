@@ -560,14 +560,18 @@ window.toggleBan = function(teamName) {
 
 function renderBanGrid() {
   const grid = document.getElementById('banTeamsGrid');
-  grid.innerHTML = teamsDB.map(t => {
-    const isBanned = bannedTeams.includes(t.n);
-    const logoUrl = getLogoUrl(t);
-    const imgHtml = logoUrl ? `<img src="${logoUrl}" loading="lazy">` : `<span style="font-size:1.5rem">${t.f||'🌐'}</span>`;
-    return `<div class="ban-item ${isBanned?'banned':''}" onclick="toggleBan('${t.n.replace(/'/g, "\\'")}')" title="${t.n}">
-      ${imgHtml}
-    </div>`;
-  }).join('');
+  grid.innerHTML = '';
+  teamsDB.forEach(t => {
+    const item = document.createElement('div');
+    item.className = 'ban-item' + (bannedTeams.includes(t.n) ? ' banned' : '');
+    item.title = t.n;
+    item.onclick = () => window.toggleBan(t.n);
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'width:36px;height:36px;';
+    renderLogo(wrap, t);
+    item.appendChild(wrap);
+    grid.appendChild(item);
+  });
 }
 
 window.applyBansAndStart = function() {

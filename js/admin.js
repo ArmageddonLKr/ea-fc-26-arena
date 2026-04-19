@@ -1,4 +1,4 @@
-import { fetchTeamsData, LOGO_OVERRIDES } from './teams.js';
+import { fetchTeamsData, LOGO_OVERRIDES, FM26_IDS } from './teams.js';
 
 let teams = [];
 
@@ -20,9 +20,9 @@ function sanitizeName(name) {
 
 function getLogoUrl(t) {
   if (t.logo) return t.logo;
-  const localPath = `./assets/logos/${sanitizeName(t.n)}.png`;
+  if (FM26_IDS[t.n]) return `./assets/logos/${FM26_IDS[t.n]}.png`;
   if (LOGO_OVERRIDES[t.n]) return LOGO_OVERRIDES[t.n];
-  return localPath;
+  return `./assets/logos/${sanitizeName(t.n)}.png`;
 }
 
 window.renderTeams = function() {
@@ -41,7 +41,8 @@ window.renderTeams = function() {
   list.innerHTML = filtered.map((t, i) => {
     const realIdx = teams.indexOf(t);
     const logo = getLogoUrl(t);
-    const logoHtml = `<img src="${logo}" loading="lazy" onerror="this.outerHTML='<span class=\\'fallback\\'>${t.f || '🌐'}</span>'">`;
+    const fb = LOGO_OVERRIDES[t.n] || '';
+    const logoHtml = `<img src="${logo}" data-fb="${fb}" loading="lazy" onerror="if(this.src!==this.dataset.fb&&this.dataset.fb){this.src=this.dataset.fb;this.onerror=null;}else{this.outerHTML='<span class=\\'fallback\\'>${t.f||'🌐'}</span>'}">`;
     const ovr = getOVR(t);
     return `<div class="team-row">
       <div class="team-row-logo">${logoHtml}</div>

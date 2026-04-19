@@ -196,8 +196,9 @@ export const FM26_IDS = {
 
 export function getLogoUrl(team) {
   if (team.logo) return team.logo;
+  if (FM26_IDS[team.n]) return `./assets/logos/${FM26_IDS[team.n]}.png`;
   if (LOGO_OVERRIDES[team.n]) return LOGO_OVERRIDES[team.n];
-  return null;
+  return `./assets/logos/${sanitizeName(team.n)}.png`;
 }
 
 // Renders logo with fallback chain:

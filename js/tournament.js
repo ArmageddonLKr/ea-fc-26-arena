@@ -1,4 +1,4 @@
-import { getLogoUrl } from './teams.js';
+import { getLogoUrl, LOGO_OVERRIDES } from './teams.js';
 import { getOVR, teamsDB, pNames } from './app.js';
 
 export let tournState = {
@@ -63,8 +63,13 @@ export function renderBracket() {
   const container = document.getElementById('bracketContainer');
   let html = '';
   tournState.matches.forEach((m, i) => {
-    let t1Render = m.t1 ? `<img src="${getLogoUrl(m.t1)||''}"> ${m.t1.n} (${getOVR(m.t1)})` : `Aguardando Vencedor`;
-    let t2Render = m.t2 ? `<img src="${getLogoUrl(m.t2)||''}"> ${m.t2.n} (${getOVR(m.t2)})` : `Aguardando Vencedor`;
+    const logoImg = (team) => {
+      const url = getLogoUrl(team);
+      const fb  = LOGO_OVERRIDES[team.n] || '';
+      return `<img src="${url}" data-fb="${fb}" style="width:18px;height:18px;object-fit:contain;" onerror="if(this.src!==this.dataset.fb&&this.dataset.fb){this.src=this.dataset.fb;this.onerror=null;}else{this.remove();}">`;
+    };
+    let t1Render = m.t1 ? `${logoImg(m.t1)} ${m.t1.n} (${getOVR(m.t1)})` : `Aguardando Vencedor`;
+    let t2Render = m.t2 ? `${logoImg(m.t2)} ${m.t2.n} (${getOVR(m.t2)})` : `Aguardando Vencedor`;
     
     let cl1 = m.winner === 1 ? 'winner' : (m.winner === 2 ? 'loser' : '');
     let cl2 = m.winner === 2 ? 'winner' : (m.winner === 1 ? 'loser' : '');
