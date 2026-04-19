@@ -354,9 +354,10 @@ function finalize() {
     updateCard(1,t1,true);
     updateCard(2,t2,true);
     SoundSystem.playImpact();
+    const finalOvr1=getOVR(t1);
     const ovr2=getOVR(t2);
-    updateAdvantage(ovr1,ovr2);
-    addToHistory(t1,t2,ovr1,ovr2);
+    updateAdvantage(finalOvr1,ovr2);
+    addToHistory(t1,t2,finalOvr1,ovr2);
     document.getElementById('btnSortear').disabled=false;
     isDrafting=false;
   },60);
@@ -575,6 +576,10 @@ window.applyBansAndStart = function() {
 };
 
 window.backToLobbyFromTournament = function() {
+  if (tournState.active) {
+    if (!confirm("Tem certeza que deseja abandonar o torneio?")) return;
+    endTournament();
+  }
   switchTab('home');
 };
 

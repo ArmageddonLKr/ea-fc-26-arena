@@ -1,4 +1,4 @@
-const CACHE = 'eafc26-v5';
+const CACHE = 'eafc26-v6';
 const ASSETS = [
   './',
   './index.html',
