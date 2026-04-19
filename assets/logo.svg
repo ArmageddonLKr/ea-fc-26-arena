@@ -1,55 +1,106 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Black circle background -->
-  <circle cx="256" cy="256" r="256" fill="#000000"/>
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#1a1a1a"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+    <linearGradient id="helmetGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="60%" stop-color="#e0e0e0"/>
+      <stop offset="100%" stop-color="#c0c0c0"/>
+    </linearGradient>
+    <linearGradient id="capeGrad" x1="0%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#4a4a4a"/>
+      <stop offset="100%" stop-color="#1e1e1e"/>
+    </linearGradient>
+    <linearGradient id="crestGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#aaaaaa" stop-opacity="0.7"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
 
-  <!-- Dark gray cape / mantle flowing below helmet -->
-  <ellipse cx="256" cy="400" rx="145" ry="80" fill="#3a3a3a"/>
-  <path d="M130 310 Q100 420 80 500 Q180 460 256 450 Q332 460 432 500 Q412 420 382 310
-           Q340 360 256 370 Q172 360 130 310 Z" fill="#2d2d2d"/>
-  <!-- Cape highlight edge -->
-  <path d="M130 310 Q172 360 256 370 Q340 360 382 310" fill="none" stroke="#555" stroke-width="2" opacity="0.5"/>
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="url(#bgGrad)"/>
 
-  <!-- Helmet body - main white shape facing right -->
-  <!-- Back of helmet (rounded dome) -->
-  <path d="M160 195 Q155 130 190 100 Q220 75 256 72 Q292 75 322 100 Q357 130 352 195
-           L345 240 Q320 260 256 268 Q192 260 167 240 Z" fill="#ffffff"/>
+  <!-- Subtle inner ring -->
+  <circle cx="256" cy="256" r="240" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"/>
 
-  <!-- Cheek guard left -->
-  <path d="M160 195 L155 250 Q158 275 175 290 Q192 300 210 295 L220 265 Q200 260 192 245 L167 240 Z" fill="#ffffff"/>
-  <!-- Cheek guard right -->
-  <path d="M352 195 L357 250 Q354 275 337 290 Q320 300 302 295 L292 265 Q312 260 320 245 L345 240 Z" fill="#ffffff"/>
+  <!-- Cape / mantle — dark flowing shape -->
+  <path d="M148 310 Q110 390 95 495 Q175 455 256 448 Q337 455 417 495
+           Q402 390 364 310 Q325 358 256 365 Q187 358 148 310 Z"
+        fill="url(#capeGrad)" opacity="0.9"/>
+  <!-- Cape edge highlight -->
+  <path d="M148 310 Q187 358 256 365 Q325 358 364 310"
+        fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
 
-  <!-- Nose guard (vertical bar) -->
-  <rect x="246" y="180" width="20" height="90" rx="5" fill="#cccccc"/>
+  <!-- === SPARTAN HELMET === -->
+  <!-- Helmet dome -->
+  <path d="M172 200 Q168 122 200 92 Q225 68 256 64 Q287 68 312 92
+           Q344 122 340 200 L332 252 Q305 272 256 278 Q207 272 180 252 Z"
+        fill="url(#helmetGrad)" filter="url(#shadow)"/>
 
-  <!-- Eye slot left -->
-  <path d="M175 190 L230 185 L235 205 L175 210 Z" fill="#000000" rx="3"/>
-  <!-- Eye slot right -->
-  <path d="M278 185 L333 190 L333 210 L278 205 Z" fill="#000000" rx="3"/>
+  <!-- Helmet shadow/depth inside dome -->
+  <path d="M200 92 Q225 68 256 64 Q287 68 312 92 Q296 84 256 82 Q216 84 200 92 Z"
+        fill="rgba(0,0,0,0.15)"/>
 
-  <!-- Helmet ridge / crest base -->
-  <rect x="235" y="62" width="42" height="18" rx="6" fill="#dddddd"/>
+  <!-- Cheek guard LEFT -->
+  <path d="M172 200 L168 262 Q170 290 186 304 Q200 314 218 308 L226 274
+           Q208 268 200 250 L180 252 Z"
+        fill="url(#helmetGrad)"/>
+  <!-- Cheek guard RIGHT -->
+  <path d="M340 200 L344 262 Q342 290 326 304 Q312 314 294 308 L286 274
+           Q304 268 312 250 L332 252 Z"
+        fill="url(#helmetGrad)"/>
 
-  <!-- Plume / crest feathers - flowing backward to the right -->
-  <path d="M277 70 Q340 40 420 30 Q400 55 370 70 Q340 85 310 88 Q290 88 277 80 Z" fill="#ffffff"/>
-  <path d="M277 75 Q345 55 430 48 Q408 72 375 84 Q345 94 315 95 Q293 94 277 85 Z" fill="#cccccc" opacity="0.7"/>
-  <path d="M277 80 Q350 68 440 65 Q416 88 380 97 Q350 104 318 103 Q295 100 277 90 Z" fill="#aaaaaa" opacity="0.5"/>
+  <!-- Nose bridge (vertical bar) -->
+  <rect x="244" y="186" width="24" height="88" rx="6"
+        fill="#b0b0b0"/>
+  <rect x="248" y="186" width="8" height="88" rx="3"
+        fill="rgba(255,255,255,0.4)"/>
 
-  <!-- Chin guard / bottom chin piece -->
-  <path d="M200 288 Q228 305 256 308 Q284 305 312 288 L305 310 Q280 325 256 327 Q232 325 207 310 Z" fill="#dddddd"/>
+  <!-- Eye visor LEFT -->
+  <path d="M180 194 Q182 186 238 183 L240 203 Q184 206 180 194 Z"
+        fill="#111111" rx="4"/>
+  <!-- Eye visor RIGHT -->
+  <path d="M276 183 Q332 186 334 194 Q332 206 276 203 Z"
+        fill="#111111"/>
+  <!-- Visor highlight lines -->
+  <line x1="186" y1="191" x2="236" y2="189" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+  <line x1="276" y1="189" x2="326" y2="191" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
 
-  <!-- Subtle shadow inside dome for depth -->
-  <path d="M190 100 Q220 75 256 72 Q292 75 322 100 Q310 95 256 93 Q202 95 190 100 Z" fill="#eeeeee" opacity="0.5"/>
+  <!-- === HELMET CREST / PLUME === -->
+  <!-- Crest base plate -->
+  <rect x="238" y="55" width="36" height="20" rx="7"
+        fill="#cccccc"/>
 
-  <!-- "FC 26" text at bottom -->
-  <text x="256" y="468"
-        font-family="Arial Black, Arial, sans-serif"
-        font-size="72"
+  <!-- Plume feathers — sweeping right/back -->
+  <path d="M274 64 Q350 28 440 18 Q420 46 386 60 Q354 73 316 78 Q294 78 274 70 Z"
+        fill="url(#crestGrad)"/>
+  <path d="M274 69 Q354 40 448 32 Q426 60 390 72 Q356 83 318 86 Q296 84 274 76 Z"
+        fill="rgba(200,200,200,0.65)"/>
+  <path d="M274 74 Q358 54 452 48 Q428 76 392 86 Q358 95 320 96 Q297 93 274 82 Z"
+        fill="rgba(160,160,160,0.4)"/>
+
+  <!-- Chin guard -->
+  <path d="M206 302 Q228 316 256 319 Q284 316 306 302 L300 322
+           Q278 334 256 336 Q234 334 212 322 Z"
+        fill="#cccccc"/>
+
+  <!-- === FC 26 TEXT === -->
+  <!-- Separator line -->
+  <line x1="96" y1="428" x2="416" y2="428"
+        stroke="rgba(255,255,255,0.18)" stroke-width="1"/>
+
+  <text x="256" y="480"
+        font-family="'Arial Narrow','Arial',sans-serif"
+        font-size="78"
         font-weight="900"
+        font-style="italic"
         text-anchor="middle"
         fill="#ffffff"
-        letter-spacing="3">FC 26</text>
-
-  <!-- Thin accent line above text -->
-  <line x1="110" y1="425" x2="402" y2="425" stroke="#ffffff" stroke-width="2" opacity="0.3"/>
+        letter-spacing="6"
+        opacity="0.95">FC 26</text>
 </svg>
