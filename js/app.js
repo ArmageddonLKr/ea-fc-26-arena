@@ -235,7 +235,7 @@ window.startDraft = function() {
     if (nextM) {
        isDrafting = true;
        document.getElementById('btnSortear').disabled = true;
-       document.getElementById('arena').classList.add('shuffling');
+       document.getElementById('tab-arena').classList.add('shuffling');
        SoundSystem.init();
        // Animação rápida só de suspense
        let ticks=0;
@@ -254,7 +254,7 @@ window.startDraft = function() {
   isDrafting=true;
   const btn=document.getElementById('btnSortear');
   btn.disabled=true;
-  document.getElementById('arena').classList.add('shuffling');
+  document.getElementById('tab-arena').classList.add('shuffling');
   SoundSystem.init();
   let ticks=0, total=14;
   const iv=setInterval(()=>{
@@ -277,7 +277,7 @@ function finalizeTournamentMatch(t1, t2) {
   const flash=document.getElementById('flashOverlay');
   flash.classList.add('on');
   setTimeout(()=>flash.classList.remove('on'),100);
-  document.getElementById('arena').classList.remove('shuffling');
+  document.getElementById('tab-arena').classList.remove('shuffling');
   setTimeout(()=>{
     updateCard(1,t1,true);
     updateCard(2,t2,true);
@@ -300,7 +300,7 @@ function finalize() {
   if (leagueMode && selectedLeague !== 'all') {
     const leaguePool = basePool.filter(t => t.league === selectedLeague);
     if (leaguePool.length >= 2) basePool = leaguePool;
-    else { showToast('Liga com poucos times disponíveis!'); isDrafting=false; document.getElementById('btnSortear').disabled=false; document.getElementById('arena').classList.remove('shuffling'); return; }
+    else { showToast('Liga com poucos times disponíveis!'); isDrafting=false; document.getElementById('btnSortear').disabled=false; document.getElementById('tab-arena').classList.remove('shuffling'); return; }
   }
 
   let available = basePool.filter(t=>!lastTeams.includes(t.n));
@@ -340,7 +340,7 @@ function finalize() {
   const flash=document.getElementById('flashOverlay');
   flash.classList.add('on');
   setTimeout(()=>flash.classList.remove('on'),100);
-  document.getElementById('arena').classList.remove('shuffling');
+  document.getElementById('tab-arena').classList.remove('shuffling');
   
   // Trigger Slot Machine Anim
   document.getElementById('c1').classList.add('slot-reveal');
