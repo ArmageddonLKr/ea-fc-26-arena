@@ -167,7 +167,7 @@ window.shareToWhatsApp = function() {
     let p2Score = scores.b;
     if (ownerMap[1] === 'b') { p1Score = scores.b; p2Score = scores.a; }
     
-    const txt = `🎮 *Sorteio EA FC 26 Finalizado!*\n\n⚽ ${pNames.a} *${p1Score} x ${p2Score}* ${pNames.b}\n\n🛡️ ${t1.n} (OVR ${getOVR(t1)}) vs 🛡️ ${t2.n} (OVR ${getOVR(t2)})\n\n_Batalha Gerada via Sorteador Competitivo_`;
+    const txt = `🎮 *Sorteio FC 26 Arena Finalizado!*\n\n⚽ ${pNames.a} *${p1Score} x ${p2Score}* ${pNames.b}\n\n🛡️ ${t1.n} (OVR ${getOVR(t1)}) vs 🛡️ ${t2.n} (OVR ${getOVR(t2)})\n\n_Batalha Gerada via Sorteador Competitivo_`;
     const url = 'https://wa.me/?text=' + encodeURIComponent(txt);
     window.open(url, '_blank');
   }
