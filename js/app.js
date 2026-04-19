@@ -37,7 +37,7 @@ async function boot() {
 function switchTab(tab) {
   document.querySelectorAll('.tab-item').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.tab === tab));
-  ['home', 'arena', 'torneio'].forEach(t => {
+  ['home', 'arena', 'torneio', 'config'].forEach(t => {
     document.getElementById(`tab-${t}`).style.display = t === tab ? 'block' : 'none';
   });
 }

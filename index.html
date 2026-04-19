@@ -106,34 +106,14 @@
       <div class="topbar-dot"></div>
       <span class="topbar-tag">Competitive</span>
     </div>
-    <a href="./admin.html" class="topbar-btn">⚙ Admin</a>
+    <a href="./admin.html" class="topbar-btn" style="font-size:0.7rem;letter-spacing:2px;">ADMIN</a>
   </div>
 
   <!-- HOME TAB -->
   <div id="tab-home">
     <p class="lobby-subtitle" style="margin-bottom:20px;">Defina os Comandantes</p>
 
-    <select class="form-select" id="leagueFilter" onchange="applyLeagueFilter()" style="margin-bottom:8px;width:100%;">
-      <option value="all">🌍 Todos os Times</option>
-      <option value="Premier League">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option>
-      <option value="La Liga">🇪🇸 La Liga</option>
-      <option value="Serie A">🇮🇹 Serie A</option>
-      <option value="Bundesliga">🇩🇪 Bundesliga</option>
-      <option value="Ligue 1">🇫🇷 Ligue 1</option>
-      <option value="Eredivisie">🇳🇱 Eredivisie</option>
-      <option value="Liga Portugal">🇵🇹 Liga Portugal</option>
-      <option value="Saudi Pro League">🇸🇦 Saudi Pro League</option>
-      <option value="MLS">🇺🇸 MLS</option>
-      <option value="Argentina">🇦🇷 Argentina</option>
-      <option value="Süper Lig">🇹🇷 Süper Lig</option>
-      <option value="Super League CH">🇨🇭 Super League CH</option>
-    </select>
-    <div class="league-mode-row" id="leagueModeRow">
-      <input type="checkbox" id="leagueModeToggle" onchange="toggleLeagueMode()">
-      <label for="leagueModeToggle">🏆 Modo Liga — sorteio exclusivo dentro da liga</label>
-    </div>
-
-    <div class="player-slots" style="margin-top:16px;">
+    <div class="player-slots">
       <div class="player-slot" style="--slot-color:var(--p1)">
         <div class="slot-icon">🎮</div>
         <span class="slot-label">Comandante 01</span>
@@ -151,23 +131,6 @@
       <button class="btn-enter" onclick="bootArena()">⚡ Batalha Rápida</button>
       <button class="btn-enter" style="background:rgba(0,180,216,0.1);color:var(--p2);border:1px solid rgba(0,180,216,0.25);" onclick="openBanMenu()">❌ Picks &amp; Bans</button>
       <button class="btn-enter" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);" onclick="openTournamentMenu()">🏆 Modo Torneio</button>
-      <button class="btn-enter" style="background:transparent;color:var(--muted);border:1px solid var(--border);" onclick="openStatsMenu()">📊 Estatísticas</button>
-    </div>
-
-    <div style="margin-top:14px;display:flex;align-items:center;gap:10px;background:var(--surface);padding:10px 14px;border-radius:var(--radius);border:1px solid var(--border);">
-      <input type="checkbox" id="handicapToggle" style="accent-color:var(--accent);width:16px;height:16px;">
-      <label for="handicapToggle" style="font-size:0.68rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);">Balanceador Automático (Handicap)</label>
-    </div>
-
-    <div class="stats-summary" style="margin-top:18px;">
-      <div class="summary-card">
-        <div class="summary-label">Times</div>
-        <div class="summary-val" id="summaryTotal">—</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">Ligas</div>
-        <div class="summary-val" id="summaryLeagues">—</div>
-      </div>
     </div>
   </div>
 
@@ -308,6 +271,53 @@
     <button style="width:100%;margin-top:16px;padding:13px;background:transparent;border:1px solid rgba(200,16,46,0.25);border-radius:var(--radius);color:var(--p1);font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;" id="tournBackBtn" onclick="backToLobbyFromTournament()">🛑 Abandonar Competição</button>
   </div>
 
+  <!-- CONFIG TAB -->
+  <div id="tab-config" style="display:none;">
+    <p class="lobby-subtitle" style="margin-bottom:20px;">Configurações</p>
+
+    <div class="form-group">
+      <label class="form-label">Filtro de Liga</label>
+      <select class="form-select" id="leagueFilter" onchange="applyLeagueFilter()">
+        <option value="all">🌍 Todos os Times</option>
+        <option value="Premier League">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option>
+        <option value="La Liga">🇪🇸 La Liga</option>
+        <option value="Serie A">🇮🇹 Serie A</option>
+        <option value="Bundesliga">🇩🇪 Bundesliga</option>
+        <option value="Ligue 1">🇫🇷 Ligue 1</option>
+        <option value="Eredivisie">🇳🇱 Eredivisie</option>
+        <option value="Liga Portugal">🇵🇹 Liga Portugal</option>
+        <option value="Saudi Pro League">🇸🇦 Saudi Pro League</option>
+        <option value="MLS">🇺🇸 MLS</option>
+        <option value="Argentina">🇦🇷 Argentina</option>
+        <option value="Süper Lig">🇹🇷 Süper Lig</option>
+        <option value="Super League CH">🇨🇭 Super League CH</option>
+      </select>
+    </div>
+
+    <div class="league-mode-row" id="leagueModeRow">
+      <input type="checkbox" id="leagueModeToggle" onchange="toggleLeagueMode()">
+      <label for="leagueModeToggle">🏆 Modo Liga — sorteio exclusivo dentro da liga</label>
+    </div>
+
+    <div style="margin-top:12px;display:flex;align-items:center;gap:10px;background:var(--surface);padding:12px 14px;border-radius:var(--radius);border:1px solid var(--border);">
+      <input type="checkbox" id="handicapToggle" style="accent-color:var(--accent);width:16px;height:16px;">
+      <label for="handicapToggle" style="font-size:0.68rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);">Balanceador Automático (Handicap)</label>
+    </div>
+
+    <div class="stats-summary" style="margin-top:18px;">
+      <div class="summary-card">
+        <div class="summary-label">Times</div>
+        <div class="summary-val" id="summaryTotal">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Ligas</div>
+        <div class="summary-val" id="summaryLeagues">—</div>
+      </div>
+    </div>
+
+    <button class="btn-enter" style="margin-top:12px;background:transparent;color:var(--muted);border:1px solid var(--border);" onclick="openStatsMenu()">📊 Estatísticas</button>
+  </div>
+
   <footer>FC 26 Arena • Competitive Engine</footer>
 </div>
 
@@ -331,6 +341,13 @@
       <path d="M6 9H3.5a2.5 2.5 0 010-5H6M18 9h2.5a2.5 2.5 0 000-5H18M4 22h16M6 4h12v7a6 6 0 01-12 0V4zM12 15v7"/>
     </svg>
     <span>Torneio</span>
+  </button>
+  <button class="tab-item" data-tab="config" onclick="switchTab('config')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+    </svg>
+    <span>Config</span>
   </button>
 </nav>
 
