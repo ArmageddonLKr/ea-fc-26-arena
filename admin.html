@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
+  <title>Admin · FC 26 Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Barlow+Condensed:ital,wght@0,300;0,600;0,700;0,900;1,900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#080808;--surface:#0f0f0f;--surface2:#161616;
+      --border:#1e1e1e;--accent:#c8102e;--text:#f0f0f0;--muted:#555;
+      --p1:#ff1744;--p2:#00b4d8;--radius:8px;
+    }
+    html,body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;}
+    body{padding-bottom:env(safe-area-inset-bottom,0px);}
+
+    /* TOPBAR */
+    .topbar{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:12px;padding:0 16px;height:52px;}
+    .back-btn{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--text);
+      font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:2px;
+      text-transform:uppercase;cursor:pointer;padding:8px 0;}
+    .back-btn svg{width:18px;height:18px;}
+    .topbar-title{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:900;
+      letter-spacing:3px;text-transform:uppercase;color:var(--text);margin-left:4px;}
+    .topbar-badge{background:var(--accent);color:#fff;border-radius:4px;padding:2px 8px;
+      font-size:0.65rem;font-weight:700;letter-spacing:1px;margin-left:auto;}
+
+    /* CONTENT */
+    .content{max-width:460px;margin:0 auto;padding:16px 16px 100px;}
+
+    /* DATA ACTIONS */
+    .data-row{display:flex;gap:8px;margin-bottom:20px;}
+    .btn-sm{flex:1;padding:11px 10px;background:var(--surface2);border:1px solid var(--border);
+      border-radius:var(--radius);color:var(--text);font-family:'Barlow Condensed',sans-serif;
+      font-size:0.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;}
+    .btn-sm:hover{border-color:var(--accent);color:var(--accent);}
+    .btn-sm.danger{color:var(--p1);border-color:rgba(200,16,46,0.25);}
+    .btn-sm.danger:hover{background:rgba(200,16,46,0.08);}
+    .btn-primary{width:100%;padding:14px;background:var(--accent);border:none;border-radius:var(--radius);
+      color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;font-weight:900;
+      letter-spacing:3px;text-transform:uppercase;cursor:pointer;margin-bottom:12px;}
+    .btn-primary:active{opacity:0.85;}
+
+    /* SEARCH */
+    .search-wrap{position:relative;margin-bottom:14px;}
+    .search-input{width:100%;padding:11px 14px 11px 38px;background:var(--surface);border:1px solid var(--border);
+      border-radius:var(--radius);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:0.9rem;outline:none;}
+    .search-input:focus{border-color:var(--accent);}
+    .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);
+      width:16px;height:16px;pointer-events:none;}
+
+    /* TEAM LIST */
+    .team-list{display:flex;flex-direction:column;gap:6px;}
+    .team-row{display:flex;align-items:center;gap:12px;padding:10px 12px;
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);}
+    .team-row-logo{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+    .team-row-logo img{width:100%;height:100%;object-fit:contain;}
+    .team-row-logo .fallback{font-size:1.3rem;}
+    .team-row-info{flex:1;min-width:0;}
+    .team-row-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.95rem;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .team-row-meta{font-size:0.65rem;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-top:2px;}
+    .team-row-ovr{font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:700;
+      color:var(--accent);padding:0 10px;flex-shrink:0;}
+    .team-row-actions{display:flex;gap:6px;}
+    .icon-btn{background:none;border:1px solid var(--border);border-radius:6px;
+      color:var(--muted);cursor:pointer;padding:5px 8px;font-size:0.8rem;line-height:1;}
+    .icon-btn:hover{border-color:var(--accent);color:var(--text);}
+    .icon-btn.del:hover{border-color:var(--p1);color:var(--p1);}
+
+    /* MODAL BACKDROP */
+    .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:400;
+      align-items:flex-end;justify-content:center;}
+    .modal-backdrop.open{display:flex;}
+    .modal-sheet{background:var(--surface);border:1px solid var(--border);border-radius:16px 16px 0 0;
+      width:100%;max-width:460px;max-height:92vh;overflow-y:auto;padding:20px 18px 32px;
+      padding-bottom:calc(32px + env(safe-area-inset-bottom,0px));}
+    .modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px;}
+    .modal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:900;
+      letter-spacing:3px;text-transform:uppercase;margin-bottom:18px;}
+
+    /* FORM */
+    .form-group{margin-bottom:14px;}
+    .form-label{display:block;font-size:0.65rem;font-weight:700;letter-spacing:2px;
+      text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+    .form-input,.form-select{width:100%;padding:10px 12px;background:var(--surface2);
+      border:1px solid var(--border);border-radius:var(--radius);color:var(--text);
+      font-family:'Rajdhani',sans-serif;font-size:0.9rem;outline:none;}
+    .form-input:focus,.form-select:focus{border-color:var(--accent);}
+    .form-select option{background:var(--surface2);}
+    .form-row{display:flex;gap:10px;}
+    .form-row .form-group{flex:1;}
+    .logo-preview{width:56px;height:56px;margin-top:10px;border:1px solid var(--border);
+      border-radius:var(--radius);display:flex;align-items:center;justify-content:center;
+      background:var(--surface2);overflow:hidden;}
+    .logo-preview img{width:100%;height:100%;object-fit:contain;}
+
+    /* RANGE INPUTS */
+    input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;
+      background:var(--border);border-radius:2px;outline:none;}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+      width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;}
+
+    .modal-actions{display:flex;gap:10px;margin-top:20px;}
+    .btn-cancel{flex:1;padding:13px;background:var(--surface2);border:1px solid var(--border);
+      border-radius:var(--radius);color:var(--muted);font-family:'Barlow Condensed',sans-serif;
+      font-size:0.78rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;}
+    .btn-save{flex:2;padding:13px;background:var(--accent);border:none;border-radius:var(--radius);
+      color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:900;
+      letter-spacing:3px;text-transform:uppercase;cursor:pointer;}
+
+    /* SECTION LABEL */
+    .section-label{font-size:0.62rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+      color:var(--muted);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+
+    .empty-state{text-align:center;padding:40px 20px;color:var(--muted);
+      font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;}
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" onclick="history.back()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 12H5M12 5l-7 7 7 7"/>
+    </svg>
+    Voltar
+  </button>
+  <span class="topbar-title">Admin</span>
+  <span class="topbar-badge" id="teamCountBadge">0 Times</span>
+</div>
+
+<div class="content">
+  <!-- DATA ACTIONS -->
+  <div class="section-label">Banco de Dados</div>
+  <div class="data-row">
+    <button class="btn-sm" onclick="exportJSON()">⬇ Exportar</button>
+    <label class="btn-sm" style="text-align:center;cursor:pointer;">
+      ⬆ Importar
+      <input type="file" accept=".json" onchange="importJSON(this)" style="display:none;">
+    </label>
+    <button class="btn-sm danger" onclick="resetDB()">↺ Restaurar</button>
+  </div>
+
+  <!-- ADD TEAM -->
+  <button class="btn-primary" onclick="openEditModal(null)">+ Adicionar Time</button>
+
+  <!-- SEARCH -->
+  <div class="search-wrap">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+    </svg>
+    <input type="text" class="search-input" placeholder="Buscar time..." id="searchInput" oninput="renderTeams()">
+  </div>
+
+  <!-- TEAM LIST -->
+  <div class="section-label" id="listLabel">0 times</div>
+  <div class="team-list" id="teamList"></div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-backdrop" id="editModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="editModalTitle">Editar Time</div>
+
+    <input type="hidden" id="editIdx">
+
+    <div class="form-group">
+      <label class="form-label">Nome do Clube</label>
+      <input type="text" class="form-input" id="fName" placeholder="Ex: Arsenal">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Liga</label>
+        <select class="form-select" id="fLeague">
+          <option value="Premier League">Premier League</option>
+          <option value="La Liga">La Liga</option>
+          <option value="Serie A">Serie A</option>
+          <option value="Bundesliga">Bundesliga</option>
+          <option value="Ligue 1">Ligue 1</option>
+          <option value="Eredivisie">Eredivisie</option>
+          <option value="Liga Portugal">Liga Portugal</option>
+          <option value="Saudi Pro League">Saudi Pro League</option>
+          <option value="MLS">MLS</option>
+          <option value="Argentina">Argentina</option>
+          <option value="Süper Lig">Süper Lig</option>
+          <option value="Super League CH">Super League CH</option>
+          <option value="Outra">Outra</option>
+        </select>
+      </div>
+      <div class="form-group" style="max-width:80px;">
+        <label class="form-label">Bandeira</label>
+        <input type="text" class="form-input" id="fFlag" placeholder="🏴" style="font-size:1.2rem;text-align:center;">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Ataque — <span id="fAVal">75</span></label>
+        <input type="range" id="fA" min="60" max="99" value="75" oninput="document.getElementById('fAVal').textContent=this.value;updateOVRPreview()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Meio — <span id="fMVal">75</span></label>
+        <input type="range" id="fM" min="60" max="99" value="75" oninput="document.getElementById('fMVal').textContent=this.value;updateOVRPreview()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Defesa — <span id="fDVal">75</span></label>
+        <input type="range" id="fD" min="60" max="99" value="75" oninput="document.getElementById('fDVal').textContent=this.value;updateOVRPreview()">
+      </div>
+    </div>
+    <div style="text-align:center;font-family:'Rajdhani';font-size:2rem;font-weight:700;color:var(--accent);margin:-4px 0 14px;">
+      OVR <span id="ovrPreview">75</span>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Jogador Estrela</label>
+      <input type="text" class="form-input" id="fStar" placeholder="Ex: Erling Haaland">
+    </div>
+    <div class="form-group">
+      <label class="form-label">URL da Logo</label>
+      <input type="text" class="form-input" id="fLogo" placeholder="https://... ou ./assets/logos/Arsenal.png" oninput="previewLogo()">
+      <div class="logo-preview" id="logoPreview">
+        <span style="font-size:1.5rem;color:var(--muted);">?</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Cor do Time (hex)</label>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input type="color" id="fColor" value="#c8102e" style="width:44px;height:36px;border:1px solid var(--border);border-radius:var(--radius);background:none;cursor:pointer;padding:2px;">
+        <input type="text" class="form-input" id="fColorHex" placeholder="#c8102e" style="flex:1;" oninput="syncColorPicker()">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEditModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveTeam()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="./js/admin.js"></script>
+</body>
+</html>
