@@ -34,6 +34,15 @@ async function boot() {
   }, 800);
 }
 
+function switchTab(tab) {
+  document.querySelectorAll('.tab-item').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.tab === tab));
+  ['home', 'arena', 'torneio'].forEach(t => {
+    document.getElementById(`tab-${t}`).style.display = t === tab ? 'block' : 'none';
+  });
+}
+window.switchTab = switchTab;
+
 function updateSummary() {
   document.getElementById('summaryTotal').textContent = teamsDB.length;
   const leagues = [...new Set(teamsDB.map(t => t.league||'Outra'))];
@@ -54,15 +63,13 @@ window.bootArena = function() {
   document.getElementById('roundNum').textContent = '0';
   matchHistory = [];
   document.getElementById('historyWrap').style.display = 'none';
-  document.getElementById('lobby').style.display = 'none';
-  document.getElementById('arena').style.display = 'block';
+  switchTab('arena');
   assignOwners();
   SoundSystem.init();
 };
 
 window.backToLobby = function() {
-  document.getElementById('arena').style.display = 'none';
-  document.getElementById('lobby').style.display = 'block';
+  switchTab('home');
 };
 
 window.addGoal = function(player) {
@@ -106,10 +113,9 @@ window.finishMatchAndSave = function() {
 window.dismissVictory = function() {
   document.getElementById('victoryOverlay').style.display = 'none';
   if(window._nextDest === 'tournament') {
-    document.getElementById('arena').style.display = 'none';
-    document.getElementById('tournament').style.display = 'block';
+    switchTab('torneio');
   } else {
-    backToLobby();
+    switchTab('home');
   }
 };
 
@@ -371,7 +377,7 @@ function updateCard(id, data, animate) {
   if(animate){oEl.classList.remove('pop');void oEl.offsetWidth;oEl.classList.add('pop');}
   
   const logoWrap=document.getElementById(`logoWrap${id}`);
-  renderLogo(logoWrap, null, data);
+  renderLogo(logoWrap, data);
 
   document.getElementById(`league${id}`).textContent=data.league||'';
   document.getElementById(`name${id}`).textContent=data.n;
@@ -525,8 +531,7 @@ if (isIOS && !isInStandaloneMode) {
 
 // ── NOVOS MENUS (TORNEIO E STATUS) ──
 window.openTournamentMenu = function() {
-  document.getElementById('lobby').style.display = 'none';
-  document.getElementById('tournament').style.display = 'block';
+  switchTab('torneio');
 };
 
 // ── BAN MENU ──
@@ -570,8 +575,7 @@ window.applyBansAndStart = function() {
 };
 
 window.backToLobbyFromTournament = function() {
-  document.getElementById('tournament').style.display = 'none';
-  document.getElementById('lobby').style.display = 'block';
+  switchTab('home');
 };
 
 window.openStatsMenu = function() {
@@ -635,11 +639,8 @@ window.playNextMatch = function() {
   // Abre arena modo torneio
   window.bootArena();
   
-  // Prepara o botão sortear (agora ele vai invocar finalizeTournamentMatch via startDraft modificado)
   const btn = document.getElementById('btnSortear');
   btn.innerHTML = `<span>⚡ Revelar Partida de Torneio</span>`;
-  
-  document.getElementById('tournament').style.display = 'none';
 };
 
 window.endTournament = function() {
