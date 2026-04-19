@@ -152,6 +152,48 @@ function sanitizeName(name) {
     .replace(/[^a-zA-Z0-9-]/g, '');
 }
 
+export const FM26_IDS = {
+  // Premier League
+  "Arsenal": 602, "Aston Villa": 603, "Bournemouth": 600, "Brentford": 617,
+  "Brighton": 618, "Burnley": 622, "Chelsea": 630, "Crystal Palace": 642,
+  "Everton": 650, "Fulham": 654, "Leeds United": 671, "Liverpool": 676,
+  "Man City": 679, "Man Utd": 680, "Newcastle": 688, "Nottm Forest": 692,
+  "Sunderland": 722, "Tottenham": 728, "West Ham": 735, "Wolves": 740,
+  // La Liga
+  "Alavés": 1688, "Athletic Bilbao": 1664, "Atlético Madrid": 1687,
+  "Barcelona": 1708, "Celta Vigo": 1724, "Elche": 1707, "Mallorca": 1726,
+  "Osasuna": 1685, "Real Betis": 1733, "Real Madrid": 1736,
+  "Real Sociedad": 1742, "Sevilla FC": 1759, "Valencia CF": 1775, "Villarreal CF": 1777,
+  // Bundesliga
+  "FC Köln": 916, "Augsburg": 2238, "Bayer Leverkusen": 901, "Bayern München": 915,
+  "Borussia Dortmund": 907, "M'gladbach": 908, "Eintracht Frankfurt": 912,
+  "Mainz 05": 918, "RB Leipzig": 91013388, "Stuttgart": 960, "Wolfsburg": 961,
+  // Serie A
+  "Atalanta": 1106, "Bologna": 1111, "Cagliari": 1114, "Como": 1123,
+  "Cremonese": 1125, "Fiorentina": 1129, "Genoa": 1132, "Inter Milan": 1135,
+  "Juventus": 1139, "Lazio": 1140, "Lecce": 1141, "Milan": 1099,
+  "Napoli": 1150, "Parma": 1156, "Pisa": 2215, "Roma": 1100,
+  "Sassuolo": 3800256, "Torino": 1174, "Udinese": 1178, "Verona": 2201,
+  // Ligue 1
+  "Lille OSC": 858, "Lyon": 865, "Marseille": 866, "AS Monaco": 826,
+  "Paris FC": 867, "PSG": 868, "Strasbourg": 872,
+  // Eredivisie
+  "Feyenoord": 2000180086, "AZ Alkmaar": 2000263050, "PSV Eindhoven": 37087233,
+  // Liga Portugal
+  "Benfica": 1487, "Braga": 1488, "Porto": 1478, "Sporting CP": 1489,
+  // Saudi Pro League
+  "Al-Ahli": 102850, "Al-Hilal": 102852, "Al-Ittihad": 106063, "Al Nassr": 102862,
+  // MLS
+  "Inter Miami": 72052048, "LA Galaxy": 1907, "LAFC": 72049313, "Whitecaps FC": 4400014,
+  // Argentina
+  "Boca Juniors": 82, "Estudiantes": 85, "Racing Club": 93,
+  "River Plate": 94, "Rosario Central": 95,
+  // Super League CH
+  "Basel": 1849, "Young Boys": 1847,
+  // Süper Lig
+  "Beşiktaş": 1866, "Fenerbahçe": 1870, "Galatasaray": 1871,
+};
+
 export function getLogoUrl(team) {
   if (team.logo) return team.logo;
   if (LOGO_OVERRIDES[team.n]) return LOGO_OVERRIDES[team.n];
@@ -159,12 +201,13 @@ export function getLogoUrl(team) {
 }
 
 // Renders logo with fallback chain:
-//   team.logo → ./assets/logos/<name>.png → Sofascore CDN → emoji
+//   team.logo → ./assets/logos/<name>.png → ./assets/logos/<fm26-id>.png → Sofascore CDN → emoji
 export function renderLogo(wrapEl, team) {
   wrapEl.innerHTML = '';
   const urls = [];
   if (team.logo) urls.push(team.logo);
   urls.push(`./assets/logos/${sanitizeName(team.n)}.png`);
+  if (FM26_IDS[team.n]) urls.push(`./assets/logos/${FM26_IDS[team.n]}.png`);
   if (LOGO_OVERRIDES[team.n]) urls.push(LOGO_OVERRIDES[team.n]);
 
   if (urls.length === 0) {
