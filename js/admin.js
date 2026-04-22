@@ -75,6 +75,8 @@ window.openEditModal = function(idx) {
   document.getElementById('fMVal').textContent = t ? t.m : 75;
   document.getElementById('fDVal').textContent = t ? t.d : 75;
   document.getElementById('fStar').value = t ? (t.s || '') : '';
+  const pidEl = document.getElementById('fPid');
+  if (pidEl) pidEl.value = t && t.pid != null && t.pid !== '' ? String(t.pid) : '';
   document.getElementById('fLogo').value = t ? (t.logo || '') : '';
   const col = t ? (t.c || '#c8102e') : '#c8102e';
   document.getElementById('fColor').value = col;
@@ -121,13 +123,17 @@ window.saveTeam = function() {
   const name = document.getElementById('fName').value.trim();
   if (!name) { alert('Nome do clube é obrigatório.'); return; }
 
+  const idx = document.getElementById('editIdx').value;
+  const prev = idx !== '' ? { ...teams[parseInt(idx, 10)] } : {};
+
   const t = {
+    ...prev,
     n: name,
     league: document.getElementById('fLeague').value,
     f: document.getElementById('fFlag').value.trim(),
-    a: parseInt(document.getElementById('fA').value),
-    m: parseInt(document.getElementById('fM').value),
-    d: parseInt(document.getElementById('fD').value),
+    a: parseInt(document.getElementById('fA').value, 10),
+    m: parseInt(document.getElementById('fM').value, 10),
+    d: parseInt(document.getElementById('fD').value, 10),
     s: document.getElementById('fStar').value.trim() || undefined,
     c: document.getElementById('fColorHex').value.trim() || document.getElementById('fColor').value,
     logo: document.getElementById('fLogo').value.trim() || null,
@@ -135,11 +141,19 @@ window.saveTeam = function() {
   if (!t.s) delete t.s;
   if (!t.logo) delete t.logo;
 
-  const idx = document.getElementById('editIdx').value;
+  const pidRaw = document.getElementById('fPid')?.value.trim();
+  if (pidRaw) {
+    const n = parseInt(pidRaw, 10);
+    if (!Number.isNaN(n)) t.pid = n;
+    else delete t.pid;
+  } else {
+    delete t.pid;
+  }
+
   if (idx === '') {
     teams.push(t);
   } else {
-    teams[parseInt(idx)] = t;
+    teams[parseInt(idx, 10)] = t;
   }
 
   save();
