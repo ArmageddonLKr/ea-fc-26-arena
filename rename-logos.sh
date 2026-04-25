@@ -88,6 +88,8 @@ cp 872.png Strasbourg.png
 cp 2000180086.png Feyenoord.png
 cp 2000263050.png AZ-Alkmaar.png
 cp 37087233.png PSV-Eindhoven.png
+cp 992.png Ajax.png
+
 
 # Liga Portugal
 cp 1487.png Benfica.png
