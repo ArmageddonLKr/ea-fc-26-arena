@@ -22,48 +22,67 @@ const SFX = (() => {
     } catch(e) {}
   }
 
-  // freq, delay(s), dur(s), vol(0-1), square wave?
-  function play(freq, delay, dur, vol, square) {
+  // type: 'bell' (warm harmonics + exponential decay), 'warm' (fundamental + gentle 2nd), 'sine' (clean)
+  function play(freq, delay, dur, vol, type) {
     const a = init(); if (!a) return;
     if (a.state === 'suspended') a.resume().catch(() => {});
     try {
       const sr  = a.sampleRate;
-      const len = Math.max(Math.floor(sr * 0.01), Math.floor(sr * dur));
+      const len = Math.max(Math.floor(sr * 0.04), Math.floor(sr * (dur || 0.3)));
       const buf = a.createBuffer(1, len, sr);
       const d   = buf.getChannelData(0);
-      const atk = Math.min(len >> 2, Math.floor(sr * 0.008));
-      const rel = Math.min(len >> 1, Math.floor(sr * 0.055));
+      const atkN = Math.min(len, Math.floor(sr * 0.004));
+      // Exponential decay: bell fades fast, warm fades medium
+      const k = type === 'bell' ? 7 : type === 'warm' ? 4.5 : 5;
       for (let i = 0; i < len; i++) {
-        const env   = i < atk ? i / atk : i > len - rel ? (len - i) / rel : 1;
-        const phase = (2 * Math.PI * freq * i) / sr;
-        // square wave usa ±1 (não ±0.4) — volume controlado exclusivamente por vol
-        const wave  = square ? (Math.sin(phase) >= 0 ? 1 : -1) : Math.sin(phase);
+        const t  = i / sr;
+        const atk = i < atkN ? i / atkN : 1;
+        const env = atk * Math.exp(-k * t);
+        const ph  = 2 * Math.PI * freq * t;
+        let wave;
+        if (type === 'bell') {
+          // Bell: fundamental + 2nd harmonic that decays twice as fast = bright chime
+          wave = Math.sin(ph) * 0.72 + Math.sin(ph * 2) * Math.exp(-6 * t) * 0.28;
+        } else if (type === 'warm') {
+          // Warm: fundamental + soft 2nd = rich but gentle
+          wave = Math.sin(ph) * 0.84 + Math.sin(ph * 2) * 0.16;
+        } else {
+          wave = Math.sin(ph);
+        }
         d[i] = wave * vol * env;
       }
       const src = a.createBufferSource();
-      src.buffer = buf;
-      src.connect(a.destination);
+      src.buffer = buf; src.connect(a.destination);
       src.start(a.currentTime + 0.05 + (delay || 0));
     } catch(e) {}
   }
 
+  // C major pentatonic for xylophone-like tick during raffle
+  const _penta = [523, 587, 659, 784, 880, 1047, 1175];
+
   return {
     unlock,
-    tick()    { play(500 + Math.random() * 600, 0, 0.08, 0.18, true); },
-    reveal()  {
-      play(523,  0,    0.20, 0.32, false);
-      play(659,  0.13, 0.20, 0.30, false);
-      play(784,  0.27, 0.20, 0.33, false);
-      play(1047, 0.43, 0.30, 0.36, false);
+    tick() {
+      const f = _penta[Math.floor(Math.random() * _penta.length)];
+      play(f, 0, 0.22, 0.20, 'bell');
     },
-    goal()    {
-      play(660,  0,    0.09, 0.42, true);
-      play(880,  0.10, 0.09, 0.38, true);
-      play(1100, 0.21, 0.26, 0.35, false);
+    reveal() {
+      // C4-E4-G4-C5 — major chord arpeggio, harp-like
+      play(523,  0,    0.45, 0.28, 'warm');
+      play(659,  0.09, 0.45, 0.26, 'warm');
+      play(784,  0.18, 0.45, 0.28, 'warm');
+      play(1047, 0.29, 0.55, 0.30, 'bell');
+    },
+    goal() {
+      // E4-G4-B4 ascending fanfare — no harsh edges
+      play(659,  0,    0.35, 0.32, 'warm');
+      play(784,  0.09, 0.35, 0.30, 'warm');
+      play(988,  0.20, 0.50, 0.33, 'bell');
     },
     victory() {
-      [523, 659, 784, 880, 1047, 1319].forEach((f, i) =>
-        play(f, i * 0.17, 0.30, Math.max(0.16, 0.38 - i * 0.03), false)
+      // C4-E4-G4-C5-E5-G5 — full triumphant arpeggio
+      [523, 659, 784, 1047, 1319, 1568].forEach((f, i) =>
+        play(f, i * 0.11, 0.55, Math.max(0.18, 0.33 - i * 0.02), i >= 3 ? 'bell' : 'warm')
       );
     },
   };
@@ -84,12 +103,72 @@ const LEAGUE_IDS = {
   'MLS':               40,
   'Argentina':         102421,
   'Süper Lig':         130286,
-  // Saudi Pro League sem ID fornecido — sem imagem por enquanto
 };
 
 function getLeagueLogoUrl(leagueName) {
   const id = LEAGUE_IDS[leagueName];
   return id ? `./assets/leagues/${id}.png` : null;
+}
+
+const LEAGUE_LIST = [
+  { value: 'all',              label: 'Todos os Times',  emoji: '🌍',  id: null },
+  { value: 'Premier League',   label: 'Premier League',  emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', id: 11 },
+  { value: 'La Liga',          label: 'La Liga',         emoji: '🇪🇸', id: 67 },
+  { value: 'Serie A',          label: 'Serie A',         emoji: '🇮🇹', id: 32 },
+  { value: 'Bundesliga',       label: 'Bundesliga',      emoji: '🇩🇪', id: 22 },
+  { value: 'Ligue 1',          label: 'Ligue 1',         emoji: '🇫🇷', id: 16 },
+  { value: 'Eredivisie',       label: 'Eredivisie',      emoji: '🇳🇱', id: 29 },
+  { value: 'Liga Portugal',    label: 'Liga Portugal',   emoji: '🇵🇹', id: 60 },
+  { value: 'Saudi Pro League', label: 'Saudi Pro',       emoji: '🇸🇦', id: null },
+  { value: 'MLS',              label: 'MLS',             emoji: '🇺🇸', id: 40 },
+  { value: 'Argentina',        label: 'Argentina',       emoji: '🇦🇷', id: 102421 },
+  { value: 'Süper Lig',        label: 'Süper Lig',       emoji: '🇹🇷', id: 130286 },
+];
+
+function renderLeagueFilter() {
+  const grid = document.getElementById('leagueFilterGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  LEAGUE_LIST.forEach(league => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    const isAll = league.value === 'all';
+    const isActive = cfg.leagueFilter === league.value;
+    chip.className = 'league-chip' + (isAll ? ' league-chip-all' : '') + (isActive ? ' active' : '');
+    chip.onclick = () => selectLeague(league.value);
+
+    if (league.id) {
+      const img = document.createElement('img');
+      img.src = `./assets/leagues/${league.id}.png`;
+      img.alt = league.label;
+      const fallback = document.createElement('span');
+      fallback.className = 'league-chip-emoji';
+      fallback.textContent = league.emoji;
+      fallback.style.display = 'none';
+      img.onerror = function() { this.style.display = 'none'; fallback.style.display = ''; };
+      chip.appendChild(img);
+      chip.appendChild(fallback);
+    } else {
+      const em = document.createElement('span');
+      em.className = 'league-chip-emoji';
+      em.textContent = league.emoji;
+      chip.appendChild(em);
+    }
+
+    const lbl = document.createElement('span');
+    lbl.className = 'league-chip-label';
+    lbl.textContent = league.label;
+    chip.appendChild(lbl);
+
+    grid.appendChild(chip);
+  });
+}
+
+function selectLeague(value) {
+  cfg.leagueFilter = value;
+  saveSettings();
+  rebuildPool();
+  renderLeagueFilter();
 }
 
 /* ===== ESTADO GLOBAL ===== */
@@ -244,7 +323,7 @@ async function init() {
 
     // Aplica settings na UI
     try {
-      document.getElementById('leagueFilter').value = cfg.leagueFilter;
+      renderLeagueFilter();
       document.getElementById('leagueModeToggle').checked = cfg.leagueMode;
       document.getElementById('elite80Toggle').checked = cfg.elite80;
       document.getElementById('handicapToggle').checked = cfg.handicap;
@@ -874,8 +953,7 @@ function clearStats() {
 
 /* ===== FILTROS / CONFIG ===== */
 function applyLeagueFilter() {
-  cfg.leagueFilter = document.getElementById('leagueFilter').value;
-  saveSettings(); rebuildPool();
+  // Delegated to selectLeague() — kept for backwards compat
 }
 
 function toggleLeagueMode() {
