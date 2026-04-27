@@ -2,79 +2,88 @@
 // Motor principal: sorteio, placar, torneio, estatísticas
 
 /* ===== MOTOR DE SOM (SFX) ===== */
+// Usa AudioBufferSourceNode com PCM sintético — mais confiável que OscillatorNode
+// em iOS/Safari/PWA standalone. Volume segue o volume de mídia do dispositivo.
 const SFX = (() => {
-  let _ctx = null;
+  let _ac = null;
 
-  function getCtx() {
-    if (!_ctx) {
-      try { _ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+  function ac() {
+    if (!_ac) {
+      try { _ac = new (window.AudioContext || window.webkitAudioContext)(); }
       catch(e) { return null; }
     }
-    return _ctx;
+    if (_ac.state !== 'running') _ac.resume().catch(() => {});
+    return _ac;
   }
 
-  // Toca uma nota. delay = offset em segundos a partir de agora.
-  // Sempre agenda 80ms no futuro para garantir que o contexto está running.
-  function note(freq, delay, duration, vol = 0.35, shape = 'sine') {
-    const ac = getCtx(); if (!ac) return;
+  // Gera PCM sintético para um tom com envelope attack/release
+  function makeBuf(freq, dur, vol, square) {
+    const a = ac(); if (!a) return null;
     try {
-      const t    = ac.currentTime + 0.08 + delay;
-      const osc  = ac.createOscillator();
-      const gain = ac.createGain();
-      osc.type = shape;
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(vol, t + 0.008);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
-      osc.connect(gain);
-      gain.connect(ac.destination);
-      osc.start(t);
-      osc.stop(t + duration + 0.02);
-    } catch(e) {}
+      const sr  = a.sampleRate;
+      const len = Math.max(1, Math.floor(sr * dur));
+      const b   = a.createBuffer(1, len, sr);
+      const d   = b.getChannelData(0);
+      const atk = Math.floor(sr * Math.min(0.008, dur * 0.1));
+      const rel = Math.floor(sr * Math.min(0.05,  dur * 0.3));
+      for (let i = 0; i < len; i++) {
+        const env = i < atk
+          ? i / atk
+          : i > len - rel
+            ? (len - i) / rel
+            : 1;
+        const phase = (2 * Math.PI * freq * i) / sr;
+        const wave  = square
+          ? (Math.sin(phase) >= 0 ? 0.4 : -0.4)
+          : Math.sin(phase);
+        d[i] = wave * vol * env;
+      }
+      return b;
+    } catch(e) { return null; }
   }
 
-  // Desbloqueia o AudioContext com buffer silencioso (obrigatório no iOS/Safari)
-  function unlock() {
-    const ac = getCtx(); if (!ac) return;
+  function play(b, delay) {
+    const a = ac(); if (!a || !b) return;
     try {
-      const buf = ac.createBuffer(1, 1, 22050);
-      const src = ac.createBufferSource();
-      src.buffer = buf;
-      src.connect(ac.destination);
-      src.start(0);
+      const src = a.createBufferSource();
+      src.buffer = b;
+      src.connect(a.destination);
+      src.start(a.currentTime + 0.04 + (delay || 0));
     } catch(e) {}
-    if (ac.state === 'suspended') ac.resume().catch(() => {});
   }
 
   return {
-    unlock,
-
-    tick() {
-      note(500 + Math.random() * 700, 0, 0.07, 0.09, 'square');
+    unlock() {
+      const a = ac(); if (!a) return;
+      // Buffer silencioso de 100ms — desbloqueia iOS/Safari corretamente
+      try {
+        const b   = a.createBuffer(1, Math.floor(a.sampleRate * 0.1), a.sampleRate);
+        const src = a.createBufferSource();
+        src.buffer = b;
+        src.connect(a.destination);
+        src.start(a.currentTime);
+      } catch(e) {}
     },
 
-    reveal() {
-      note(523,  0,    0.18, 0.32);
-      note(659,  0.13, 0.18, 0.30);
-      note(784,  0.26, 0.18, 0.33);
-      note(1047, 0.42, 0.32, 0.35);
+    tick()    { play(makeBuf(500 + Math.random() * 600, 0.07, 0.07, true));              },
+    reveal()  {
+      [[523,0],[659,0.13],[784,0.26],[1047,0.42]].forEach(([f,d]) =>
+        play(makeBuf(f, 0.18, 0.33, false), d)
+      );
     },
-
-    goal() {
-      note(660,  0,    0.09, 0.55, 'square');
-      note(880,  0.10, 0.09, 0.50, 'square');
-      note(1100, 0.20, 0.28, 0.42, 'sine');
+    goal()    {
+      play(makeBuf(660,  0.07, 0.50, true));
+      play(makeBuf(880,  0.07, 0.45, true), 0.10);
+      play(makeBuf(1100, 0.22, 0.40, false), 0.20);
     },
-
     victory() {
-      [523, 659, 784, 880, 1047, 1319].forEach((f, i) => {
-        note(f, i * 0.17, 0.32, Math.max(0.15, 0.40 - i * 0.03));
-      });
+      [523,659,784,880,1047,1319].forEach((f, i) =>
+        play(makeBuf(f, 0.28, Math.max(0.15, 0.38 - i * 0.03), false), i * 0.17)
+      );
     },
   };
 })();
 
-// Desbloqueia no primeiro toque/clique — mantém listener para reconectar se suspenso
 document.addEventListener('touchstart', () => SFX.unlock(), { passive: true });
 document.addEventListener('click',      () => SFX.unlock(), { passive: true });
 
