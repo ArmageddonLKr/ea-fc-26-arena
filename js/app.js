@@ -5,75 +5,78 @@
 const SFX = (() => {
   let _ctx = null;
 
-  function ctx() {
+  function getCtx() {
     if (!_ctx) {
       try { _ctx = new (window.AudioContext || window.webkitAudioContext)(); }
       catch(e) { return null; }
     }
-    if (_ctx.state === 'suspended') _ctx.resume().catch(() => {});
     return _ctx;
   }
 
-  function note(ac, freq, startTime, duration, vol = 0.28, shape = 'sine') {
+  // Toca uma nota. delay = offset em segundos a partir de agora.
+  // Sempre agenda 80ms no futuro para garantir que o contexto está running.
+  function note(freq, delay, duration, vol = 0.35, shape = 'sine') {
+    const ac = getCtx(); if (!ac) return;
     try {
+      const t    = ac.currentTime + 0.08 + delay;
       const osc  = ac.createOscillator();
       const gain = ac.createGain();
       osc.type = shape;
-      osc.frequency.setValueAtTime(freq, startTime);
-      gain.gain.setValueAtTime(0.001, startTime);
-      gain.gain.linearRampToValueAtTime(vol, startTime + 0.012);
-      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(vol, t + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
       osc.connect(gain);
       gain.connect(ac.destination);
-      osc.start(startTime);
-      osc.stop(startTime + duration + 0.05);
+      osc.start(t);
+      osc.stop(t + duration + 0.02);
     } catch(e) {}
   }
 
+  // Desbloqueia o AudioContext com buffer silencioso (obrigatório no iOS/Safari)
+  function unlock() {
+    const ac = getCtx(); if (!ac) return;
+    try {
+      const buf = ac.createBuffer(1, 1, 22050);
+      const src = ac.createBufferSource();
+      src.buffer = buf;
+      src.connect(ac.destination);
+      src.start(0);
+    } catch(e) {}
+    if (ac.state === 'suspended') ac.resume().catch(() => {});
+  }
+
   return {
-    unlock() { ctx(); },
+    unlock,
 
-    // Tick do slot machine durante o sorteio
     tick() {
-      const ac = ctx(); if (!ac) return;
-      note(ac, 480 + Math.random() * 640, ac.currentTime, 0.04, 0.065, 'square');
+      note(500 + Math.random() * 700, 0, 0.07, 0.09, 'square');
     },
 
-    // Revelação das equipes sorteadas (fanfarra ascendente)
     reveal() {
-      const ac = ctx(); if (!ac) return;
-      const t = ac.currentTime;
-      note(ac, 523,  t,        0.14, 0.28);
-      note(ac, 659,  t + 0.12, 0.14, 0.27);
-      note(ac, 784,  t + 0.24, 0.14, 0.30);
-      note(ac, 1047, t + 0.38, 0.28, 0.32);
+      note(523,  0,    0.18, 0.32);
+      note(659,  0.13, 0.18, 0.30);
+      note(784,  0.26, 0.18, 0.33);
+      note(1047, 0.42, 0.32, 0.35);
     },
 
-    // Gol marcado
     goal() {
-      const ac = ctx(); if (!ac) return;
-      const t = ac.currentTime;
-      note(ac, 660,  t,        0.06, 0.48, 'square');
-      note(ac, 880,  t + 0.07, 0.06, 0.42, 'square');
-      note(ac, 1100, t + 0.14, 0.22, 0.36, 'sine');
+      note(660,  0,    0.09, 0.55, 'square');
+      note(880,  0.10, 0.09, 0.50, 'square');
+      note(1100, 0.20, 0.28, 0.42, 'sine');
     },
 
-    // Fanfarra de vitória
     victory() {
-      const ac = ctx(); if (!ac) return;
-      const t = ac.currentTime;
-      const melody = [523, 659, 784, 880, 1047, 1319];
-      melody.forEach((f, i) => {
-        note(ac, f, t + i * 0.16, 0.28 + i * 0.018, Math.max(0.12, 0.38 - i * 0.038));
+      [523, 659, 784, 880, 1047, 1319].forEach((f, i) => {
+        note(f, i * 0.17, 0.32, Math.max(0.15, 0.40 - i * 0.03));
       });
     },
   };
 })();
 
-// Desbloqueia o AudioContext no primeiro toque (obrigatório para iOS)
-['touchstart', 'click'].forEach(ev =>
-  document.addEventListener(ev, () => SFX.unlock(), { once: true, passive: true })
-);
+// Desbloqueia no primeiro toque/clique — mantém listener para reconectar se suspenso
+document.addEventListener('touchstart', () => SFX.unlock(), { passive: true });
+document.addEventListener('click',      () => SFX.unlock(), { passive: true });
 
 /* ===== ESTADO GLOBAL ===== */
 let teams       = [];        // banco completo
