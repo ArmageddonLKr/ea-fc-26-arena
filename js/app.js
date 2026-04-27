@@ -3,80 +3,94 @@
 
 /* ===== MOTOR DE SOM (SFX) ===== */
 const SFX = (() => {
-  let _ctx = null;
+  let _ac = null;
 
-  function getCtx() {
-    if (!_ctx) {
-      try { _ctx = new (window.AudioContext || window.webkitAudioContext)(); }
-      catch(e) { return null; }
-    }
-    return _ctx;
+  function init() {
+    if (_ac) return _ac;
+    try { _ac = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e) { return null; }
+    return _ac;
   }
 
-  // Toca uma nota. delay = offset em segundos a partir de agora.
-  // Sempre agenda 80ms no futuro para garantir que o contexto está running.
-  function note(freq, delay, duration, vol = 0.35, shape = 'sine') {
-    const ac = getCtx(); if (!ac) return;
-    try {
-      const t    = ac.currentTime + 0.08 + delay;
-      const osc  = ac.createOscillator();
-      const gain = ac.createGain();
-      osc.type = shape;
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(vol, t + 0.008);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
-      osc.connect(gain);
-      gain.connect(ac.destination);
-      osc.start(t);
-      osc.stop(t + duration + 0.02);
-    } catch(e) {}
-  }
-
-  // Desbloqueia o AudioContext com buffer silencioso (obrigatório no iOS/Safari)
   function unlock() {
-    const ac = getCtx(); if (!ac) return;
+    const a = init(); if (!a) return;
+    if (a.state === 'suspended') a.resume().catch(() => {});
     try {
-      const buf = ac.createBuffer(1, 1, 22050);
-      const src = ac.createBufferSource();
-      src.buffer = buf;
-      src.connect(ac.destination);
-      src.start(0);
+      const b = a.createBuffer(1, a.sampleRate >> 2, a.sampleRate);
+      const s = a.createBufferSource();
+      s.buffer = b; s.connect(a.destination); s.start(a.currentTime);
     } catch(e) {}
-    if (ac.state === 'suspended') ac.resume().catch(() => {});
+  }
+
+  // freq, delay(s), dur(s), vol(0-1), square wave?
+  function play(freq, delay, dur, vol, square) {
+    const a = init(); if (!a) return;
+    if (a.state === 'suspended') a.resume().catch(() => {});
+    try {
+      const sr  = a.sampleRate;
+      const len = Math.max(Math.floor(sr * 0.01), Math.floor(sr * dur));
+      const buf = a.createBuffer(1, len, sr);
+      const d   = buf.getChannelData(0);
+      const atk = Math.min(len >> 2, Math.floor(sr * 0.008));
+      const rel = Math.min(len >> 1, Math.floor(sr * 0.055));
+      for (let i = 0; i < len; i++) {
+        const env   = i < atk ? i / atk : i > len - rel ? (len - i) / rel : 1;
+        const phase = (2 * Math.PI * freq * i) / sr;
+        // square wave usa ±1 (não ±0.4) — volume controlado exclusivamente por vol
+        const wave  = square ? (Math.sin(phase) >= 0 ? 1 : -1) : Math.sin(phase);
+        d[i] = wave * vol * env;
+      }
+      const src = a.createBufferSource();
+      src.buffer = buf;
+      src.connect(a.destination);
+      src.start(a.currentTime + 0.05 + (delay || 0));
+    } catch(e) {}
   }
 
   return {
     unlock,
-
-    tick() {
-      note(500 + Math.random() * 700, 0, 0.07, 0.09, 'square');
+    tick()    { play(500 + Math.random() * 600, 0, 0.08, 0.18, true); },
+    reveal()  {
+      play(523,  0,    0.20, 0.32, false);
+      play(659,  0.13, 0.20, 0.30, false);
+      play(784,  0.27, 0.20, 0.33, false);
+      play(1047, 0.43, 0.30, 0.36, false);
     },
-
-    reveal() {
-      note(523,  0,    0.18, 0.32);
-      note(659,  0.13, 0.18, 0.30);
-      note(784,  0.26, 0.18, 0.33);
-      note(1047, 0.42, 0.32, 0.35);
+    goal()    {
+      play(660,  0,    0.09, 0.42, true);
+      play(880,  0.10, 0.09, 0.38, true);
+      play(1100, 0.21, 0.26, 0.35, false);
     },
-
-    goal() {
-      note(660,  0,    0.09, 0.55, 'square');
-      note(880,  0.10, 0.09, 0.50, 'square');
-      note(1100, 0.20, 0.28, 0.42, 'sine');
-    },
-
     victory() {
-      [523, 659, 784, 880, 1047, 1319].forEach((f, i) => {
-        note(f, i * 0.17, 0.32, Math.max(0.15, 0.40 - i * 0.03));
-      });
+      [523, 659, 784, 880, 1047, 1319].forEach((f, i) =>
+        play(f, i * 0.17, 0.30, Math.max(0.16, 0.38 - i * 0.03), false)
+      );
     },
   };
 })();
 
-// Desbloqueia no primeiro toque/clique — mantém listener para reconectar se suspenso
 document.addEventListener('touchstart', () => SFX.unlock(), { passive: true });
 document.addEventListener('click',      () => SFX.unlock(), { passive: true });
+
+/* ===== MAPA DE LIGAS (ID → imagem em assets/leagues/<id>.png) ===== */
+const LEAGUE_IDS = {
+  'Premier League':    11,
+  'La Liga':           67,
+  'Serie A':           32,
+  'Bundesliga':        22,
+  'Ligue 1':           16,
+  'Eredivisie':        29,
+  'Liga Portugal':     60,
+  'MLS':               40,
+  'Argentina':         102421,
+  'Süper Lig':         130286,
+  // Saudi Pro League sem ID fornecido — sem imagem por enquanto
+};
+
+function getLeagueLogoUrl(leagueName) {
+  const id = LEAGUE_IDS[leagueName];
+  return id ? `./assets/leagues/${id}.png` : null;
+}
 
 /* ===== ESTADO GLOBAL ===== */
 let teams       = [];        // banco completo
@@ -302,6 +316,7 @@ function updateScoreNames() {
 
 /* ===== PLACAR ===== */
 function addGoal(side) {
+  SFX.unlock(); // garante contexto ativo no gesto
   score[side]++;
   document.getElementById('scoreNum1').textContent = score.a;
   document.getElementById('scoreNum2').textContent = score.b;
@@ -354,6 +369,7 @@ function _startSession() {
 
 /* ===== DRAFT ===== */
 async function startDraft() {
+  SFX.unlock(); // garante contexto ativo no gesto do botão
   const available = pool.filter(t => !bannedTeams.has(t.n));
   if (available.length < 2) {
     showToast('Pool insuficiente. Desbane times ou ajuste filtros.', 'warn'); return;
@@ -459,7 +475,12 @@ function renderCard(num, team, owner) {
 
   // Liga + Nome
   const leagueEl = document.getElementById(`league${num}`);
-  if (leagueEl) leagueEl.textContent = `${team.f||''} ${team.league}`;
+  if (leagueEl) {
+    const lgUrl = getLeagueLogoUrl(team.league);
+    leagueEl.innerHTML = lgUrl
+      ? `<img class="league-logo" src="${lgUrl}" alt="" onerror="this.remove()">${team.f||''} ${team.league}`
+      : `${team.f||''} ${team.league}`;
+  }
   const nameEl = document.getElementById(`name${num}`);
   if (nameEl) nameEl.textContent = team.n;
 

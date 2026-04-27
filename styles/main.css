@@ -675,6 +675,17 @@ button, a, [role="button"] {
   text-transform: uppercase;
   color: var(--muted);
   margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.league-logo {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
 }
 
 .team-name {
