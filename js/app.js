@@ -22,69 +22,74 @@ const SFX = (() => {
     } catch(e) {}
   }
 
-  // TICK: Karplus-Strong — corda de guitarra dedilhada, pitch via playbackRate
+  // TICK: UI digital blip — sub thump sintético + ping eletrônico + glitch shimmer HP
   function buildTick() {
     const a = ctx(); if (!a) return null;
-    const sr   = a.sampleRate;
-    const freq = 220;                         // A3 — playbackRate varia o pitch
-    const N    = Math.round(sr / freq);       // comprimento do anel = 1 período
-    const len  = Math.floor(sr * 0.30);      // 300ms — sustain natural da corda
-    const buf  = a.createBuffer(1, len, sr);
-    const d    = buf.getChannelData(0);
+    const sr    = a.sampleRate;
+    const len   = Math.floor(sr * 0.055);    // 55ms — UI blip compacto
+    const buf   = a.createBuffer(1, len, sr);
+    const d     = buf.getChannelData(0);
+    const atkN  = Math.floor(sr * 0.0005);   // 0.5ms — ataque ultra-crisp
+    const shimN = Math.floor(sr * 0.018);    // 18ms janela de shimmer
 
-    // Ring buffer inicializado com ruído branco (dedilhada da corda)
-    const ring = new Float32Array(N);
-    for (let i = 0; i < N; i++) ring[i] = Math.random() * 2 - 1;
-
-    // Algoritmo Karplus-Strong: média de amostras adjacentes com damping
-    let pos = 0;
+    let shimPrev = 0;
     for (let i = 0; i < len; i++) {
-      const next = (pos + 1) % N;
-      d[i]       = ring[pos] * 0.88;
-      ring[pos]  = (ring[pos] + ring[next]) * 0.5 * 0.9968; // damping → decay
-      pos        = next;
+      const t   = i / sr;
+      const atk = i < atkN ? i / atkN : 1;
+      // Sub thump sintético (72Hz)
+      const sub  = Math.sin(2 * Math.PI * 72   * t) * 0.42 * Math.exp(-55  * t);
+      // Digital ping — dois parciais high-freq que definem o caráter "eSports UI"
+      const ping = Math.sin(2 * Math.PI * 2400 * t) * 0.28 * Math.exp(-130 * t)
+                 + Math.sin(2 * Math.PI * 4100 * t) * 0.16 * Math.exp(-210 * t);
+      // Glitch shimmer: ruído passado por filtro one-pole high-pass (y = x - x_prev)
+      let shim = 0;
+      if (i < shimN) {
+        const raw = Math.random() * 2 - 1;
+        shim = (raw - shimPrev) * Math.exp(-i / (shimN * 0.30)) * 0.14;
+        shimPrev = raw;
+      }
+      d[i] = Math.tanh((sub + ping + shim) * 1.10 * atk) * 0.82;
     }
     return buf;
   }
 
-  // IMPACT: power chord E distorcido — root 82Hz + quinta + oitava + sub, amp overdriven
+  // IMPACT: sub-bass hit cinematico (45Hz) + glitch shimmer eletrônico — estilo EA FC menu
   function buildImpact(weight, echo) {
     const a = ctx(); if (!a) return null;
-    const sr   = a.sampleRate;
-    const dry  = Math.floor(sr * 0.55);
-    const tot  = Math.floor(sr * (echo > 0 ? 0.95 : 0.55));
-    const buf  = a.createBuffer(1, tot, sr);
-    const d    = buf.getChannelData(0);
+    const sr     = a.sampleRate;
+    const dry    = Math.floor(sr * 0.50);
+    const tot    = Math.floor(sr * (echo > 0 ? 0.90 : 0.50));
+    const buf    = a.createBuffer(1, tot, sr);
+    const d      = buf.getChannelData(0);
+    const atkN   = Math.floor(sr * 0.002);   // 2ms attack — punch cinematico
+    const shimN  = Math.floor(sr * 0.070);   // 70ms janela de shimmer
+    const shimSt = Math.floor(sr * 0.003);   // shimmer entra 3ms após o hit
 
-    // Power chord em E: sub-oitava, root, quinta, oitava, harmônico de quinta
-    const root  = 82.41; // E2
-    const parts = [
-      { f: root * 0.5, amp: 0.35, dk: 2.8 }, // E1 — sub
-      { f: root,       amp: 0.60, dk: 3.5 }, // E2 — root
-      { f: root * 1.5, amp: 0.45, dk: 4.5 }, // B2 — quinta perfeita
-      { f: root * 2,   amp: 0.30, dk: 5.5 }, // E3 — oitava
-      { f: root * 3,   amp: 0.12, dk: 9.0 }, // B3 — harmônico de quinta
-    ];
-    const atkN = Math.floor(sr * 0.003); // 3ms attack — pick attack da guitarra
+    let shimPrev = 0;
     for (let i = 0; i < dry; i++) {
       const t   = i / sr;
       const atk = i < atkN ? i / atkN : 1;
-      let wave  = 0;
-      parts.forEach(p => {
-        wave += Math.sin(2 * Math.PI * p.f * t) * p.amp * Math.exp(-(p.dk / weight) * t);
-      });
-      // Distorção pesada — amp de guitarra overdriven (gain 7x antes do clip)
-      d[i] = Math.tanh(wave * 7 * weight) * 0.65 * atk;
+      // Sub-bass hit: três camadas sintéticas — sub profundo + corpo + presença
+      const sub  = Math.sin(2 * Math.PI * 45  * t) * 0.65 * Math.exp(-(5.0 / weight) * t);
+      const sub2 = Math.sin(2 * Math.PI * 95  * t) * 0.30 * Math.exp(-(8.5 / weight) * t);
+      const body = Math.sin(2 * Math.PI * 155 * t) * 0.18 * Math.exp(-(13  / weight) * t);
+      // Glitch shimmer: high-pass noise com envelope — cauda digital crispo
+      const si = i - shimSt;
+      let shim = 0;
+      if (si >= 0 && si < shimN) {
+        const raw = Math.random() * 2 - 1;
+        shim = (raw - shimPrev) * Math.exp(-si / (shimN * 0.35)) * 0.30 * weight;
+        shimPrev = raw;
+      }
+      d[i] = Math.tanh(((sub + sub2 + body) * weight * atk + shim) * 0.95) * 0.72;
     }
-    // Eco triplo: reverb de estádio
+    // Eco duplo — reverb sintético contido (não orgânico)
     if (echo > 0) {
-      const e1 = Math.floor(sr * 0.115);
-      const e2 = Math.floor(sr * 0.240);
-      const e3 = Math.floor(sr * 0.390);
+      const e1 = Math.floor(sr * 0.105);
+      const e2 = Math.floor(sr * 0.215);
       for (let i = 0; i < dry; i++) {
-        if (i + e1 < tot) d[i + e1] += d[i] * echo * 0.25;
-        if (i + e2 < tot) d[i + e2] += d[i] * echo * 0.10;
-        if (i + e3 < tot) d[i + e3] += d[i] * echo * 0.04;
+        if (i + e1 < tot) d[i + e1] += d[i] * echo * 0.22;
+        if (i + e2 < tot) d[i + e2] += d[i] * echo * 0.08;
       }
     }
     return buf;
@@ -101,12 +106,12 @@ const SFX = (() => {
       } catch(e) {}
     },
 
-    // progress 0→1: pitch desce ~1 oitava (E3→E2) em curva exponencial
+    // progress 0→1: blip brilhante → thud escuro (~1.3 oitavas de descida)
     tick(progress = 0) {
       const a = ctx(); if (!a) return;
       if (a.state === 'suspended') a.resume().catch(() => {});
-      // A3 × rate: início ≈ E4 (330Hz), fim ≈ A2 (110Hz) — corda desacelerando
-      const rate = 1.50 * Math.pow(0.50, progress);
+      // rate 1.80→0.72 — pitch desce exponencialmente como slot desacelerando
+      const rate = 1.80 * Math.pow(0.40, progress);
       fire(buildTick(), a.currentTime + 0.01, rate);
     },
 
