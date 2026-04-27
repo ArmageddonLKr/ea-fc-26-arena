@@ -16,83 +16,73 @@ const SFX = (() => {
     try { const s = a.createBufferSource(); s.buffer = buf; s.connect(a.destination); s.start(when); } catch(e) {}
   }
 
-  // LOW-THUD: sub-bass click — mecânico, abafado, grave
-  function buildThud() {
+  // TICK: snap mecânico preciso — sub-bass + click transiente, sem pitch musical
+  function buildTick() {
     const a = ctx(); if (!a) return null;
     const sr = a.sampleRate;
-    const len = Math.floor(sr * 0.055);
+    const len = Math.floor(sr * 0.048);
     const buf = a.createBuffer(1, len, sr);
     const d = buf.getChannelData(0);
-    const f = 62 + Math.random() * 20;          // pitch leve variação 62-82 Hz
-    const atkN  = Math.floor(sr * 0.0018);      // 1.8ms attack
-    const noiseN = Math.floor(sr * 0.004);      // 4ms noise burst (snap mecânico)
+    const fSub   = 78 + Math.random() * 18;   // 78-96 Hz, sub grave
+    const fClick = 290 + Math.random() * 60;   // 290-350 Hz, click mecânico
+    const atkN   = Math.floor(sr * 0.0014);
+    const noiseN = Math.floor(sr * 0.004);
     for (let i = 0; i < len; i++) {
       const t = i / sr;
       const atk = i < atkN ? i / atkN : 1;
-      const env = atk * Math.exp(-55 * t);      // decay rápido 55ms
-      // Sub-bass + oitava + leve inarmônico para textura
-      const wave = Math.sin(2 * Math.PI * f       * t) * 0.62
-                 + Math.sin(2 * Math.PI * f * 2   * t) * 0.28
-                 + Math.sin(2 * Math.PI * f * 3.02 * t) * 0.10;
-      // Click de impacto no início (simula snap mecânico)
+      // Sub-bass com inarmônico leve (não-musical)
+      const sub   = Math.sin(2 * Math.PI * fSub   * t) * 0.60 * Math.exp(-58 * t)
+                  + Math.sin(2 * Math.PI * fSub * 2.03 * t) * 0.28 * Math.exp(-80 * t);
+      // Click transiente que decai em 8ms — dá o caráter mecânico
+      const click = Math.sin(2 * Math.PI * fClick  * t) * 0.20 * Math.exp(-220 * t);
       const noise = i < noiseN
-        ? (Math.random() * 2 - 1) * Math.exp(-i / (noiseN * 0.4)) * 0.09 : 0;
-      d[i] = (wave + noise) * 0.40 * env;
+        ? (Math.random() * 2 - 1) * Math.exp(-i / (noiseN * 0.38)) * 0.07 : 0;
+      d[i] = (sub + click + noise) * 0.42 * atk;
     }
     return buf;
   }
 
-  // METALLIC LOCK: parciais inarmônicos + 2 reflexos de eco (reverb industrial curto)
-  function buildLock(vol) {
+  // IMPACT: pancada inarmônica sem pitch musical — bloco base para todos os sons
+  // weight controla peso, echo controla cauda industrial
+  function buildImpact(weight, echo) {
     const a = ctx(); if (!a) return null;
     const sr  = a.sampleRate;
-    const dry = Math.floor(sr * 0.20);    // 200ms hit seco
-    const tot = Math.floor(sr * 0.46);    // 460ms com cauda de eco
+    const dry = Math.floor(sr * 0.24);
+    const tot = Math.floor(sr * (echo > 0 ? 0.56 : 0.24));
     const buf = a.createBuffer(1, tot, sr);
     const d   = buf.getChannelData(0);
-    // Parciais inarmônicos — típicos de metal pesado percutido
-    const base = 118;
+
+    // Parciais inarmônicos — razões não-musicais para evitar o "som de piano"
+    // Base: 68 Hz. Ratios: 2.13, 3.84, 6.47 (não são múltiplos inteiros = inarmônico)
+    const base = 68;
     const parts = [
-      { f: base,        amp: 0.52, dk: 18 },
-      { f: base * 1.87, amp: 0.30, dk: 26 },
-      { f: base * 3.12, amp: 0.13, dk: 40 },
-      { f: base * 4.52, amp: 0.05, dk: 65 },
+      { f: base,          amp: 0.48, dk: 12 / weight },
+      { f: base * 2.13,   amp: 0.30, dk: 20 / weight },
+      { f: base * 3.84,   amp: 0.14, dk: 38 / weight },
+      { f: base * 6.47,   amp: 0.08, dk: 68 / weight },
     ];
-    const atkN  = Math.floor(sr * 0.0018);
-    const noiseN = Math.floor(sr * 0.005);  // 5ms ruído de impacto
+    const atkN  = Math.floor(sr * 0.0014);
+    const noiseN = Math.floor(sr * 0.007);
+
     for (let i = 0; i < dry; i++) {
       const t = i / sr;
       const atk = i < atkN ? i / atkN : 1;
       let wave = 0;
       parts.forEach(p => { wave += Math.sin(2 * Math.PI * p.f * t) * p.amp * Math.exp(-p.dk * t); });
+      // Burst de impacto — fundamental para textura "metal batido"
       const noise = i < noiseN
-        ? (Math.random() * 2 - 1) * Math.exp(-i / (noiseN * 0.35)) * 0.14 : 0;
-      d[i] = (wave + noise) * vol * atk;
+        ? (Math.random() * 2 - 1) * Math.exp(-i / (noiseN * 0.28)) * 0.18 : 0;
+      d[i] = (wave + noise) * 0.54 * weight * atk;
     }
-    // Eco industrial: reflexos em 82ms e 164ms (reverb curto tipo câmara de metal)
-    const e1 = Math.floor(sr * 0.082);
-    const e2 = Math.floor(sr * 0.164);
-    for (let i = 0; i < dry; i++) {
-      if (i + e1 < tot) d[i + e1] += d[i] * 0.30;
-      if (i + e2 < tot) d[i + e2] += d[i] * 0.12;
-    }
-    return buf;
-  }
 
-  // Warm tone para melodias de gol/vitória
-  function buildWarm(freq, dur, vol) {
-    const a = ctx(); if (!a) return null;
-    const sr = a.sampleRate;
-    const len = Math.floor(sr * dur);
-    const buf = a.createBuffer(1, len, sr);
-    const d = buf.getChannelData(0);
-    const atkN = Math.floor(sr * 0.006);
-    for (let i = 0; i < len; i++) {
-      const t = i / sr;
-      const atk = i < atkN ? i / atkN : 1;
-      const env = atk * Math.exp(-4.5 * t / dur);
-      const ph = 2 * Math.PI * freq * t;
-      d[i] = (Math.sin(ph) * 0.84 + Math.sin(ph * 2) * 0.16) * vol * env;
+    // Eco industrial (câmara de metal) — só quando pedido
+    if (echo > 0) {
+      const e1 = Math.floor(sr * 0.090);
+      const e2 = Math.floor(sr * 0.180);
+      for (let i = 0; i < dry; i++) {
+        if (i + e1 < tot) d[i + e1] += d[i] * echo * 0.28;
+        if (i + e2 < tot) d[i + e2] += d[i] * echo * 0.11;
+      }
     }
     return buf;
   }
@@ -107,31 +97,36 @@ const SFX = (() => {
         s.buffer = b; s.connect(a.destination); s.start(a.currentTime);
       } catch(e) {}
     },
+
     tick() {
       const a = ctx(); if (!a) return;
       if (a.state === 'suspended') a.resume().catch(() => {});
-      fire(buildThud(), a.currentTime + 0.01);
+      fire(buildTick(), a.currentTime + 0.01);
     },
+
+    // Slam único pesado: engrenagem trancando com eco industrial
     reveal() {
       const a = ctx(); if (!a) return;
       if (a.state === 'suspended') a.resume().catch(() => {});
-      fire(buildLock(0.58), a.currentTime + 0.04);
+      fire(buildImpact(1.0, 1.0), a.currentTime + 0.04);
     },
+
+    // Confirmação de gol: dois impactos rápidos (peso → impacto final)
     goal() {
       const a = ctx(); if (!a) return;
       if (a.state === 'suspended') a.resume().catch(() => {});
-      [[659, 0, 0.30, 0.27], [784, 0.09, 0.30, 0.25], [988, 0.18, 0.35, 0.27]].forEach(([f, dl, dr, v]) => {
-        fire(buildWarm(f, dr, v), a.currentTime + 0.04 + dl);
-      });
-      fire(buildLock(0.46), a.currentTime + 0.04 + 0.32);
+      fire(buildImpact(0.65, 0),   a.currentTime + 0.04);
+      fire(buildImpact(1.05, 0.7), a.currentTime + 0.04 + 0.16);
     },
+
+    // Vitória: 3 impactos crescentes + slam final — sem melodia, só peso
     victory() {
       const a = ctx(); if (!a) return;
       if (a.state === 'suspended') a.resume().catch(() => {});
-      [523, 659, 784, 1047].forEach((f, i) => {
-        fire(buildWarm(f, 0.50, 0.26 - i * 0.01), a.currentTime + 0.04 + i * 0.11);
-      });
-      fire(buildLock(0.56), a.currentTime + 0.04 + 0.56);
+      fire(buildImpact(0.50, 0),   a.currentTime + 0.04);
+      fire(buildImpact(0.72, 0),   a.currentTime + 0.04 + 0.20);
+      fire(buildImpact(0.94, 0),   a.currentTime + 0.04 + 0.40);
+      fire(buildImpact(1.35, 1.0), a.currentTime + 0.04 + 0.66);
     },
   };
 })();
