@@ -34,18 +34,19 @@
   --font-body: 'Rajdhani', sans-serif;
 }
 
-html, body {
+html {
   background: var(--bg);
+  min-height: 100dvh;
+  overscroll-behavior-x: none;
+}
+
+body {
   color: var(--text);
   font-family: var(--font-body);
   min-height: 100dvh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overscroll-behavior-x: none;
-}
-
-body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
@@ -1355,7 +1356,13 @@ footer {
 /* ===== PWA BANNERS ===== */
 #pwaBanner, #iosBanner {
   max-width: 460px;
-  left: 50%; transform: translateX(-50%);
-  right: auto;
-  width: 100%;
+}
+
+@media (min-width: 461px) {
+  #pwaBanner, #iosBanner {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+    width: 460px;
+  }
 }
