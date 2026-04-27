@@ -22,64 +22,79 @@ const SFX = (() => {
     } catch(e) {}
   }
 
-  // TICK: pulso magnético seco — sub fixo em 52 Hz, pitch controlado por playbackRate
+  // TICK: pulso magnético seco — sub 52 Hz + click solenoide, pitch via playbackRate
   function buildTick() {
     const a = ctx(); if (!a) return null;
-    const sr  = a.sampleRate;
-    const len = Math.floor(sr * 0.038);   // 38ms — curto e seco
-    const buf = a.createBuffer(1, len, sr);
-    const d   = buf.getChannelData(0);
-    const fSub = 52;                       // fixo — variação vem do playbackRate
-    const atkN  = Math.floor(sr * 0.001); // 1ms hard attack
-    const noiseN = Math.floor(sr * 0.003);
+    const sr     = a.sampleRate;
+    const len    = Math.floor(sr * 0.042);    // 42ms — levemente mais presença
+    const buf    = a.createBuffer(1, len, sr);
+    const d      = buf.getChannelData(0);
+    const fSub   = 52;
+    const atkN   = Math.floor(sr * 0.0008);   // 0.8ms ultra-hard attack
+    const clickN = Math.floor(sr * 0.0022);   // 2.2ms click solenoide
+    const noiseN = Math.floor(sr * 0.004);    // 4ms burst de textura
     for (let i = 0; i < len; i++) {
-      const t = i / sr;
-      const atk = i < atkN ? i / atkN : 1;
-      // Sub-bass inarmônico (não-musical)
-      const sub = Math.sin(2 * Math.PI * fSub       * t) * 0.58 * Math.exp(-72  * t)
-                + Math.sin(2 * Math.PI * fSub * 2.09 * t) * 0.26 * Math.exp(-110 * t);
-      // Snap magnético: transiente de alta frequência que decai em ~3ms
-      const mag  = Math.sin(2 * Math.PI * 1450 * t) * 0.18 * Math.exp(-580 * t);
+      const t   = i / sr;
+      const env = i < atkN ? i / atkN : 1;
+      // Sub magnético inarmônico
+      const sub = Math.sin(2 * Math.PI * fSub        * t) * 0.55 * Math.exp(-65  * t)
+                + Math.sin(2 * Math.PI * fSub * 2.11 * t) * 0.22 * Math.exp(-115 * t);
+      // Click de solenoide: dois parciais altos simulando relay eletromecânico
+      const click = i < clickN
+        ? Math.sin(2 * Math.PI * 2800 * t) * Math.exp(-i / (clickN * 0.28)) * 0.38
+        + Math.sin(2 * Math.PI * 4300 * t) * Math.exp(-i / (clickN * 0.18)) * 0.16
+        : 0;
+      // Snap magnético
+      const snap  = Math.sin(2 * Math.PI * 1550 * t) * 0.20 * Math.exp(-520 * t);
+      // Ruído digital curto
       const noise = i < noiseN
-        ? (Math.random() * 2 - 1) * Math.exp(-i / (noiseN * 0.32)) * 0.08 : 0;
-      d[i] = (sub + mag + noise) * atk;
+        ? (Math.random() * 2 - 1) * Math.exp(-i / (noiseN * 0.28)) * 0.10 : 0;
+      // tanh soft-clip: saturação analógica que adiciona harmônicos impares
+      const raw = (sub + click + snap + noise) * env;
+      d[i] = Math.tanh(raw * 1.45) * 0.70;
     }
     return buf;
   }
 
-  // IMPACT: pancada industrial pesada — sub ancorado em 45 Hz conforme spec
+  // IMPACT: pancada industrial pesada — sub 45 Hz + 5 parciais inarmônicos + eco triplo
   function buildImpact(weight, echo) {
     const a = ctx(); if (!a) return null;
     const sr  = a.sampleRate;
-    const dry = Math.floor(sr * 0.24);
-    const tot = Math.floor(sr * (echo > 0 ? 0.54 : 0.24));
+    const dry = Math.floor(sr * 0.28);
+    const tot = Math.floor(sr * (echo > 0 ? 0.60 : 0.28));
     const buf = a.createBuffer(1, tot, sr);
     const d   = buf.getChannelData(0);
-    // Base em 45 Hz — razões inarmônicas garantem textura industrial, não musical
+    // 5 parciais inarmônicos — série não-temperada, textura industrial pesada
     const base = 45;
     const parts = [
-      { f: base,          amp: 0.50, dk: 9  / weight },
-      { f: base * 2.17,   amp: 0.28, dk: 17 / weight },
-      { f: base * 4.13,   amp: 0.14, dk: 34 / weight },
-      { f: base * 7.28,   amp: 0.08, dk: 60 / weight },
+      { f: base,          amp: 0.55, dk: 7  / weight },  // sub profundo
+      { f: base * 2.07,   amp: 0.30, dk: 14 / weight },  // 2° inarmônico
+      { f: base * 3.89,   amp: 0.16, dk: 27 / weight },  // growl médio-baixo
+      { f: base * 6.14,   amp: 0.10, dk: 46 / weight },  // overtone metálico
+      { f: base * 11.30,  amp: 0.04, dk: 92 / weight },  // ting agudo de metal
     ];
-    const atkN  = Math.floor(sr * 0.0012);
-    const noiseN = Math.floor(sr * 0.008);
+    const atkN   = Math.floor(sr * 0.0010);  // 1ms ultra-hard
+    const noiseN = Math.floor(sr * 0.010);   // 10ms burst de impacto
     for (let i = 0; i < dry; i++) {
-      const t = i / sr;
+      const t   = i / sr;
       const atk = i < atkN ? i / atkN : 1;
-      let wave = 0;
+      let wave  = 0;
       parts.forEach(p => { wave += Math.sin(2 * Math.PI * p.f * t) * p.amp * Math.exp(-p.dk * t); });
       const noise = i < noiseN
-        ? (Math.random() * 2 - 1) * Math.exp(-i / (noiseN * 0.25)) * 0.22 : 0;
-      d[i] = (wave + noise) * 0.56 * weight * atk;
+        ? (Math.random() * 2 - 1) * Math.exp(-i / (noiseN * 0.22)) * 0.30 : 0;
+      // tanh soft-clip: satura como equipamento analógico sobrecarregado
+      const raw = (wave + noise) * weight * atk;
+      d[i] = Math.tanh(raw * 0.90) * 0.62;
     }
+    // Eco triplo: três reflexos decrescentes — simula espaço industrial de concreto
     if (echo > 0) {
-      const e1 = Math.floor(sr * 0.088);
-      const e2 = Math.floor(sr * 0.176);
+      const e1 = Math.floor(sr * 0.095);
+      const e2 = Math.floor(sr * 0.195);
+      const e3 = Math.floor(sr * 0.315);
       for (let i = 0; i < dry; i++) {
-        if (i + e1 < tot) d[i + e1] += d[i] * echo * 0.27;
-        if (i + e2 < tot) d[i + e2] += d[i] * echo * 0.10;
+        if (i + e1 < tot) d[i + e1] += d[i] * echo * 0.28;
+        if (i + e2 < tot) d[i + e2] += d[i] * echo * 0.12;
+        if (i + e3 < tot) d[i + e3] += d[i] * echo * 0.05;
       }
     }
     return buf;
@@ -96,11 +111,12 @@ const SFX = (() => {
       } catch(e) {}
     },
 
-    // progress 0→1: pitch desce de 1.35 (rápido) a 0.72 (lento) via playbackRate
+    // progress 0→1: curva exponencial — freio mecânico (rate 1.45 → 0.75)
     tick(progress = 0) {
       const a = ctx(); if (!a) return;
       if (a.state === 'suspended') a.resume().catch(() => {});
-      const rate = 1.35 - progress * 0.63;
+      // Exponencial dá sensação de inércia real: rápido no início, lento no fim
+      const rate = 1.45 * Math.pow(0.517, progress);
       fire(buildTick(), a.currentTime + 0.01, rate);
     },
 
