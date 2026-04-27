@@ -5,85 +5,133 @@
 const SFX = (() => {
   let _ac = null;
 
-  function init() {
+  function ctx() {
     if (_ac) return _ac;
-    try { _ac = new (window.AudioContext || window.webkitAudioContext)(); }
-    catch(e) { return null; }
+    try { _ac = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
     return _ac;
   }
 
-  function unlock() {
-    const a = init(); if (!a) return;
-    if (a.state === 'suspended') a.resume().catch(() => {});
-    try {
-      const b = a.createBuffer(1, a.sampleRate >> 2, a.sampleRate);
-      const s = a.createBufferSource();
-      s.buffer = b; s.connect(a.destination); s.start(a.currentTime);
-    } catch(e) {}
+  function fire(buf, when) {
+    const a = ctx(); if (!a || !buf) return;
+    try { const s = a.createBufferSource(); s.buffer = buf; s.connect(a.destination); s.start(when); } catch(e) {}
   }
 
-  // type: 'bell' (warm harmonics + exponential decay), 'warm' (fundamental + gentle 2nd), 'sine' (clean)
-  function play(freq, delay, dur, vol, type) {
-    const a = init(); if (!a) return;
-    if (a.state === 'suspended') a.resume().catch(() => {});
-    try {
-      const sr  = a.sampleRate;
-      const len = Math.max(Math.floor(sr * 0.04), Math.floor(sr * (dur || 0.3)));
-      const buf = a.createBuffer(1, len, sr);
-      const d   = buf.getChannelData(0);
-      const atkN = Math.min(len, Math.floor(sr * 0.004));
-      // Exponential decay: bell fades fast, warm fades medium
-      const k = type === 'bell' ? 7 : type === 'warm' ? 4.5 : 5;
-      for (let i = 0; i < len; i++) {
-        const t  = i / sr;
-        const atk = i < atkN ? i / atkN : 1;
-        const env = atk * Math.exp(-k * t);
-        const ph  = 2 * Math.PI * freq * t;
-        let wave;
-        if (type === 'bell') {
-          // Bell: fundamental + 2nd harmonic that decays twice as fast = bright chime
-          wave = Math.sin(ph) * 0.72 + Math.sin(ph * 2) * Math.exp(-6 * t) * 0.28;
-        } else if (type === 'warm') {
-          // Warm: fundamental + soft 2nd = rich but gentle
-          wave = Math.sin(ph) * 0.84 + Math.sin(ph * 2) * 0.16;
-        } else {
-          wave = Math.sin(ph);
-        }
-        d[i] = wave * vol * env;
-      }
-      const src = a.createBufferSource();
-      src.buffer = buf; src.connect(a.destination);
-      src.start(a.currentTime + 0.05 + (delay || 0));
-    } catch(e) {}
+  // LOW-THUD: sub-bass click — mecânico, abafado, grave
+  function buildThud() {
+    const a = ctx(); if (!a) return null;
+    const sr = a.sampleRate;
+    const len = Math.floor(sr * 0.055);
+    const buf = a.createBuffer(1, len, sr);
+    const d = buf.getChannelData(0);
+    const f = 62 + Math.random() * 20;          // pitch leve variação 62-82 Hz
+    const atkN  = Math.floor(sr * 0.0018);      // 1.8ms attack
+    const noiseN = Math.floor(sr * 0.004);      // 4ms noise burst (snap mecânico)
+    for (let i = 0; i < len; i++) {
+      const t = i / sr;
+      const atk = i < atkN ? i / atkN : 1;
+      const env = atk * Math.exp(-55 * t);      // decay rápido 55ms
+      // Sub-bass + oitava + leve inarmônico para textura
+      const wave = Math.sin(2 * Math.PI * f       * t) * 0.62
+                 + Math.sin(2 * Math.PI * f * 2   * t) * 0.28
+                 + Math.sin(2 * Math.PI * f * 3.02 * t) * 0.10;
+      // Click de impacto no início (simula snap mecânico)
+      const noise = i < noiseN
+        ? (Math.random() * 2 - 1) * Math.exp(-i / (noiseN * 0.4)) * 0.09 : 0;
+      d[i] = (wave + noise) * 0.40 * env;
+    }
+    return buf;
   }
 
-  // C major pentatonic for xylophone-like tick during raffle
-  const _penta = [523, 587, 659, 784, 880, 1047, 1175];
+  // METALLIC LOCK: parciais inarmônicos + 2 reflexos de eco (reverb industrial curto)
+  function buildLock(vol) {
+    const a = ctx(); if (!a) return null;
+    const sr  = a.sampleRate;
+    const dry = Math.floor(sr * 0.20);    // 200ms hit seco
+    const tot = Math.floor(sr * 0.46);    // 460ms com cauda de eco
+    const buf = a.createBuffer(1, tot, sr);
+    const d   = buf.getChannelData(0);
+    // Parciais inarmônicos — típicos de metal pesado percutido
+    const base = 118;
+    const parts = [
+      { f: base,        amp: 0.52, dk: 18 },
+      { f: base * 1.87, amp: 0.30, dk: 26 },
+      { f: base * 3.12, amp: 0.13, dk: 40 },
+      { f: base * 4.52, amp: 0.05, dk: 65 },
+    ];
+    const atkN  = Math.floor(sr * 0.0018);
+    const noiseN = Math.floor(sr * 0.005);  // 5ms ruído de impacto
+    for (let i = 0; i < dry; i++) {
+      const t = i / sr;
+      const atk = i < atkN ? i / atkN : 1;
+      let wave = 0;
+      parts.forEach(p => { wave += Math.sin(2 * Math.PI * p.f * t) * p.amp * Math.exp(-p.dk * t); });
+      const noise = i < noiseN
+        ? (Math.random() * 2 - 1) * Math.exp(-i / (noiseN * 0.35)) * 0.14 : 0;
+      d[i] = (wave + noise) * vol * atk;
+    }
+    // Eco industrial: reflexos em 82ms e 164ms (reverb curto tipo câmara de metal)
+    const e1 = Math.floor(sr * 0.082);
+    const e2 = Math.floor(sr * 0.164);
+    for (let i = 0; i < dry; i++) {
+      if (i + e1 < tot) d[i + e1] += d[i] * 0.30;
+      if (i + e2 < tot) d[i + e2] += d[i] * 0.12;
+    }
+    return buf;
+  }
+
+  // Warm tone para melodias de gol/vitória
+  function buildWarm(freq, dur, vol) {
+    const a = ctx(); if (!a) return null;
+    const sr = a.sampleRate;
+    const len = Math.floor(sr * dur);
+    const buf = a.createBuffer(1, len, sr);
+    const d = buf.getChannelData(0);
+    const atkN = Math.floor(sr * 0.006);
+    for (let i = 0; i < len; i++) {
+      const t = i / sr;
+      const atk = i < atkN ? i / atkN : 1;
+      const env = atk * Math.exp(-4.5 * t / dur);
+      const ph = 2 * Math.PI * freq * t;
+      d[i] = (Math.sin(ph) * 0.84 + Math.sin(ph * 2) * 0.16) * vol * env;
+    }
+    return buf;
+  }
 
   return {
-    unlock,
+    unlock() {
+      const a = ctx(); if (!a) return;
+      if (a.state === 'suspended') a.resume().catch(() => {});
+      try {
+        const b = a.createBuffer(1, a.sampleRate >> 2, a.sampleRate);
+        const s = a.createBufferSource();
+        s.buffer = b; s.connect(a.destination); s.start(a.currentTime);
+      } catch(e) {}
+    },
     tick() {
-      const f = _penta[Math.floor(Math.random() * _penta.length)];
-      play(f, 0, 0.22, 0.20, 'bell');
+      const a = ctx(); if (!a) return;
+      if (a.state === 'suspended') a.resume().catch(() => {});
+      fire(buildThud(), a.currentTime + 0.01);
     },
     reveal() {
-      // C4-E4-G4-C5 — major chord arpeggio, harp-like
-      play(523,  0,    0.45, 0.28, 'warm');
-      play(659,  0.09, 0.45, 0.26, 'warm');
-      play(784,  0.18, 0.45, 0.28, 'warm');
-      play(1047, 0.29, 0.55, 0.30, 'bell');
+      const a = ctx(); if (!a) return;
+      if (a.state === 'suspended') a.resume().catch(() => {});
+      fire(buildLock(0.58), a.currentTime + 0.04);
     },
     goal() {
-      // E4-G4-B4 ascending fanfare — no harsh edges
-      play(659,  0,    0.35, 0.32, 'warm');
-      play(784,  0.09, 0.35, 0.30, 'warm');
-      play(988,  0.20, 0.50, 0.33, 'bell');
+      const a = ctx(); if (!a) return;
+      if (a.state === 'suspended') a.resume().catch(() => {});
+      [[659, 0, 0.30, 0.27], [784, 0.09, 0.30, 0.25], [988, 0.18, 0.35, 0.27]].forEach(([f, dl, dr, v]) => {
+        fire(buildWarm(f, dr, v), a.currentTime + 0.04 + dl);
+      });
+      fire(buildLock(0.46), a.currentTime + 0.04 + 0.32);
     },
     victory() {
-      // C4-E4-G4-C5-E5-G5 — full triumphant arpeggio
-      [523, 659, 784, 1047, 1319, 1568].forEach((f, i) =>
-        play(f, i * 0.11, 0.55, Math.max(0.18, 0.33 - i * 0.02), i >= 3 ? 'bell' : 'warm')
-      );
+      const a = ctx(); if (!a) return;
+      if (a.state === 'suspended') a.resume().catch(() => {});
+      [523, 659, 784, 1047].forEach((f, i) => {
+        fire(buildWarm(f, 0.50, 0.26 - i * 0.01), a.currentTime + 0.04 + i * 0.11);
+      });
+      fire(buildLock(0.56), a.currentTime + 0.04 + 0.56);
     },
   };
 })();
@@ -503,26 +551,34 @@ function slotAnimation(available) {
   const c1 = document.getElementById('c1');
   const c2 = document.getElementById('c2');
 
-  if(c1) { c1.style.opacity='0.45'; c1.style.transform='scale(0.96)'; }
-  if(c2) { c2.style.opacity='0.45'; c2.style.transform='scale(0.96)'; }
+  if (c1) { c1.style.opacity = '0.45'; c1.style.transform = 'scale(0.96)'; }
+  if (c2) { c2.style.opacity = '0.45'; c2.style.transform = 'scale(0.96)'; }
 
   return new Promise(resolve => {
-    let ticks = 0;
-    const max = 9;
-    const iv = setInterval(() => {
-      const r1 = available[Math.floor(Math.random()*available.length)];
-      const r2 = available[Math.floor(Math.random()*available.length)];
-      if(n1) n1.textContent = r1.n;
-      if(n2) n2.textContent = r2.n;
+    // Desaceleração exponencial: 14 ticks de 62ms → 220ms (roulette wheel)
+    const total = 14;
+    const startMs = 62;
+    const endMs = 220;
+    const ratio = Math.pow(endMs / startMs, 1 / (total - 1));
+    let idx = 0;
+
+    function nextTick() {
+      const r1 = available[Math.floor(Math.random() * available.length)];
+      const r2 = available[Math.floor(Math.random() * available.length)];
+      if (n1) n1.textContent = r1.n;
+      if (n2) n2.textContent = r2.n;
       SFX.tick();
-      ticks++;
-      if (ticks >= max) {
-        clearInterval(iv);
-        if(c1) { c1.style.opacity='1'; c1.style.transform='scale(1)'; }
-        if(c2) { c2.style.opacity='1'; c2.style.transform='scale(1)'; }
-        setTimeout(resolve, 80);
+      idx++;
+      if (idx < total) {
+        setTimeout(nextTick, startMs * Math.pow(ratio, idx));
+      } else {
+        if (c1) { c1.style.opacity = '1'; c1.style.transform = 'scale(1)'; }
+        if (c2) { c2.style.opacity = '1'; c2.style.transform = 'scale(1)'; }
+        setTimeout(resolve, 95);
       }
-    }, 80);
+    }
+
+    setTimeout(nextTick, startMs);
   });
 }
 
