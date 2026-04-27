@@ -2,83 +2,68 @@
 // Motor principal: sorteio, placar, torneio, estatísticas
 
 /* ===== MOTOR DE SOM (SFX) ===== */
-// Usa AudioBufferSourceNode com PCM sintético — mais confiável que OscillatorNode
-// em iOS/Safari/PWA standalone. Volume segue o volume de mídia do dispositivo.
 const SFX = (() => {
   let _ac = null;
 
-  function ac() {
-    if (!_ac) {
-      try { _ac = new (window.AudioContext || window.webkitAudioContext)(); }
-      catch(e) { return null; }
-    }
-    if (_ac.state !== 'running') _ac.resume().catch(() => {});
+  function init() {
+    if (_ac) return _ac;
+    try { _ac = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e) { return null; }
     return _ac;
   }
 
-  // Gera PCM sintético para um tom com envelope attack/release
-  function makeBuf(freq, dur, vol, square) {
-    const a = ac(); if (!a) return null;
+  function unlock() {
+    const a = init(); if (!a) return;
+    if (a.state === 'suspended') a.resume().catch(() => {});
     try {
-      const sr  = a.sampleRate;
-      const len = Math.max(1, Math.floor(sr * dur));
-      const b   = a.createBuffer(1, len, sr);
-      const d   = b.getChannelData(0);
-      const atk = Math.floor(sr * Math.min(0.008, dur * 0.1));
-      const rel = Math.floor(sr * Math.min(0.05,  dur * 0.3));
-      for (let i = 0; i < len; i++) {
-        const env = i < atk
-          ? i / atk
-          : i > len - rel
-            ? (len - i) / rel
-            : 1;
-        const phase = (2 * Math.PI * freq * i) / sr;
-        const wave  = square
-          ? (Math.sin(phase) >= 0 ? 0.4 : -0.4)
-          : Math.sin(phase);
-        d[i] = wave * vol * env;
-      }
-      return b;
-    } catch(e) { return null; }
+      const b = a.createBuffer(1, a.sampleRate >> 2, a.sampleRate);
+      const s = a.createBufferSource();
+      s.buffer = b; s.connect(a.destination); s.start(a.currentTime);
+    } catch(e) {}
   }
 
-  function play(b, delay) {
-    const a = ac(); if (!a || !b) return;
+  // freq, delay(s), dur(s), vol(0-1), square wave?
+  function play(freq, delay, dur, vol, square) {
+    const a = init(); if (!a) return;
+    if (a.state === 'suspended') a.resume().catch(() => {});
     try {
+      const sr  = a.sampleRate;
+      const len = Math.max(Math.floor(sr * 0.01), Math.floor(sr * dur));
+      const buf = a.createBuffer(1, len, sr);
+      const d   = buf.getChannelData(0);
+      const atk = Math.min(len >> 2, Math.floor(sr * 0.008));
+      const rel = Math.min(len >> 1, Math.floor(sr * 0.055));
+      for (let i = 0; i < len; i++) {
+        const env   = i < atk ? i / atk : i > len - rel ? (len - i) / rel : 1;
+        const phase = (2 * Math.PI * freq * i) / sr;
+        // square wave usa ±1 (não ±0.4) — volume controlado exclusivamente por vol
+        const wave  = square ? (Math.sin(phase) >= 0 ? 1 : -1) : Math.sin(phase);
+        d[i] = wave * vol * env;
+      }
       const src = a.createBufferSource();
-      src.buffer = b;
+      src.buffer = buf;
       src.connect(a.destination);
-      src.start(a.currentTime + 0.04 + (delay || 0));
+      src.start(a.currentTime + 0.05 + (delay || 0));
     } catch(e) {}
   }
 
   return {
-    unlock() {
-      const a = ac(); if (!a) return;
-      // Buffer silencioso de 100ms — desbloqueia iOS/Safari corretamente
-      try {
-        const b   = a.createBuffer(1, Math.floor(a.sampleRate * 0.1), a.sampleRate);
-        const src = a.createBufferSource();
-        src.buffer = b;
-        src.connect(a.destination);
-        src.start(a.currentTime);
-      } catch(e) {}
-    },
-
-    tick()    { play(makeBuf(500 + Math.random() * 600, 0.07, 0.07, true));              },
+    unlock,
+    tick()    { play(500 + Math.random() * 600, 0, 0.08, 0.18, true); },
     reveal()  {
-      [[523,0],[659,0.13],[784,0.26],[1047,0.42]].forEach(([f,d]) =>
-        play(makeBuf(f, 0.18, 0.33, false), d)
-      );
+      play(523,  0,    0.20, 0.32, false);
+      play(659,  0.13, 0.20, 0.30, false);
+      play(784,  0.27, 0.20, 0.33, false);
+      play(1047, 0.43, 0.30, 0.36, false);
     },
     goal()    {
-      play(makeBuf(660,  0.07, 0.50, true));
-      play(makeBuf(880,  0.07, 0.45, true), 0.10);
-      play(makeBuf(1100, 0.22, 0.40, false), 0.20);
+      play(660,  0,    0.09, 0.42, true);
+      play(880,  0.10, 0.09, 0.38, true);
+      play(1100, 0.21, 0.26, 0.35, false);
     },
     victory() {
-      [523,659,784,880,1047,1319].forEach((f, i) =>
-        play(makeBuf(f, 0.28, Math.max(0.15, 0.38 - i * 0.03), false), i * 0.17)
+      [523, 659, 784, 880, 1047, 1319].forEach((f, i) =>
+        play(f, i * 0.17, 0.30, Math.max(0.16, 0.38 - i * 0.03), false)
       );
     },
   };
@@ -86,6 +71,26 @@ const SFX = (() => {
 
 document.addEventListener('touchstart', () => SFX.unlock(), { passive: true });
 document.addEventListener('click',      () => SFX.unlock(), { passive: true });
+
+/* ===== MAPA DE LIGAS (ID → imagem em assets/leagues/<id>.png) ===== */
+const LEAGUE_IDS = {
+  'Premier League':    11,
+  'La Liga':           67,
+  'Serie A':           32,
+  'Bundesliga':        22,
+  'Ligue 1':           16,
+  'Eredivisie':        29,
+  'Liga Portugal':     60,
+  'MLS':               40,
+  'Argentina':         102421,
+  'Süper Lig':         130286,
+  // Saudi Pro League sem ID fornecido — sem imagem por enquanto
+};
+
+function getLeagueLogoUrl(leagueName) {
+  const id = LEAGUE_IDS[leagueName];
+  return id ? `./assets/leagues/${id}.png` : null;
+}
 
 /* ===== ESTADO GLOBAL ===== */
 let teams       = [];        // banco completo
@@ -311,6 +316,7 @@ function updateScoreNames() {
 
 /* ===== PLACAR ===== */
 function addGoal(side) {
+  SFX.unlock(); // garante contexto ativo no gesto
   score[side]++;
   document.getElementById('scoreNum1').textContent = score.a;
   document.getElementById('scoreNum2').textContent = score.b;
@@ -363,6 +369,7 @@ function _startSession() {
 
 /* ===== DRAFT ===== */
 async function startDraft() {
+  SFX.unlock(); // garante contexto ativo no gesto do botão
   const available = pool.filter(t => !bannedTeams.has(t.n));
   if (available.length < 2) {
     showToast('Pool insuficiente. Desbane times ou ajuste filtros.', 'warn'); return;
@@ -468,7 +475,12 @@ function renderCard(num, team, owner) {
 
   // Liga + Nome
   const leagueEl = document.getElementById(`league${num}`);
-  if (leagueEl) leagueEl.textContent = `${team.f||''} ${team.league}`;
+  if (leagueEl) {
+    const lgUrl = getLeagueLogoUrl(team.league);
+    leagueEl.innerHTML = lgUrl
+      ? `<img class="league-logo" src="${lgUrl}" alt="" onerror="this.remove()">${team.f||''} ${team.league}`
+      : `${team.f||''} ${team.league}`;
+  }
   const nameEl = document.getElementById(`name${num}`);
   if (nameEl) nameEl.textContent = team.n;
 
