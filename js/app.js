@@ -11,77 +11,75 @@ const SFX = (() => {
     return _ac;
   }
 
-  function fire(buf, when) {
+  function fire(buf, when, rate) {
     const a = ctx(); if (!a || !buf) return;
-    try { const s = a.createBufferSource(); s.buffer = buf; s.connect(a.destination); s.start(when); } catch(e) {}
+    try {
+      const s = a.createBufferSource();
+      s.buffer = buf;
+      if (rate != null) s.playbackRate.value = rate;
+      s.connect(a.destination);
+      s.start(when);
+    } catch(e) {}
   }
 
-  // TICK: snap mecânico preciso — sub-bass + click transiente, sem pitch musical
+  // TICK: pulso magnético seco — sub fixo em 52 Hz, pitch controlado por playbackRate
   function buildTick() {
     const a = ctx(); if (!a) return null;
-    const sr = a.sampleRate;
-    const len = Math.floor(sr * 0.048);
+    const sr  = a.sampleRate;
+    const len = Math.floor(sr * 0.038);   // 38ms — curto e seco
     const buf = a.createBuffer(1, len, sr);
-    const d = buf.getChannelData(0);
-    const fSub   = 78 + Math.random() * 18;   // 78-96 Hz, sub grave
-    const fClick = 290 + Math.random() * 60;   // 290-350 Hz, click mecânico
-    const atkN   = Math.floor(sr * 0.0014);
-    const noiseN = Math.floor(sr * 0.004);
+    const d   = buf.getChannelData(0);
+    const fSub = 52;                       // fixo — variação vem do playbackRate
+    const atkN  = Math.floor(sr * 0.001); // 1ms hard attack
+    const noiseN = Math.floor(sr * 0.003);
     for (let i = 0; i < len; i++) {
       const t = i / sr;
       const atk = i < atkN ? i / atkN : 1;
-      // Sub-bass com inarmônico leve (não-musical)
-      const sub   = Math.sin(2 * Math.PI * fSub   * t) * 0.60 * Math.exp(-58 * t)
-                  + Math.sin(2 * Math.PI * fSub * 2.03 * t) * 0.28 * Math.exp(-80 * t);
-      // Click transiente que decai em 8ms — dá o caráter mecânico
-      const click = Math.sin(2 * Math.PI * fClick  * t) * 0.20 * Math.exp(-220 * t);
+      // Sub-bass inarmônico (não-musical)
+      const sub = Math.sin(2 * Math.PI * fSub       * t) * 0.58 * Math.exp(-72  * t)
+                + Math.sin(2 * Math.PI * fSub * 2.09 * t) * 0.26 * Math.exp(-110 * t);
+      // Snap magnético: transiente de alta frequência que decai em ~3ms
+      const mag  = Math.sin(2 * Math.PI * 1450 * t) * 0.18 * Math.exp(-580 * t);
       const noise = i < noiseN
-        ? (Math.random() * 2 - 1) * Math.exp(-i / (noiseN * 0.38)) * 0.07 : 0;
-      d[i] = (sub + click + noise) * 0.42 * atk;
+        ? (Math.random() * 2 - 1) * Math.exp(-i / (noiseN * 0.32)) * 0.08 : 0;
+      d[i] = (sub + mag + noise) * atk;
     }
     return buf;
   }
 
-  // IMPACT: pancada inarmônica sem pitch musical — bloco base para todos os sons
-  // weight controla peso, echo controla cauda industrial
+  // IMPACT: pancada industrial pesada — sub ancorado em 45 Hz conforme spec
   function buildImpact(weight, echo) {
     const a = ctx(); if (!a) return null;
     const sr  = a.sampleRate;
     const dry = Math.floor(sr * 0.24);
-    const tot = Math.floor(sr * (echo > 0 ? 0.56 : 0.24));
+    const tot = Math.floor(sr * (echo > 0 ? 0.54 : 0.24));
     const buf = a.createBuffer(1, tot, sr);
     const d   = buf.getChannelData(0);
-
-    // Parciais inarmônicos — razões não-musicais para evitar o "som de piano"
-    // Base: 68 Hz. Ratios: 2.13, 3.84, 6.47 (não são múltiplos inteiros = inarmônico)
-    const base = 68;
+    // Base em 45 Hz — razões inarmônicas garantem textura industrial, não musical
+    const base = 45;
     const parts = [
-      { f: base,          amp: 0.48, dk: 12 / weight },
-      { f: base * 2.13,   amp: 0.30, dk: 20 / weight },
-      { f: base * 3.84,   amp: 0.14, dk: 38 / weight },
-      { f: base * 6.47,   amp: 0.08, dk: 68 / weight },
+      { f: base,          amp: 0.50, dk: 9  / weight },
+      { f: base * 2.17,   amp: 0.28, dk: 17 / weight },
+      { f: base * 4.13,   amp: 0.14, dk: 34 / weight },
+      { f: base * 7.28,   amp: 0.08, dk: 60 / weight },
     ];
-    const atkN  = Math.floor(sr * 0.0014);
-    const noiseN = Math.floor(sr * 0.007);
-
+    const atkN  = Math.floor(sr * 0.0012);
+    const noiseN = Math.floor(sr * 0.008);
     for (let i = 0; i < dry; i++) {
       const t = i / sr;
       const atk = i < atkN ? i / atkN : 1;
       let wave = 0;
       parts.forEach(p => { wave += Math.sin(2 * Math.PI * p.f * t) * p.amp * Math.exp(-p.dk * t); });
-      // Burst de impacto — fundamental para textura "metal batido"
       const noise = i < noiseN
-        ? (Math.random() * 2 - 1) * Math.exp(-i / (noiseN * 0.28)) * 0.18 : 0;
-      d[i] = (wave + noise) * 0.54 * weight * atk;
+        ? (Math.random() * 2 - 1) * Math.exp(-i / (noiseN * 0.25)) * 0.22 : 0;
+      d[i] = (wave + noise) * 0.56 * weight * atk;
     }
-
-    // Eco industrial (câmara de metal) — só quando pedido
     if (echo > 0) {
-      const e1 = Math.floor(sr * 0.090);
-      const e2 = Math.floor(sr * 0.180);
+      const e1 = Math.floor(sr * 0.088);
+      const e2 = Math.floor(sr * 0.176);
       for (let i = 0; i < dry; i++) {
-        if (i + e1 < tot) d[i + e1] += d[i] * echo * 0.28;
-        if (i + e2 < tot) d[i + e2] += d[i] * echo * 0.11;
+        if (i + e1 < tot) d[i + e1] += d[i] * echo * 0.27;
+        if (i + e2 < tot) d[i + e2] += d[i] * echo * 0.10;
       }
     }
     return buf;
@@ -98,10 +96,12 @@ const SFX = (() => {
       } catch(e) {}
     },
 
-    tick() {
+    // progress 0→1: pitch desce de 1.35 (rápido) a 0.72 (lento) via playbackRate
+    tick(progress = 0) {
       const a = ctx(); if (!a) return;
       if (a.state === 'suspended') a.resume().catch(() => {});
-      fire(buildTick(), a.currentTime + 0.01);
+      const rate = 1.35 - progress * 0.63;
+      fire(buildTick(), a.currentTime + 0.01, rate);
     },
 
     // Slam único pesado: engrenagem trancando com eco industrial
@@ -562,7 +562,8 @@ function slotAnimation(available) {
       const r2 = available[Math.floor(Math.random() * available.length)];
       if (n1) n1.textContent = r1.n;
       if (n2) n2.textContent = r2.n;
-      SFX.tick();
+      const progress = idx / total;
+      SFX.tick(progress);
       idx++;
       if (idx < total) {
         setTimeout(nextTick, startMs * Math.pow(ratio, idx));
