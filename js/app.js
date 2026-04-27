@@ -1,6 +1,83 @@
 // js/app.js — FC 26 Arena · Competitive Engine
 // Motor principal: sorteio, placar, torneio, estatísticas
 
+/* ===== MOTOR DE SOM (SFX) ===== */
+const SFX = (() => {
+  let _ctx = null;
+
+  function getCtx() {
+    if (!_ctx) {
+      try { _ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch(e) { return null; }
+    }
+    return _ctx;
+  }
+
+  // Toca uma nota. delay = offset em segundos a partir de agora.
+  // Sempre agenda 80ms no futuro para garantir que o contexto está running.
+  function note(freq, delay, duration, vol = 0.35, shape = 'sine') {
+    const ac = getCtx(); if (!ac) return;
+    try {
+      const t    = ac.currentTime + 0.08 + delay;
+      const osc  = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = shape;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(vol, t + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.start(t);
+      osc.stop(t + duration + 0.02);
+    } catch(e) {}
+  }
+
+  // Desbloqueia o AudioContext com buffer silencioso (obrigatório no iOS/Safari)
+  function unlock() {
+    const ac = getCtx(); if (!ac) return;
+    try {
+      const buf = ac.createBuffer(1, 1, 22050);
+      const src = ac.createBufferSource();
+      src.buffer = buf;
+      src.connect(ac.destination);
+      src.start(0);
+    } catch(e) {}
+    if (ac.state === 'suspended') ac.resume().catch(() => {});
+  }
+
+  return {
+    unlock,
+
+    tick() {
+      note(500 + Math.random() * 700, 0, 0.07, 0.09, 'square');
+    },
+
+    reveal() {
+      note(523,  0,    0.18, 0.32);
+      note(659,  0.13, 0.18, 0.30);
+      note(784,  0.26, 0.18, 0.33);
+      note(1047, 0.42, 0.32, 0.35);
+    },
+
+    goal() {
+      note(660,  0,    0.09, 0.55, 'square');
+      note(880,  0.10, 0.09, 0.50, 'square');
+      note(1100, 0.20, 0.28, 0.42, 'sine');
+    },
+
+    victory() {
+      [523, 659, 784, 880, 1047, 1319].forEach((f, i) => {
+        note(f, i * 0.17, 0.32, Math.max(0.15, 0.40 - i * 0.03));
+      });
+    },
+  };
+})();
+
+// Desbloqueia no primeiro toque/clique — mantém listener para reconectar se suspenso
+document.addEventListener('touchstart', () => SFX.unlock(), { passive: true });
+document.addEventListener('click',      () => SFX.unlock(), { passive: true });
+
 /* ===== ESTADO GLOBAL ===== */
 let teams       = [];        // banco completo
 let pool        = [];        // pool de sorteio (filtrado + ativos)
@@ -228,16 +305,18 @@ function addGoal(side) {
   score[side]++;
   document.getElementById('scoreNum1').textContent = score.a;
   document.getElementById('scoreNum2').textContent = score.b;
+  SFX.goal();
   if (navigator.vibrate) navigator.vibrate(18);
   const flash = document.getElementById('flashOverlay');
   if (flash) {
-    flash.style.opacity = '0.15';
-    setTimeout(() => flash.style.opacity = '0', 250);
+    flash.style.opacity = '0.12';
+    setTimeout(() => flash.style.opacity = '0', 220);
   }
-  // Bump animation
   const numEl = document.getElementById(side === 'a' ? 'scoreNum1' : 'scoreNum2');
-  numEl.style.transform = 'scale(1.25)';
-  setTimeout(() => numEl.style.transform = 'scale(1)', 200);
+  numEl.classList.remove('pop');
+  void numEl.offsetWidth;
+  numEl.classList.add('pop');
+  setTimeout(() => numEl.classList.remove('pop'), 260);
 }
 
 function resetScore() {
@@ -287,6 +366,7 @@ async function startDraft() {
 
   // Animação de slot machine nos nomes
   await slotAnimation(available);
+  SFX.reveal();
 
   // Escolhe 2 aleatórios
   const shuffled = [...available].sort(() => Math.random() - 0.5);
@@ -322,23 +402,24 @@ async function startDraft() {
   if(rn) rn.textContent = roundCount;
 }
 
-function slotAnimation(pool) {
+function slotAnimation(available) {
   const n1 = document.getElementById('name1');
   const n2 = document.getElementById('name2');
   const c1 = document.getElementById('c1');
   const c2 = document.getElementById('c2');
 
-  if(c1) { c1.style.opacity='0.5'; c1.style.transform='scale(0.97)'; }
-  if(c2) { c2.style.opacity='0.5'; c2.style.transform='scale(0.97)'; }
+  if(c1) { c1.style.opacity='0.45'; c1.style.transform='scale(0.96)'; }
+  if(c2) { c2.style.opacity='0.45'; c2.style.transform='scale(0.96)'; }
 
   return new Promise(resolve => {
     let ticks = 0;
-    const max = 7;
+    const max = 9;
     const iv = setInterval(() => {
-      const r1 = pool[Math.floor(Math.random()*pool.length)];
-      const r2 = pool[Math.floor(Math.random()*pool.length)];
+      const r1 = available[Math.floor(Math.random()*available.length)];
+      const r2 = available[Math.floor(Math.random()*available.length)];
       if(n1) n1.textContent = r1.n;
       if(n2) n2.textContent = r2.n;
+      SFX.tick();
       ticks++;
       if (ticks >= max) {
         clearInterval(iv);
@@ -497,6 +578,7 @@ function showVictory(winner, t1, t2, s1, s2) {
   ov.style.display = 'flex';
   ov.style.animation = 'fadeIn 0.4s ease';
   launchConfetti();
+  SFX.victory();
   if (navigator.vibrate) navigator.vibrate([60,80,60,80,120]);
 }
 
