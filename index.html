@@ -475,6 +475,18 @@
 <script src="./js/app.js"></script>
 <script>
   if ('serviceWorker' in navigator) {
+    // Guarda se já havia um SW controlando a página (instalação prévia)
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloading = false;
+
+    // Quando um novo SW assume o controle, recarrega para servir o conteúdo atualizado
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (hadController && !reloading) {
+        reloading = true;
+        window.location.reload();
+      }
+    });
+
     navigator.serviceWorker.register('./sw.js', { scope: './' })
       .then(r => console.log('[PWA] SW registrado', r.scope))
       .catch(e => console.warn('[PWA] SW falhou', e));
