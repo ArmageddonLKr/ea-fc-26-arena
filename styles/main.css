@@ -1366,3 +1366,88 @@ footer {
     width: 460px;
   }
 }
+
+/* ===== MODAL DE PLACAR ===== */
+.sim-teams {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.sim-team-name {
+  flex: 1;
+  font-family: var(--font-head);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text2);
+  text-align: center;
+  word-break: break-word;
+}
+.sim-vs {
+  font-family: var(--font-head);
+  font-size: 1.1rem;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.sim-score-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 8px;
+}
+.sim-score-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.sim-score-sep {
+  width: 1px;
+  height: 120px;
+  background: var(--border2);
+  margin: 0 12px;
+}
+.sim-player-label {
+  font-family: var(--font-head);
+  font-size: 0.58rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sim-num {
+  font-family: var(--font-head);
+  font-size: 4.5rem;
+  font-weight: 900;
+  line-height: 1;
+  user-select: none;
+}
+.sim-num-p1 { color: var(--p1); text-shadow: 0 0 24px rgba(255,23,68,0.3); }
+.sim-num-p2 { color: var(--p2); text-shadow: 0 0 24px rgba(0,184,224,0.3); }
+.sim-btn {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,23,68,0.08);
+  border: 1px solid rgba(255,23,68,0.25);
+  color: var(--p1);
+  transition: background 0.12s, transform 0.1s;
+}
+.sim-btn-p2 {
+  background: rgba(0,184,224,0.08);
+  border-color: rgba(0,184,224,0.25);
+  color: var(--p2);
+}
+.sim-btn-minus {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+  font-size: 1.6rem;
+}
+.sim-btn:active { transform: scale(0.86); }

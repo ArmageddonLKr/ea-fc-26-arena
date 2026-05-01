@@ -77,6 +77,38 @@
   </div>
 </div>
 
+<!-- ===== MODAL: REGISTRAR RESULTADO ===== -->
+<div class="modal-backdrop" id="scoreModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚽ Resultado da Partida</div>
+    <div class="sim-teams">
+      <span id="sim-t1" class="sim-team-name"></span>
+      <span class="sim-vs">×</span>
+      <span id="sim-t2" class="sim-team-name"></span>
+    </div>
+    <div class="sim-score-row">
+      <div class="sim-score-side">
+        <span id="sim-p1" class="sim-player-label"></span>
+        <button class="sim-btn" onclick="adjustModalScore('a',1)">+</button>
+        <span class="sim-num sim-num-p1" id="sim-score-a">0</span>
+        <button class="sim-btn sim-btn-minus" onclick="adjustModalScore('a',-1)">−</button>
+      </div>
+      <div class="sim-score-sep"></div>
+      <div class="sim-score-side">
+        <span id="sim-p2" class="sim-player-label"></span>
+        <button class="sim-btn sim-btn-p2" onclick="adjustModalScore('b',1)">+</button>
+        <span class="sim-num sim-num-p2" id="sim-score-b">0</span>
+        <button class="sim-btn sim-btn-p2 sim-btn-minus" onclick="adjustModalScore('b',-1)">−</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeScoreModal()">Cancelar</button>
+      <button class="btn-save" onclick="confirmScoreAndSave()">✓ Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== VITÓRIA ===== -->
 <div id="victoryOverlay"
   style="display:none;position:fixed;inset:0;z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;">
@@ -318,7 +350,7 @@
     </div>
 
     <!-- Salvar partida -->
-    <button class="btn-save-match" onclick="finishMatchAndSave()">
+    <button class="btn-save-match" onclick="openScoreModal()">
       💾 Registrar Resultado
     </button>
 
