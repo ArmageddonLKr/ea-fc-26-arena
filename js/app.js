@@ -229,6 +229,7 @@ function selectLeague(value) {
 let teams       = [];        // banco completo
 let pool        = [];        // pool de sorteio (filtrado + ativos)
 let bannedTeams = new Set(); // times banidos (por nome)
+let recentTeams = new Set(); // par usado na última rodada (evita repetição imediata)
 let roundTeams  = [null, null];
 let score       = { a: 0, b: 0 };
 let roundHistory = [];
@@ -488,6 +489,7 @@ function _startSession() {
   sessionActive = true;
   roundHistory = [];
   roundCount = 0;
+  recentTeams = new Set();
   score = { a: 0, b: 0 };
   const s1=document.getElementById('scoreNum1');
   const s2=document.getElementById('scoreNum2');
@@ -503,10 +505,15 @@ function _startSession() {
 /* ===== DRAFT ===== */
 async function startDraft() {
   SFX.unlock(); // garante contexto ativo no gesto do botão
-  const available = pool.filter(t => !bannedTeams.has(t.n));
-  if (available.length < 2) {
+  const base = pool.filter(t => !bannedTeams.has(t.n));
+  if (base.length < 2) {
     showToast('Pool insuficiente. Desbane times ou ajuste filtros.', 'warn'); return;
   }
+
+  // Exclui o par da rodada anterior para evitar repetição imediata
+  // Se o pool ficar pequeno demais com a exclusão, usa o pool completo
+  let available = base.filter(t => !recentTeams.has(t.n));
+  if (available.length < 2) available = base;
 
   const btn = document.getElementById('btnSortear');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin-icon">⚡</span> Sorteando...'; }
@@ -517,22 +524,30 @@ async function startDraft() {
   await slotAnimation(available);
   SFX.reveal();
 
-  // Escolhe 2 aleatórios
+  // Escolhe t1 aleatório, depois aplica balanceamento
   const shuffled = [...available].sort(() => Math.random() - 0.5);
   let t1 = shuffled[0];
   let t2 = shuffled[1];
 
-  // Handicap: tenta balancear se diferença > 5
+  // Handicap: balanceamento melhorado — threshold menor e t2 escolhido
+  // aleatoriamente entre todos os candidatos equilibrados (não sempre o mesmo)
   if (cfg.handicap) {
-    const diff = Math.abs(getOVR(t1) - getOVR(t2));
-    if (diff > 5) {
-      const target = getOVR(t1);
+    const target = getOVR(t1);
+    const THRESHOLD = 3;
+    const balanced = available.filter(t => t.n !== t1.n && Math.abs(getOVR(t) - target) <= THRESHOLD);
+    if (balanced.length > 0) {
+      t2 = balanced[Math.floor(Math.random() * balanced.length)];
+    } else {
+      // Nenhum time dentro da faixa ideal — pega o mais próximo disponível
       const sorted = available
         .filter(t => t.n !== t1.n)
-        .sort((a,b) => Math.abs(getOVR(a)-target) - Math.abs(getOVR(b)-target));
+        .sort((a, b) => Math.abs(getOVR(a) - target) - Math.abs(getOVR(b) - target));
       if (sorted.length > 0) t2 = sorted[0];
     }
   }
+
+  // Registra par como "usados recentemente" para evitar na próxima rodada
+  recentTeams = new Set([t1.n, t2.n]);
 
   roundTeams = [t1, t2];
   roundCount++;
