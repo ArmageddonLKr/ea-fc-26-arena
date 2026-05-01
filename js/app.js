@@ -690,6 +690,41 @@ function renderRoundHistory() {
   `).join('');
 }
 
+/* ===== MODAL DE PLACAR ===== */
+let _modalScore = { a: 0, b: 0 };
+
+function openScoreModal() {
+  if (!roundTeams[0] || !roundTeams[1]) {
+    showToast('Sorteie antes de salvar!', 'warn'); return;
+  }
+  _modalScore = { a: score.a, b: score.b };
+  document.getElementById('sim-score-a').textContent = _modalScore.a;
+  document.getElementById('sim-score-b').textContent = _modalScore.b;
+  document.getElementById('sim-p1').textContent = P(0);
+  document.getElementById('sim-p2').textContent = P(1);
+  document.getElementById('sim-t1').textContent = roundTeams[0].n;
+  document.getElementById('sim-t2').textContent = roundTeams[1].n;
+  document.getElementById('scoreModal').classList.add('open');
+}
+
+function adjustModalScore(side, delta) {
+  _modalScore[side] = Math.max(0, _modalScore[side] + delta);
+  document.getElementById(`sim-score-${side}`).textContent = _modalScore[side];
+  SFX.tick(0.4);
+}
+
+function closeScoreModal() {
+  document.getElementById('scoreModal').classList.remove('open');
+}
+
+function confirmScoreAndSave() {
+  score = { ..._modalScore };
+  document.getElementById('scoreNum1').textContent = score.a;
+  document.getElementById('scoreNum2').textContent = score.b;
+  closeScoreModal();
+  finishMatchAndSave();
+}
+
 /* ===== SALVAR PARTIDA ===== */
 function finishMatchAndSave() {
   if (!roundTeams[0] || !roundTeams[1]) {
