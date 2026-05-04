@@ -72,7 +72,7 @@
   --t-eyebrow-size:   0.6rem;     --t-eyebrow-track: 0.3em;   --t-eyebrow-weight: 700;
   --t-body-size:      0.92rem;    --t-body-weight:   700;     --t-body-track:     0.04em;
   --t-meta-size:      0.72rem;    --t-meta-weight:   500;
-  --t-caption-size:   0.52rem;    --t-caption-track: 0.2em;   --t-caption-weight: 700;
+  --t-caption-size:   0.65rem;    --t-caption-track: 0.2em;   --t-caption-weight: 700;
 }
 
 html {
@@ -89,6 +89,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(200,16,46,0.04) 0%, transparent 70%), var(--bg);
 }
 
 
@@ -178,8 +179,8 @@ button, a, [role="button"] {
 @keyframes toastIn     { from { transform: translateX(-50%) translateY(16px); opacity: 0 } to { transform: translateX(-50%) translateY(0); opacity: 1 } }
 @keyframes scorePop    { 0% { transform: scale(1) } 40% { transform: scale(1.32) } 100% { transform: scale(1) } }
 @keyframes glowPulse   {
-  0%, 100% { box-shadow: 0 4px 28px rgba(200,16,46,0.28), 0 0 0 0 rgba(200,16,46,0.0); }
-  50%       { box-shadow: 0 6px 40px rgba(200,16,46,0.5),  0 0 0 6px rgba(200,16,46,0.08); }
+  0%, 100% { box-shadow: 0 4px 32px rgba(200,16,46,0.38), 0 0 0 0 rgba(200,16,46,0.0); }
+  50%       { box-shadow: 0 8px 48px rgba(200,16,46,0.65),  0 0 0 8px rgba(200,16,46,0.12); }
 }
 @keyframes victoryBadge {
   0%   { transform: scale(0.7) translateY(20px); opacity: 0 }
@@ -255,10 +256,11 @@ button, a, [role="button"] {
 /* ===== TOPBAR ===== */
 .topbar {
   position: sticky; top: 0; z-index: 50;
-  background: rgba(6,6,10,0.94);
+  background: rgba(6,6,10,0.96);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(200,16,46,0.18);
+  box-shadow: 0 1px 0 rgba(200,16,46,0.06), 0 2px 16px rgba(0,0,0,0.5);
   display: flex; align-items: center; gap: 10px;
   padding: 0 16px;
   height: 52px;
@@ -317,8 +319,9 @@ button, a, [role="button"] {
 #app {
   max-width: 460px;
   margin: 0 auto;
-  padding: 20px 16px 100px;
+  padding: 20px 16px 110px;
   animation: fadeIn 0.35s ease;
+  overflow-x: hidden;
 }
 
 /* ===== LOBBY / HOME ===== */
@@ -567,7 +570,7 @@ button, a, [role="button"] {
 
 .ah-badge {
   font-family: var(--font-head);
-  font-size: 0.52rem;
+  font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -593,7 +596,7 @@ button, a, [role="button"] {
 
 .round-label {
   font-family: var(--font-head);
-  font-size: 0.52rem;
+  font-size: 0.65rem;
   letter-spacing: 4px;
   text-transform: uppercase;
   color: var(--muted);
@@ -631,7 +634,7 @@ button, a, [role="button"] {
 .btn-draw::before {
   content: '';
   position: absolute; top: 0; left: -120%; width: 60%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
   transition: left 0.55s ease;
 }
 
@@ -681,6 +684,7 @@ button, a, [role="button"] {
   overflow: hidden;
   transition: border-color 0.3s, box-shadow 0.3s;
   animation: cardIn 0.4s cubic-bezier(0.34,1.4,0.64,1);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 
 .card-stripe {
@@ -738,7 +742,7 @@ button, a, [role="button"] {
 
 .ovr-label {
   font-family: var(--font-head);
-  font-size: 0.48rem;
+  font-size: 0.65rem;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--muted);
@@ -762,7 +766,7 @@ button, a, [role="button"] {
 }
 
 .team-logo-wrap {
-  width: 52px; height: 52px;
+  width: 64px; height: 64px;
   flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
 }
@@ -790,8 +794,8 @@ button, a, [role="button"] {
 }
 
 .league-logo {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   object-fit: contain;
   flex-shrink: 0;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
@@ -840,7 +844,7 @@ button, a, [role="button"] {
 
 .stat-label {
   font-family: var(--font-head);
-  font-size: 0.52rem;
+  font-size: 0.65rem;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--muted);
@@ -1063,14 +1067,14 @@ button, a, [role="button"] {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  padding: 10px 6px 9px;
+  padding: 12px 6px 10px;
   background: var(--surface2);
   border: 1.5px solid var(--border2);
   border-radius: var(--radius);
   cursor: pointer;
   touch-action: manipulation;
   transition: border-color 0.18s, background 0.18s;
-  min-height: 68px;
+  min-height: 80px;
   width: 100%;
 }
 
@@ -1087,8 +1091,8 @@ button, a, [role="button"] {
 }
 
 .league-chip img {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -1157,7 +1161,7 @@ button, a, [role="button"] {
 
 .summary-label {
   font-family: var(--font-head);
-  font-size: 0.52rem;
+  font-size: 0.65rem;
   letter-spacing: 3px;
   text-transform: uppercase;
   color: var(--muted);
@@ -1275,7 +1279,7 @@ button, a, [role="button"] {
 
 .ban-name {
   font-family: var(--font-head);
-  font-size: 0.52rem;
+  font-size: 0.65rem;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   color: var(--text2);
@@ -1336,7 +1340,7 @@ button, a, [role="button"] {
   position: fixed;
   bottom: 0; left: 0; right: 0;
   z-index: 100;
-  background: rgba(8,8,14,0.97);
+  background: linear-gradient(to bottom, rgba(8,8,14,0.92), rgba(8,8,14,0.99));
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-top: 1px solid var(--border);
@@ -1381,7 +1385,7 @@ button, a, [role="button"] {
 .tab-item.active::before { width: 28px; }
 
 .tab-item svg { width: 20px; height: 20px; }
-.tab-item span { font-size: 0.5rem; letter-spacing: 2px; text-transform: uppercase; }
+.tab-item span { font-size: 0.65rem; letter-spacing: 1.5px; text-transform: uppercase; }
 
 .tab-item.active { color: var(--accent); }
 .tab-item:active:not(.active) { color: var(--text2); }
@@ -1389,7 +1393,7 @@ button, a, [role="button"] {
 /* ===== FOOTER ===== */
 footer {
   font-family: var(--font-head);
-  font-size: 0.52rem;
+  font-size: 0.65rem;
   letter-spacing: 3px;
   text-transform: uppercase;
   color: var(--muted);

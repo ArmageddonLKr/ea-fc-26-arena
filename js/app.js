@@ -588,8 +588,11 @@ function slotAnimation(available) {
       const r2 = available[Math.floor(Math.random() * available.length)];
       if (n1) n1.textContent = r1.n;
       if (n2) n2.textContent = r2.n;
-      const progress = idx / total;
-      SFX.tick(progress);
+      // Only tick every 3 iterations to avoid cacophonous pitch-sliding effect
+      if (idx % 3 === 0) {
+        const progress = idx / total;
+        SFX.tick(progress);
+      }
       idx++;
       if (idx < total) {
         setTimeout(nextTick, startMs * Math.pow(ratio, idx));

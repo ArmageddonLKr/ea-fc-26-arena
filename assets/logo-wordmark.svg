@@ -1,23 +1,77 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 56" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 64" fill="none">
   <defs>
-    <linearGradient id="m" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ff3a4f"></stop>
-      <stop offset="100%" stop-color="#c8102e"></stop>
+    <linearGradient id="hex-wm" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0c0c14"/>
     </linearGradient>
+    <linearGradient id="ring-wm" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff1744"/>
+      <stop offset="100%" stop-color="#c8102e"/>
+    </linearGradient>
+    <linearGradient id="bolt-wm" x1="0%" y1="0%" x2="60%" y2="100%">
+      <stop offset="0%" stop-color="#ffe066"/>
+      <stop offset="100%" stop-color="#f0c040"/>
+    </linearGradient>
+    <filter id="glow-wm" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
   </defs>
 
-  
-  <path d="M 28 6 L 52 14 L 52 28 Q 52 42 40 50 L 28 54 L 16 50 Q 4 42 4 28 L 4 14 Z" fill="url(#m)" stroke="rgba(255,255,255,0.25)" stroke-width="0.7"></path>
-  
-  <path d="M 14 18 L 26 18 L 26 22 L 19 22 L 19 26 L 25 26 L 25 30 L 19 30 L 19 38 L 14 38 Z" fill="#fff8e7"></path>
-  <path d="M 42 18 Q 32 18 32 28 Q 32 38 42 38 L 42 33 Q 38 33 38 28 Q 38 23 42 23 Z" fill="#fff8e7"></path>
+  <!-- Mini hexagon icon (32×56 area, centered at x=28 y=32) -->
+  <path d="M 28 6
+           L 52 18
+           L 52 46
+           L 28 58
+           L 4 46
+           L 4 18 Z"
+        fill="url(#hex-wm)"/>
 
-  
-  <text x="64" y="29" font-family="Barlow Condensed, Impact, sans-serif" font-weight="900" font-size="22" letter-spacing="3" fill="#fff">FC 26</text>
-  
-  <text x="64" y="46" font-family="Barlow Condensed, Impact, sans-serif" font-weight="700" font-size="11" letter-spacing="6" fill="#c8102e">ARENA</text>
+  <!-- Hexagon red border -->
+  <path d="M 28 6
+           L 52 18
+           L 52 46
+           L 28 58
+           L 4 46
+           L 4 18 Z"
+        stroke="url(#ring-wm)" stroke-width="1.8" fill="none" opacity="0.85"/>
 
-  
-  <circle cx="190" cy="28" r="2.2" fill="#f0c040"></circle>
-  <text x="198" y="32" font-family="Barlow Condensed, Impact, sans-serif" font-weight="700" font-size="10" letter-spacing="3" fill="rgba(255,255,255,0.55)">PRO</text>
+  <!-- Corner accent dots -->
+  <circle cx="28" cy="6" r="2" fill="#c8102e" filter="url(#glow-wm)"/>
+  <circle cx="28" cy="58" r="2" fill="#c8102e" filter="url(#glow-wm)"/>
+
+  <!-- Lightning bolt inside hex -->
+  <g filter="url(#glow-wm)">
+    <path d="M 31 12
+             L 21 32
+             L 27.5 32
+             L 25 52
+             L 35 34
+             L 28.5 34
+             L 35 12 Z"
+          fill="url(#bolt-wm)"/>
+  </g>
+
+  <!-- Vertical separator line -->
+  <line x1="66" y1="14" x2="66" y2="50" stroke="rgba(200,16,46,0.3)" stroke-width="1"/>
+
+  <!-- Main wordmark text -->
+  <!-- "FC 26" large -->
+  <text x="77" y="36"
+        font-family="'Barlow Condensed', 'Impact', sans-serif"
+        font-weight="900" font-size="26" letter-spacing="2"
+        fill="#ffffff">FC 26</text>
+
+  <!-- "ARENA" subtitle -->
+  <text x="78" y="52"
+        font-family="'Barlow Condensed', 'Impact', sans-serif"
+        font-weight="700" font-size="11" letter-spacing="7"
+        fill="#c8102e">ARENA</text>
+
+  <!-- Gold accent dot + "PRO" tag at far right -->
+  <circle cx="228" cy="32" r="2" fill="#f0c040" opacity="0.8"/>
+  <text x="235" y="36"
+        font-family="'Barlow Condensed', 'Impact', sans-serif"
+        font-weight="700" font-size="10" letter-spacing="3"
+        fill="rgba(255,255,255,0.4)">PRO</text>
 </svg>
