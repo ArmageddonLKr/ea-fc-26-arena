@@ -624,7 +624,7 @@ function renderCard(num, team, owner) {
   const ovrEl = document.getElementById(`o${num}`);
   if (ovrEl) {
     ovrEl.textContent = ovr;
-    ovrEl.className = 'ovr-num ' + (ovr >= 85 ? 'ovr-elite' : ovr >= 80 ? 'ovr-gold' : 'ovr-base');
+    ovrEl.className = 'ovr-num ' + (ovr >= 80 ? 'ovr-elite' : ovr >= 75 ? 'ovr-gold' : 'ovr-base');
   }
 
   // Logo
