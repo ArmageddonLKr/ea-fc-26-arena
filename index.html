@@ -76,6 +76,28 @@
   </div>
 </div>
 
+<!-- ===== MODAL: CHAMPIONS ===== -->
+<div class="modal-backdrop" id="championsModal">
+  <div class="modal-sheet" style="max-height:92vh;display:flex;flex-direction:column;">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="margin-bottom:6px;">
+      🏆 Selecionar Times
+    </div>
+    <p style="font-size:0.65rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">
+      Selecione 4, 8 ou 16 times para o chaveamento
+    </p>
+    <div class="champions-counter" id="championsCounter">0 / 16</div>
+    <div class="champions-grid" id="championsGrid"></div>
+    <div class="modal-actions" style="margin-top:14px;">
+      <button class="btn-cancel" onclick="closeChampionsModal()">Cancelar</button>
+      <button class="btn-save" id="btnStartChampions" onclick="startChampionsBracket()" disabled
+        style="opacity:0.45;cursor:not-allowed;">
+        ⚡ Sortear Chaveamento
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== MODAL: REGISTRAR RESULTADO ===== -->
 <div class="modal-backdrop" id="scoreModal">
   <div class="modal-sheet">
@@ -372,6 +394,11 @@
       </select>
 
       <button class="btn-enter" onclick="generateTournament()">⚡ Gerar Chaves</button>
+      <button class="btn-enter"
+        style="margin-top:10px;background:rgba(200,16,46,0.08);color:var(--accent);border:1px solid rgba(200,16,46,0.3);"
+        onclick="openChampionsModal()">
+        🏆 Modo Champions
+      </button>
     </div>
 
     <div id="bracketWrap" style="display:none;margin-top:18px;">

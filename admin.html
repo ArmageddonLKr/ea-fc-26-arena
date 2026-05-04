@@ -80,6 +80,7 @@ html, body {
   max-width: 720px;
   margin: 0 auto;
   padding: 20px 16px 60px;
+  overflow-x: hidden;
 }
 
 /* ===== TOOLBAR ===== */
@@ -91,13 +92,14 @@ html, body {
 
 .search-input {
   flex: 1; min-width: 140px;
+  width: 100%;
   background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: var(--radius);
   color: var(--text);
   font-family: var(--font-body);
-  font-size: 0.88rem;
-  padding: 9px 14px;
+  font-size: 16px;
+  padding: 12px 14px;
   outline: none;
   transition: border-color 0.2s;
 }
@@ -110,8 +112,8 @@ html, body {
   border-radius: var(--radius);
   color: var(--text2);
   font-family: var(--font-body);
-  font-size: 0.82rem;
-  padding: 9px 10px;
+  font-size: 16px;
+  padding: 12px 10px;
   outline: none;
   cursor: pointer;
   min-width: 100px;
@@ -121,7 +123,7 @@ html, body {
 
 .btn-toolbar {
   display: flex; align-items: center; gap: 5px;
-  padding: 9px 14px;
+  padding: 12px 14px;
   border-radius: var(--radius);
   font-family: var(--font-head);
   font-size: 0.7rem;
@@ -143,6 +145,7 @@ html, body {
 .sort-row {
   display: flex; gap: 6px; align-items: center;
   margin-bottom: 10px;
+  flex-wrap: wrap;
 }
 
 .sort-label {
@@ -354,6 +357,13 @@ html, body {
   gap: 14px;
 }
 
+@media (max-width: 480px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-full { grid-column: 1; }
+}
+
 .form-full { grid-column: 1 / -1; }
 
 .form-group {
@@ -371,13 +381,13 @@ html, body {
 }
 
 .form-input, .form-select-edit {
-  padding: 10px 12px;
+  padding: 12px 12px;
   background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: var(--radius);
   color: var(--text);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 16px;
   outline: none;
   transition: border-color 0.2s;
   width: 100%;
@@ -393,6 +403,12 @@ html, body {
   grid-template-columns: 1fr 1fr 1fr;
   gap: 12px;
   grid-column: 1 / -1;
+}
+
+@media (max-width: 380px) {
+  .stat-controls-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .stat-control-group {
@@ -597,6 +613,66 @@ html, body {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+/* ===== MOBILE RESPONSIVE (≤480px) ===== */
+@media (max-width: 480px) {
+  html, body { overflow-x: hidden; }
+
+  .admin-wrap { padding: 14px 12px 60px; }
+
+  /* Toolbar: busca ocupa linha inteira, filtro + botão ficam juntos abaixo */
+  .admin-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+  .admin-toolbar .search-input { width: 100%; }
+  .admin-toolbar .filter-select { flex: 1; width: 100%; }
+  .admin-toolbar .btn-toolbar.primary { width: 100%; justify-content: center; }
+
+  /* Sort row: wrap e export/import/reset ficam em nova linha */
+  .sort-row { gap: 4px; }
+  .sort-row > span[style*="margin-left:auto"] {
+    margin-left: 0 !important;
+    width: 100%;
+    display: flex;
+    gap: 6px;
+  }
+
+  /* Botões sort menores */
+  .sort-btn { padding: 6px 10px; font-size: 0.58rem; }
+
+  /* Team row: quebra em 2 linhas no mobile, evita overflow */
+  .team-row { flex-wrap: nowrap; gap: 8px; padding: 10px; overflow: hidden; }
+  .team-row-name { font-size: 0.88rem; }
+  .team-row-meta { font-size: 0.55rem; }
+  .team-row-ovr  { font-size: 1rem; min-width: 28px; }
+
+  /* Icon buttons no mobile: tamanho mínimo de toque */
+  .icon-btn { width: 36px; height: 36px; font-size: 0.9rem; }
+
+  /* Modal: borda arredondada topo + largura total */
+  .modal-sheet {
+    border-radius: 18px 18px 0 0;
+    padding: 18px 14px 28px;
+    max-height: 95vh;
+  }
+
+  /* OVR Preview: mais compacto */
+  .ovr-preview-wrap { padding: 12px 14px; }
+  .ovr-preview-num  { font-size: 1.8rem; }
+
+  /* Logo preview group: coluna no mobile */
+  .logo-preview-group { flex-direction: column; }
+  .logo-preview { width: 56px; height: 56px; }
+
+  /* Color row: empilha */
+  .color-row { flex-direction: row; }
+
+  /* Modal actions: empilha botões */
+  .modal-actions { flex-direction: column; }
+  .btn-cancel, .btn-save { width: 100%; padding: 14px; }
+
+  /* Topbar: logo menor + badge menor */
+  .topbar { padding: 0 12px; }
+  .team-count-badge { font-size: 0.56rem; padding: 2px 8px; }
+}
 </style>
 </head>
 <body>

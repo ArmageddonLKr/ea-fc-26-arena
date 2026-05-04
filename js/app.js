@@ -147,16 +147,22 @@ document.addEventListener('click',      () => SFX.unlock(), { passive: true });
 
 /* ===== MAPA DE LIGAS (ID → imagem em assets/leagues/<id>.png) ===== */
 const LEAGUE_IDS = {
-  'Premier League':    11,
-  'La Liga':           67,
-  'Serie A':           32,
-  'Bundesliga':        22,
-  'Ligue 1':           16,
-  'Eredivisie':        29,
-  'Liga Portugal':     60,
-  'MLS':               40,
-  'Argentina':         102421,
-  'Süper Lig':         130286,
+  'Premier League':              11,
+  'La Liga':                     67,
+  'LaLiga':                      67,
+  'Serie A':                     32,
+  'Bundesliga':                  22,
+  'Ligue 1':                     16,
+  'Eredivisie':                  29,
+  'Liga Portugal':               60,
+  'MLS':                         40,
+  'Argentina':                   102421,
+  'Liga Profesional':            102421,
+  'Süper Lig':                   130286,
+  'Saudi Pro League':            7920263,
+  'RSL':                         7920263,
+  'UEFA Champions League':       1301394,
+  'Champions League':            1301394,
 };
 
 function getLeagueLogoUrl(leagueName) {
@@ -173,10 +179,11 @@ const LEAGUE_LIST = [
   { value: 'Ligue 1',          label: 'Ligue 1',         emoji: '🇫🇷', id: 16 },
   { value: 'Eredivisie',       label: 'Eredivisie',      emoji: '🇳🇱', id: 29 },
   { value: 'Liga Portugal',    label: 'Liga Portugal',   emoji: '🇵🇹', id: 60 },
-  { value: 'Saudi Pro League', label: 'Saudi Pro',       emoji: '🇸🇦', id: null },
+  { value: 'Saudi Pro League', label: 'Saudi Pro',       emoji: '🇸🇦', id: 7920263 },
   { value: 'MLS',              label: 'MLS',             emoji: '🇺🇸', id: 40 },
   { value: 'Argentina',        label: 'Argentina',       emoji: '🇦🇷', id: 102421 },
   { value: 'Süper Lig',        label: 'Süper Lig',       emoji: '🇹🇷', id: 130286 },
+  { value: 'UEFA Champions League', label: 'Champions',  emoji: '🏆',  id: 1301394 },
 ];
 
 function renderLeagueFilter() {
@@ -899,6 +906,93 @@ function closeBanMenu() {
 function applyBansAndStart() {
   closeBanMenu();
   _startSession();
+}
+
+/* ===== CHAMPIONS MODE ===== */
+let championsSelected = []; // array of team objects currently selected
+
+function openChampionsModal() {
+  if (pool.length < 4) { showToast('Precisa de ao menos 4 times no pool.', 'warn'); return; }
+  championsSelected = [];
+  renderChampionsGrid();
+  updateChampionsCounter();
+  document.getElementById('championsModal').classList.add('open');
+}
+
+function closeChampionsModal() {
+  document.getElementById('championsModal').classList.remove('open');
+}
+
+function renderChampionsGrid() {
+  const grid = document.getElementById('championsGrid');
+  if (!grid) return;
+  grid.innerHTML = pool.map(t => {
+    const selected = championsSelected.some(s => s.n === t.n);
+    const badge    = makeBadge(t.n, t.c);
+    const logo     = getLogoUrl(t) || badge;
+    const safeN    = t.n.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    return `
+      <div class="champions-team${selected ? ' selected' : ''}" onclick="toggleChampionsTeam('${safeN}')">
+        <img src="${logo}" alt="${t.n}" onerror="this.src='${badge}'"
+             style="width:36px;height:36px;object-fit:contain;">
+        <div class="champions-team-name">${t.n.split(/\s+/)[0]}</div>
+      </div>`;
+  }).join('');
+}
+
+function toggleChampionsTeam(name) {
+  const team = pool.find(t => t.n === name);
+  if (!team) return;
+  const idx = championsSelected.findIndex(s => s.n === name);
+  if (idx >= 0) {
+    championsSelected.splice(idx, 1);
+  } else {
+    championsSelected.push(team);
+  }
+  renderChampionsGrid();
+  updateChampionsCounter();
+}
+
+function updateChampionsCounter() {
+  const n = championsSelected.length;
+  const valid = n === 4 || n === 8 || n === 16;
+  const counter = document.getElementById('championsCounter');
+  const btn     = document.getElementById('btnStartChampions');
+  if (counter) {
+    counter.textContent = `${n} / 16`;
+    counter.className = 'champions-counter' + (valid ? ' valid' : '');
+  }
+  if (btn) {
+    btn.disabled = !valid;
+    btn.style.opacity = valid ? '1' : '0.45';
+    btn.style.cursor  = valid ? 'pointer' : 'not-allowed';
+  }
+}
+
+function startChampionsBracket() {
+  const n = championsSelected.length;
+  if (n !== 4 && n !== 8 && n !== 16) {
+    showToast('Selecione 4, 8 ou 16 times.', 'warn'); return;
+  }
+
+  // Shuffle the selected teams
+  const picked = [...championsSelected].sort(() => Math.random() - 0.5);
+  tourn = { teams: picked, bracket: [], idx: 0, done: false };
+
+  for (let i = 0; i < picked.length; i += 2) {
+    tourn.bracket.push({ t1: picked[i], t2: picked[i+1], winner: null, round: 1 });
+  }
+
+  closeChampionsModal();
+  switchTab('torneio');
+
+  // Show bracket, hide setup controls
+  renderBracket();
+  document.getElementById('bracketWrap').style.display = 'block';
+  document.getElementById('tournSetupControls').style.display = 'none';
+  document.getElementById('btnNextMatch').style.display = 'block';
+
+  showToast(`🏆 Chaveamento com ${n} times gerado!`);
 }
 
 /* ===== TORNEIO ===== */
