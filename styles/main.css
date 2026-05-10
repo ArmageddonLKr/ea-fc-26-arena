@@ -1630,3 +1630,116 @@ footer {
 }
 
 .champions-counter.valid { color: var(--accent); }
+
+/* =====================================================
+   UCL MODE — UEFA Champions League Theme
+   ===================================================== */
+
+@keyframes ucl-star-twinkle {
+  0%,100% { opacity: 0.15; }
+  50%      { opacity: 0.55; }
+}
+
+@keyframes ucl-pulse-gold {
+  0%,100% { box-shadow: 0 0 0 0 rgba(201,168,76,0); }
+  50%      { box-shadow: 0 0 18px 4px rgba(201,168,76,0.28); }
+}
+
+body.ucl-mode {
+  --bg:        #020b1e;
+  --surface:   #030f28;
+  --surface2:  #051636;
+  --surface3:  #081e48;
+  --border:    #0d2260;
+  --border2:   #1a3590;
+  --accent:    #c9a84c;
+  --accent2:   #f0c040;
+  --gold:      #f0c040;
+  --gold2:     #ffe066;
+  --glow-accent:        0 4px 28px rgba(201,168,76,0.32);
+  --glow-accent-strong: 0 6px 40px rgba(201,168,76,0.5), 0 0 0 6px rgba(201,168,76,0.08);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(26,53,144,0.22) 0%, transparent 68%),
+    var(--bg);
+}
+
+/* Campo de estrelas gerado por CSS — sem JS */
+body.ucl-mode::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 8%,  rgba(240,192,64,0.7) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 28% 18%, rgba(240,192,64,0.5) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 45% 6%,  rgba(240,192,64,0.65) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 62% 14%, rgba(240,192,64,0.45) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 78% 9%,  rgba(240,192,64,0.6) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 90% 22%, rgba(240,192,64,0.4) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 7%  35%, rgba(200,200,255,0.3) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 55% 28%, rgba(200,200,255,0.25) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 83% 38%, rgba(200,200,255,0.3) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 33% 44%, rgba(240,192,64,0.35) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 70% 48%, rgba(240,192,64,0.5) 0%, transparent 100%);
+  animation: ucl-star-twinkle 3.5s ease-in-out infinite alternate;
+}
+
+/* Garante que o conteúdo fique sobre as estrelas */
+body.ucl-mode #app,
+body.ucl-mode .modal-backdrop,
+body.ucl-mode .tab-bar,
+body.ucl-mode #splash {
+  position: relative;
+  z-index: 1;
+}
+
+/* Topbar UCL — borda dourada sutil */
+body.ucl-mode .topbar {
+  border-bottom-color: rgba(201,168,76,0.25);
+}
+
+/* Botão UCL na home */
+.btn-enter.btn-ucl {
+  background: linear-gradient(135deg, #051636 0%, #0d2260 100%);
+  color: #f0c040;
+  border: 1px solid rgba(201,168,76,0.5);
+  animation: ucl-pulse-gold 2.8s ease-in-out infinite;
+}
+.btn-enter.btn-ucl:active {
+  background: linear-gradient(135deg, #0d2260 0%, #1a3590 100%);
+}
+
+/* Badge UCL no header da arena */
+.ucl-arena-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-head);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #f0c040;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 4px;
+  padding: 3px 8px;
+  margin-bottom: 6px;
+}
+
+/* Card border gold em UCL mode */
+body.ucl-mode .card {
+  border-color: rgba(201,168,76,0.2);
+}
+
+/* Tab bar UCL */
+body.ucl-mode .tab-bar {
+  border-top-color: rgba(201,168,76,0.2);
+}
+body.ucl-mode .tab-item.active {
+  color: #f0c040;
+}
+body.ucl-mode .tab-item.active svg {
+  filter: drop-shadow(0 0 6px rgba(240,192,64,0.6));
+}

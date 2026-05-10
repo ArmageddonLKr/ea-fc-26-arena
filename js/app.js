@@ -242,6 +242,7 @@ let score       = { a: 0, b: 0 };
 let roundHistory = [];
 let roundCount  = 0;
 let sessionActive = false;
+let uclMode     = false;     // modo UCL — filtra pool para times ucl:true
 
 const SK = {
   teams:    'fc26_teams_v2',
@@ -427,8 +428,9 @@ async function init() {
 function rebuildPool() {
   pool = teams.filter(t => {
     if (t.active === false) return false;
-    if (cfg.leagueFilter !== 'all' && t.league !== cfg.leagueFilter) return false;
-    if (cfg.elite80 && getOVR(t) < 80) return false;
+    if (uclMode && !t.ucl) return false;
+    if (!uclMode && cfg.leagueFilter !== 'all' && t.league !== cfg.leagueFilter) return false;
+    if (!uclMode && cfg.elite80 && getOVR(t) < 80) return false;
     return true;
   });
   updateConfigStats();
@@ -484,9 +486,24 @@ function resetScore() {
 
 /* ===== BOOT ARENA ===== */
 function bootArena() {
+  uclMode = false;
+  document.body.classList.remove('ucl-mode');
+  rebuildPool();
   if (pool.length < 2) {
     showToast('Pool insuficiente. Ajuste os filtros.', 'warn'); return;
   }
+  bannedTeams = new Set();
+  _startSession();
+}
+
+function bootArenaUCL() {
+  const uclTeams = teams.filter(t => t.active !== false && t.ucl === true);
+  if (uclTeams.length < 2) {
+    showToast('Nenhum time UCL disponível.', 'warn'); return;
+  }
+  uclMode = true;
+  document.body.classList.add('ucl-mode');
+  rebuildPool();
   bannedTeams = new Set();
   _startSession();
 }
@@ -497,6 +514,8 @@ function _startSession() {
   roundHistory = [];
   roundCount = 0;
   recentTeams = new Set();
+  const uclBadge = document.getElementById('uclArenaBadge');
+  if (uclBadge) uclBadge.style.display = uclMode ? 'block' : 'none';
   score = { a: 0, b: 0 };
   const s1=document.getElementById('scoreNum1');
   const s2=document.getElementById('scoreNum2');
@@ -643,10 +662,14 @@ function renderCard(num, team, owner) {
   // Liga + Nome
   const leagueEl = document.getElementById(`league${num}`);
   if (leagueEl) {
-    const lgUrl = getLeagueLogoUrl(team.league);
-    leagueEl.innerHTML = lgUrl
-      ? `<img class="league-logo" src="${lgUrl}" alt="" onerror="this.remove()">${team.f||''} ${team.league}`
-      : `${team.f||''} ${team.league}`;
+    if (uclMode) {
+      leagueEl.innerHTML = `⭐ UEFA Champions League`;
+    } else {
+      const lgUrl = getLeagueLogoUrl(team.league);
+      leagueEl.innerHTML = lgUrl
+        ? `<img class="league-logo" src="${lgUrl}" alt="" onerror="this.remove()">${team.f||''} ${team.league}`
+        : `${team.f||''} ${team.league}`;
+    }
   }
   const nameEl = document.getElementById(`name${num}`);
   if (nameEl) nameEl.textContent = team.n;
