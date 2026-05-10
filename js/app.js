@@ -654,106 +654,77 @@ function _startSession() {
 }
 
 /* ===== DRAFT ===== */
-async function startDraft() {
+function startDraft() {
   SFX.unlock();
   const base = pool.filter(t => !bannedTeams.has(t.n));
   if (base.length < 2) {
     showToast('Pool insuficiente. Desbane times ou ajuste filtros.', 'warn'); return;
   }
 
-  // Anti-repetição: exclui os últimos 8 times (4 pares) usados
-  // Se o pool ficar pequeno demais, afrouxa progressivamente
-  let available = base.filter(t => !recentQueue.includes(t.n));
-  if (available.length < 2) {
-    available = base.filter(t => !recentQueue.slice(0, 4).includes(t.n));
-    if (available.length < 2) available = base;
-  }
+  // ── ESCOLHA DE t1 ────────────────────────────────────────────────────────
+  // Anti-repetição: exclui últimos 8 times usados (4 pares).
+  // Afrouxa progressivamente se o pool ficar pequeno.
+  let poolT1 = base.filter(t => !recentQueue.includes(t.n));
+  if (poolT1.length < 2) poolT1 = base.filter(t => !recentQueue.slice(0, 4).includes(t.n));
+  if (poolT1.length < 1) poolT1 = base;
 
-  const btn = document.getElementById('btnSortear');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin-icon">⚡</span> Sorteando...'; }
+  const t1 = poolT1[Math.floor(Math.random() * poolT1.length)];
 
-  if (navigator.vibrate) navigator.vibrate([25,40,25]);
+  // ── ESCOLHA DE t2 ────────────────────────────────────────────────────────
+  // Sempre parte de TODOS os não-banidos exceto t1 (não filtra por recentes).
+  // Isso garante que o balanceamento não seja limitado pelo anti-repetição.
+  const candidatesAll = base.filter(t => t.n !== t1.n);
 
-  // Animação rápida — papum
-  await slotAnimation(available);
-  uclMode ? SFX.revealUCL() : SFX.reveal();
+  let t2;
+  if (cfg.handicap && candidatesAll.length > 0) {
+    const target = getOVR(t1);
 
-  // Escolhe t1 aleatório, depois aplica balanceamento
-  const shuffled = [...available].sort(() => Math.random() - 0.5);
-  let t1 = shuffled[0];
-  let t2 = shuffled[1];
-
-  // Balanceamento: tenta aproximar OVR, threshold 4 pts (UCL tem campo menor)
-  if (cfg.handicap) {
-    const target    = getOVR(t1);
-    const THRESHOLD = uclMode ? 4 : 3;
-    const balanced  = available.filter(t => t.n !== t1.n && Math.abs(getOVR(t) - target) <= THRESHOLD);
-    if (balanced.length > 0) {
-      t2 = balanced[Math.floor(Math.random() * balanced.length)];
-    } else {
-      const sorted = available
-        .filter(t => t.n !== t1.n)
-        .sort((a, b) => Math.abs(getOVR(a) - target) - Math.abs(getOVR(b) - target));
-      if (sorted.length > 0) t2 = sorted[0];
+    // Busca progressiva: ±2 → ±4 → ±6 → mais próximo disponível
+    for (const th of [2, 4, 6]) {
+      const within = candidatesAll.filter(t => Math.abs(getOVR(t) - target) <= th);
+      if (within.length > 0) {
+        // Dentro do threshold, prefere times não-recentes
+        const fresh  = within.filter(t => !recentQueue.includes(t.n));
+        const source = fresh.length > 0 ? fresh : within;
+        t2 = source[Math.floor(Math.random() * source.length)];
+        break;
+      }
     }
+    // Fallback final: o mais próximo em OVR de t1
+    if (!t2) {
+      const sorted = [...candidatesAll].sort((a, b) =>
+        Math.abs(getOVR(a) - target) - Math.abs(getOVR(b) - target)
+      );
+      t2 = sorted[0];
+    }
+  } else {
+    // Sem balanceamento: escolhe aleatório, preferindo não-recentes
+    const fresh  = candidatesAll.filter(t => !recentQueue.includes(t.n));
+    const source = fresh.length > 0 ? fresh : candidatesAll;
+    t2 = source[Math.floor(Math.random() * source.length)];
   }
 
-  // Registra par na fila de recentes (mantém últimos 8 = 4 pares)
+  // ── REGISTRA E RENDERIZA ─────────────────────────────────────────────────
   recentQueue = [t1.n, t2.n, ...recentQueue].slice(0, 8);
-
-  roundTeams = [t1, t2];
+  roundTeams  = [t1, t2];
   roundCount++;
+
+  if (navigator.vibrate) navigator.vibrate([18]);
   renderCard(1, t1, P(0));
   renderCard(2, t2, P(1));
   updateOVRAdv(t1, t2);
+  uclMode ? SFX.revealUCL() : SFX.reveal();
 
   if (roundHistory.length > 0) {
     const hw = document.getElementById('historyWrap');
-    if(hw) hw.style.display='block';
+    if (hw) hw.style.display = 'block';
     renderRoundHistory();
   }
 
-  if(btn) { btn.disabled=false; btn.innerHTML='<span>⚡ Novo Sorteio</span>'; }
   const rn = document.getElementById('roundNum');
-  if(rn) rn.textContent = roundCount;
+  if (rn) rn.textContent = roundCount;
 }
 
-function slotAnimation(available) {
-  const n1 = document.getElementById('name1');
-  const n2 = document.getElementById('name2');
-  const c1 = document.getElementById('c1');
-  const c2 = document.getElementById('c2');
-
-  if (c1) { c1.style.opacity = '0.45'; c1.style.transform = 'scale(0.96)'; }
-  if (c2) { c2.style.opacity = '0.45'; c2.style.transform = 'scale(0.96)'; }
-
-  return new Promise(resolve => {
-    // 5 ticks rápidos — snappy, sem delay
-    const total   = 5;
-    const startMs = 32;
-    const endMs   = 75;
-    const ratio   = Math.pow(endMs / startMs, 1 / (total - 1));
-    let idx = 0;
-
-    function nextTick() {
-      const r1 = available[Math.floor(Math.random() * available.length)];
-      const r2 = available[Math.floor(Math.random() * available.length)];
-      if (n1) n1.textContent = r1.n;
-      if (n2) n2.textContent = r2.n;
-      if (idx % 2 === 0) SFX.tick(idx / total);
-      idx++;
-      if (idx < total) {
-        setTimeout(nextTick, startMs * Math.pow(ratio, idx));
-      } else {
-        if (c1) { c1.style.opacity = '1'; c1.style.transform = 'scale(1)'; }
-        if (c2) { c2.style.opacity = '1'; c2.style.transform = 'scale(1)'; }
-        setTimeout(resolve, 40);
-      }
-    }
-
-    setTimeout(nextTick, startMs);
-  });
-}
 
 /* ===== RENDER CARD ===== */
 function renderCard(num, team, owner) {
