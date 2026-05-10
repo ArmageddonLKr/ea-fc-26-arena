@@ -704,25 +704,61 @@ function startDraft() {
     t2 = source[Math.floor(Math.random() * source.length)];
   }
 
-  // ── REGISTRA E RENDERIZA ─────────────────────────────────────────────────
+  // ── REGISTRA (síncrono) e REVELA com suspense ────────────────────────────
   recentQueue = [t1.n, t2.n, ...recentQueue].slice(0, 8);
   roundTeams  = [t1, t2];
   roundCount++;
 
   if (navigator.vibrate) navigator.vibrate([18]);
-  renderCard(1, t1, P(0));
-  renderCard(2, t2, P(1));
-  updateOVRAdv(t1, t2);
-  uclMode ? SFX.revealUCL() : SFX.reveal();
+  _suspenseReveal(t1, t2);
+}
 
-  if (roundHistory.length > 0) {
-    const hw = document.getElementById('historyWrap');
-    if (hw) hw.style.display = 'block';
-    renderRoundHistory();
+/* Animação de suspense: 7 ticks (35 → 105ms) ≈ 450ms, depois revela.
+   O par já foi calculado — o suspense é puramente visual. */
+function _suspenseReveal(t1, t2) {
+  const c1 = document.getElementById('c1');
+  const c2 = document.getElementById('c2');
+  const n1 = document.getElementById('name1');
+  const n2 = document.getElementById('name2');
+
+  if (c1) { c1.style.opacity = '0.25'; c1.style.transform = 'scale(0.97)'; }
+  if (c2) { c2.style.opacity = '0.25'; c2.style.transform = 'scale(0.97)'; }
+
+  const src   = pool.length >= 2 ? pool : [t1, t2];
+  const TICKS = 7, T0 = 35, T1 = 105;
+  const ratio = Math.pow(T1 / T0, 1 / (TICKS - 1));
+  let i = 0;
+
+  function tick() {
+    const r1 = src[Math.floor(Math.random() * src.length)];
+    const r2 = src[Math.floor(Math.random() * src.length)];
+    if (n1) n1.textContent = r1.n;
+    if (n2) n2.textContent = r2.n;
+    if (i % 2 === 0) SFX.tick(i / TICKS);
+    i++;
+    if (i < TICKS) {
+      setTimeout(tick, T0 * Math.pow(ratio, i));
+    } else {
+      // Reveal — restaura cards e injeta dados reais
+      if (c1) { c1.style.opacity = '1'; c1.style.transform = ''; }
+      if (c2) { c2.style.opacity = '1'; c2.style.transform = ''; }
+      renderCard(1, t1, P(0));
+      renderCard(2, t2, P(1));
+      updateOVRAdv(t1, t2);
+      uclMode ? SFX.revealUCL() : SFX.reveal();
+
+      const rn = document.getElementById('roundNum');
+      if (rn) rn.textContent = roundCount;
+
+      if (roundHistory.length > 0) {
+        const hw = document.getElementById('historyWrap');
+        if (hw) hw.style.display = 'block';
+        renderRoundHistory();
+      }
+    }
   }
 
-  const rn = document.getElementById('roundNum');
-  if (rn) rn.textContent = roundCount;
+  setTimeout(tick, T0);
 }
 
 

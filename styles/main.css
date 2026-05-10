@@ -766,15 +766,21 @@ button, a, [role="button"] {
 }
 
 .team-logo-wrap {
-  width: 90px; height: 90px;
+  width: 92px; height: 92px;
   flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse 80% 80% at 50% 50%, rgba(255,255,255,0.07) 0%, transparent 100%);
+  border-radius: 14px;
+  padding: 6px;
 }
 
 .team-logo-wrap img {
   width: 100%; height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.7)) drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+  /* sombra única — sem composição dupla que borra em retina */
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.55));
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: high-quality;
 }
 
 .logo-fallback { font-size: 2rem; opacity: 0.5; }
