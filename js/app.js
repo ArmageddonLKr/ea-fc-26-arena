@@ -725,7 +725,7 @@ function _suspenseReveal(t1, t2) {
   if (c2) { c2.style.opacity = '0.25'; c2.style.transform = 'scale(0.97)'; }
 
   const src   = pool.length >= 2 ? pool : [t1, t2];
-  const TICKS = 25, T0 = 60, T1 = 1600;
+  const TICKS = 20, T0 = 40, T1 = 750;
   const ratio = Math.pow(T1 / T0, 1 / (TICKS - 1));
   let i = 0;
 
