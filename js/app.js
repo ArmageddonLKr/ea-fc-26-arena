@@ -153,6 +153,28 @@ const SFX = (() => {
 document.addEventListener('touchstart', () => SFX.unlock(), { passive: true });
 document.addEventListener('click',      () => SFX.unlock(), { passive: true });
 
+/* ===== UCL 2026-27 — 32 times participantes ===== */
+const UCL_26_27 = new Set([
+  // Bundesliga (4)
+  'Bayern München','Bayer Leverkusen','Borussia Dortmund','RB Leipzig',
+  // La Liga (4)
+  'Real Madrid','Barcelona','Atlético Madrid','Villarreal CF',
+  // Premier League (5)
+  'Liverpool','Arsenal','Man City','Chelsea','Aston Villa',
+  // Ligue 1 (3)
+  'PSG','AS Monaco','Marseille',
+  // Serie A (5)
+  'Inter Milan','Napoli','Juventus','Milan','Atalanta',
+  // Eredivisie (2)
+  'PSV Eindhoven','Feyenoord',
+  // Liga Portugal (3)
+  'Sporting CP','Benfica','Porto',
+  // Süper Lig / playoff (2)
+  'Galatasaray','Fenerbahçe',
+  // Classificados via playoff / 5ª vaga
+  'Ajax','Bologna','Newcastle','Stuttgart',
+]);
+
 /* ===== MAPA DE LIGAS (ID → imagem em assets/leagues/<id>.png) ===== */
 const LEAGUE_IDS = {
   'Premier League':              11,
@@ -515,7 +537,9 @@ function bootArenaUCL() {
   if (allUCL.length < 2) {
     showToast('Nenhum time UCL disponível.', 'warn'); return;
   }
-  uclSelectedTeams = [...allUCL]; // todos selecionados por padrão
+  // Pré-seleciona os 32 times da UCL 26-27 por padrão
+  uclSelectedTeams = allUCL.filter(t => UCL_26_27.has(t.n));
+  if (uclSelectedTeams.length < 2) uclSelectedTeams = [...allUCL];
   renderUCLModal();
   document.getElementById('uclModal').classList.add('open');
 }
@@ -524,20 +548,37 @@ function renderUCLModal() {
   const grid = document.getElementById('uclTeamsGrid');
   if (!grid) return;
   const allUCL = teams.filter(t => t.active !== false && t.ucl === true);
-  grid.innerHTML = allUCL.map(t => {
-    const sel   = uclSelectedTeams.some(s => s.n === t.n);
-    const badge = makeBadge(t.n, t.c);
-    const logo  = getLogoUrl(t) || badge;
-    const safeN = t.n.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    return `
-      <div class="ban-item${sel ? '' : ' banned'}" onclick="toggleUCLTeam('${safeN}')">
-        <img src="${logo}" alt="${t.n}" onerror="this.src='${badge}'"
-             style="width:36px;height:36px;object-fit:contain;">
-        <div class="ban-name">${t.n.split(/\s+/)[0]}</div>
-        ${sel ? '' : '<div class="ban-x">✕</div>'}
-      </div>`;
-  }).join('');
+
+  // Ordena: 26-27 primeiro, depois extras
+  const official = allUCL.filter(t =>  UCL_26_27.has(t.n));
+  const extras   = allUCL.filter(t => !UCL_26_27.has(t.n));
+  const ordered  = [...official, ...extras];
+
+  let html = '';
+  if (extras.length > 0) {
+    html += `<div style="grid-column:1/-1;font-family:var(--font-head);font-size:0.55rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:2px 0 4px;">UCL 2026-27</div>`;
+  }
+  html += official.map(t => teamChipHtml(t)).join('');
+  if (extras.length > 0) {
+    html += `<div style="grid-column:1/-1;font-family:var(--font-head);font-size:0.55rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:8px 0 4px;">Outras opções</div>`;
+    html += extras.map(t => teamChipHtml(t)).join('');
+  }
+  grid.innerHTML = html;
   updateUCLCounter();
+}
+
+function teamChipHtml(t) {
+  const sel   = uclSelectedTeams.some(s => s.n === t.n);
+  const badge = makeBadge(t.n, t.c);
+  const logo  = getLogoUrl(t) || badge;
+  const safeN = t.n.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  return `
+    <div class="ban-item${sel ? '' : ' banned'}" onclick="toggleUCLTeam('${safeN}')">
+      <img src="${logo}" alt="${t.n}" onerror="this.src='${badge}'"
+           style="width:36px;height:36px;object-fit:contain;">
+      <div class="ban-name">${t.n.split(/\s+/)[0]}</div>
+      ${sel ? '' : '<div class="ban-x">✕</div>'}
+    </div>`;
 }
 
 function toggleUCLTeam(name) {
