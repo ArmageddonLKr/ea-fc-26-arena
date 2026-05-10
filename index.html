@@ -98,6 +98,47 @@
   </div>
 </div>
 
+<!-- ===== MODAL: UCL SORTEIO ===== -->
+<div class="modal-backdrop" id="uclModal">
+  <div class="modal-sheet" style="max-height:92vh;display:flex;flex-direction:column;">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="margin-bottom:4px;">
+      ⭐ UEFA Champions League
+    </div>
+    <p style="font-size:0.65rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">
+      Toque para remover times do sorteio
+    </p>
+
+    <!-- contador -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);">Times:</span>
+      <span id="uclTeamCount" style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:900;color:var(--gold);">0</span>
+    </div>
+
+    <!-- grid de times -->
+    <div id="uclTeamsGrid"
+      style="display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:8px;overflow-y:auto;flex:1;padding-bottom:12px;">
+    </div>
+
+    <!-- opções -->
+    <div style="border-top:1px solid var(--border);padding:12px 0 4px;display:flex;flex-direction:column;gap:10px;">
+      <div class="league-mode-row">
+        <input type="checkbox" id="uclBalanced" checked>
+        <label for="uclBalanced">⚖ Balanceado — aproxima OVR no sorteio</label>
+      </div>
+      <div class="league-mode-row">
+        <input type="checkbox" id="uclElite80">
+        <label for="uclElite80">⭐ Elite 80+ — só times com OVR ≥ 80</label>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top:10px;">
+      <button class="btn-cancel" onclick="closeUCLModal()">Cancelar</button>
+      <button class="btn-save" id="btnStartUCL" onclick="startArenaUCL()">⚡ Sortear UCL</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== MODAL: REGISTRAR RESULTADO ===== -->
 <div class="modal-backdrop" id="scoreModal">
   <div class="modal-sheet">

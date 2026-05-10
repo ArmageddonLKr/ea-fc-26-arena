@@ -319,7 +319,7 @@ button, a, [role="button"] {
 #app {
   max-width: 460px;
   margin: 0 auto;
-  padding: 20px 16px 110px;
+  padding: 12px 16px 110px;
   animation: fadeIn 0.35s ease;
   overflow-x: hidden;
 }
@@ -443,8 +443,8 @@ button, a, [role="button"] {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 18px 14px 14px;
-  margin-bottom: 14px;
+  padding: 10px 14px 8px;
+  margin-bottom: 10px;
   position: relative;
   overflow: hidden;
 }
@@ -471,7 +471,7 @@ button, a, [role="button"] {
 
 .score-num {
   font-family: var(--font-head);
-  font-size: 5rem;
+  font-size: 3.2rem;
   font-weight: 900;
   line-height: 0.9;
   color: var(--text);
@@ -550,7 +550,7 @@ button, a, [role="button"] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
   padding: 0 2px;
 }
 
@@ -611,7 +611,7 @@ button, a, [role="button"] {
 }
 
 /* ===== SORTEIO BUTTON ===== */
-.btn-draw-wrap { margin-bottom: 14px; }
+.btn-draw-wrap { margin-bottom: 10px; }
 
 .btn-draw {
   display: flex; align-items: center; justify-content: center; gap: 10px;
@@ -762,11 +762,11 @@ button, a, [role="button"] {
 /* ===== TEAM IDENTITY ===== */
 .team-identity {
   display: flex; gap: 12px; align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .team-logo-wrap {
-  width: 72px; height: 72px;
+  width: 90px; height: 90px;
   flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
 }
@@ -794,8 +794,8 @@ button, a, [role="button"] {
 }
 
 .league-logo {
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
   flex-shrink: 0;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
@@ -803,7 +803,7 @@ button, a, [role="button"] {
 
 .team-name {
   font-family: var(--font-head);
-  font-size: 1.35rem;
+  font-size: 1.55rem;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -875,8 +875,8 @@ button, a, [role="button"] {
 /* ===== OVR ADVANTAGE ===== */
 .ovr-advantage {
   display: flex; flex-direction: column; align-items: center;
-  gap: 5px;
-  padding: 8px 0;
+  gap: 4px;
+  padding: 4px 0;
 }
 
 .ovr-adv-text {
@@ -1441,8 +1441,8 @@ footer {
 /* ===== SAVE BTN ARENA ===== */
 .btn-save-match {
   width: 100%;
-  margin-top: 16px;
-  padding: 14px;
+  margin-top: 8px;
+  padding: 11px;
   background: rgba(200,16,46,0.07);
   border: 1px solid rgba(200,16,46,0.2);
   border-radius: var(--radius);

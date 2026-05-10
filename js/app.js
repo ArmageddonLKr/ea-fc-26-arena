@@ -139,6 +139,14 @@ const SFX = (() => {
       fire(buildImpact(0.94, 0),   a.currentTime + 0.04 + 0.40);
       fire(buildImpact(1.35, 1.0), a.currentTime + 0.04 + 0.66);
     },
+
+    // UCL: dois hits majestosos — buildup leve + slam épico
+    revealUCL() {
+      const a = ctx(); if (!a) return;
+      if (a.state === 'suspended') a.resume().catch(() => {});
+      fire(buildImpact(0.55, 0.2), a.currentTime + 0.02);
+      fire(buildImpact(1.3,  1.0), a.currentTime + 0.20);
+    },
   };
 })();
 
@@ -233,16 +241,17 @@ function selectLeague(value) {
 }
 
 /* ===== ESTADO GLOBAL ===== */
-let teams       = [];        // banco completo
-let pool        = [];        // pool de sorteio (filtrado + ativos)
-let bannedTeams = new Set(); // times banidos (por nome)
-let recentTeams = new Set(); // par usado na última rodada (evita repetição imediata)
-let roundTeams  = [null, null];
-let score       = { a: 0, b: 0 };
-let roundHistory = [];
-let roundCount  = 0;
+let teams         = [];        // banco completo
+let pool          = [];        // pool de sorteio (filtrado + ativos)
+let bannedTeams   = new Set(); // times banidos (por nome)
+let recentQueue   = [];        // últimos 8 times usados (4 pares) — evita repetição
+let roundTeams    = [null, null];
+let score         = { a: 0, b: 0 };
+let roundHistory  = [];
+let roundCount    = 0;
 let sessionActive = false;
-let uclMode     = false;     // modo UCL — filtra pool para times ucl:true
+let uclMode         = false;   // modo UCL ativo
+let uclSelectedTeams = [];     // times escolhidos no modal UCL
 
 const SK = {
   teams:    'fc26_teams_v2',
@@ -426,11 +435,15 @@ async function init() {
 
 /* ===== POOL ===== */
 function rebuildPool() {
+  if (uclMode) {
+    pool = uclSelectedTeams.filter(t => t.active !== false);
+    updateConfigStats();
+    return;
+  }
   pool = teams.filter(t => {
     if (t.active === false) return false;
-    if (uclMode && !t.ucl) return false;
-    if (!uclMode && cfg.leagueFilter !== 'all' && t.league !== cfg.leagueFilter) return false;
-    if (!uclMode && cfg.elite80 && getOVR(t) < 80) return false;
+    if (cfg.leagueFilter !== 'all' && t.league !== cfg.leagueFilter) return false;
+    if (cfg.elite80 && getOVR(t) < 80) return false;
     return true;
   });
   updateConfigStats();
@@ -496,14 +509,85 @@ function bootArena() {
   _startSession();
 }
 
+/* ===== UCL MODE — MODAL DE SELEÇÃO ===== */
 function bootArenaUCL() {
-  const uclTeams = teams.filter(t => t.active !== false && t.ucl === true);
-  if (uclTeams.length < 2) {
+  const allUCL = teams.filter(t => t.active !== false && t.ucl === true);
+  if (allUCL.length < 2) {
     showToast('Nenhum time UCL disponível.', 'warn'); return;
   }
+  uclSelectedTeams = [...allUCL]; // todos selecionados por padrão
+  renderUCLModal();
+  document.getElementById('uclModal').classList.add('open');
+}
+
+function renderUCLModal() {
+  const grid = document.getElementById('uclTeamsGrid');
+  if (!grid) return;
+  const allUCL = teams.filter(t => t.active !== false && t.ucl === true);
+  grid.innerHTML = allUCL.map(t => {
+    const sel   = uclSelectedTeams.some(s => s.n === t.n);
+    const badge = makeBadge(t.n, t.c);
+    const logo  = getLogoUrl(t) || badge;
+    const safeN = t.n.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    return `
+      <div class="ban-item${sel ? '' : ' banned'}" onclick="toggleUCLTeam('${safeN}')">
+        <img src="${logo}" alt="${t.n}" onerror="this.src='${badge}'"
+             style="width:36px;height:36px;object-fit:contain;">
+        <div class="ban-name">${t.n.split(/\s+/)[0]}</div>
+        ${sel ? '' : '<div class="ban-x">✕</div>'}
+      </div>`;
+  }).join('');
+  updateUCLCounter();
+}
+
+function toggleUCLTeam(name) {
+  const team = teams.find(t => t.n === name);
+  if (!team) return;
+  const idx = uclSelectedTeams.findIndex(s => s.n === name);
+  if (idx >= 0) uclSelectedTeams.splice(idx, 1);
+  else          uclSelectedTeams.push(team);
+  renderUCLModal();
+}
+
+function updateUCLCounter() {
+  const n   = uclSelectedTeams.length;
+  const el  = document.getElementById('uclTeamCount');
+  const btn = document.getElementById('btnStartUCL');
+  if (el)  el.textContent = n;
+  if (btn) {
+    btn.disabled       = n < 2;
+    btn.style.opacity  = n >= 2 ? '1' : '0.45';
+    btn.style.cursor   = n >= 2 ? 'pointer' : 'not-allowed';
+  }
+}
+
+function closeUCLModal() {
+  document.getElementById('uclModal').classList.remove('open');
+}
+
+function startArenaUCL() {
+  if (uclSelectedTeams.length < 2) {
+    showToast('Selecione ao menos 2 times.', 'warn'); return;
+  }
+  const elite80Chk  = document.getElementById('uclElite80');
+  const balancedChk = document.getElementById('uclBalanced');
+
+  let finalPool = [...uclSelectedTeams];
+  if (elite80Chk && elite80Chk.checked) {
+    finalPool = finalPool.filter(t => getOVR(t) >= 80);
+    if (finalPool.length < 2) {
+      showToast('Menos de 2 times Elite 80+ selecionados.', 'warn'); return;
+    }
+  }
+
+  closeUCLModal();
   uclMode = true;
+  uclSelectedTeams = finalPool;
   document.body.classList.add('ucl-mode');
-  rebuildPool();
+  pool = finalPool;
+
+  cfg.handicap = balancedChk ? balancedChk.checked : false;
+
   bannedTeams = new Set();
   _startSession();
 }
@@ -513,7 +597,7 @@ function _startSession() {
   sessionActive = true;
   roundHistory = [];
   roundCount = 0;
-  recentTeams = new Set();
+  recentQueue = [];
   const uclBadge = document.getElementById('uclArenaBadge');
   if (uclBadge) uclBadge.style.display = uclMode ? 'block' : 'none';
   score = { a: 0, b: 0 };
@@ -530,41 +614,42 @@ function _startSession() {
 
 /* ===== DRAFT ===== */
 async function startDraft() {
-  SFX.unlock(); // garante contexto ativo no gesto do botão
+  SFX.unlock();
   const base = pool.filter(t => !bannedTeams.has(t.n));
   if (base.length < 2) {
     showToast('Pool insuficiente. Desbane times ou ajuste filtros.', 'warn'); return;
   }
 
-  // Exclui o par da rodada anterior para evitar repetição imediata
-  // Se o pool ficar pequeno demais com a exclusão, usa o pool completo
-  let available = base.filter(t => !recentTeams.has(t.n));
-  if (available.length < 2) available = base;
+  // Anti-repetição: exclui os últimos 8 times (4 pares) usados
+  // Se o pool ficar pequeno demais, afrouxa progressivamente
+  let available = base.filter(t => !recentQueue.includes(t.n));
+  if (available.length < 2) {
+    available = base.filter(t => !recentQueue.slice(0, 4).includes(t.n));
+    if (available.length < 2) available = base;
+  }
 
   const btn = document.getElementById('btnSortear');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin-icon">⚡</span> Sorteando...'; }
 
   if (navigator.vibrate) navigator.vibrate([25,40,25]);
 
-  // Animação de slot machine nos nomes
+  // Animação rápida — papum
   await slotAnimation(available);
-  SFX.reveal();
+  uclMode ? SFX.revealUCL() : SFX.reveal();
 
   // Escolhe t1 aleatório, depois aplica balanceamento
   const shuffled = [...available].sort(() => Math.random() - 0.5);
   let t1 = shuffled[0];
   let t2 = shuffled[1];
 
-  // Handicap: balanceamento melhorado — threshold menor e t2 escolhido
-  // aleatoriamente entre todos os candidatos equilibrados (não sempre o mesmo)
+  // Balanceamento: tenta aproximar OVR, threshold 4 pts (UCL tem campo menor)
   if (cfg.handicap) {
-    const target = getOVR(t1);
-    const THRESHOLD = 3;
-    const balanced = available.filter(t => t.n !== t1.n && Math.abs(getOVR(t) - target) <= THRESHOLD);
+    const target    = getOVR(t1);
+    const THRESHOLD = uclMode ? 4 : 3;
+    const balanced  = available.filter(t => t.n !== t1.n && Math.abs(getOVR(t) - target) <= THRESHOLD);
     if (balanced.length > 0) {
       t2 = balanced[Math.floor(Math.random() * balanced.length)];
     } else {
-      // Nenhum time dentro da faixa ideal — pega o mais próximo disponível
       const sorted = available
         .filter(t => t.n !== t1.n)
         .sort((a, b) => Math.abs(getOVR(a) - target) - Math.abs(getOVR(b) - target));
@@ -572,8 +657,8 @@ async function startDraft() {
     }
   }
 
-  // Registra par como "usados recentemente" para evitar na próxima rodada
-  recentTeams = new Set([t1.n, t2.n]);
+  // Registra par na fila de recentes (mantém últimos 8 = 4 pares)
+  recentQueue = [t1.n, t2.n, ...recentQueue].slice(0, 8);
 
   roundTeams = [t1, t2];
   roundCount++;
@@ -602,11 +687,11 @@ function slotAnimation(available) {
   if (c2) { c2.style.opacity = '0.45'; c2.style.transform = 'scale(0.96)'; }
 
   return new Promise(resolve => {
-    // Desaceleração exponencial: 14 ticks de 62ms → 220ms (roulette wheel)
-    const total = 14;
-    const startMs = 62;
-    const endMs = 220;
-    const ratio = Math.pow(endMs / startMs, 1 / (total - 1));
+    // 5 ticks rápidos — snappy, sem delay
+    const total   = 5;
+    const startMs = 32;
+    const endMs   = 75;
+    const ratio   = Math.pow(endMs / startMs, 1 / (total - 1));
     let idx = 0;
 
     function nextTick() {
@@ -614,18 +699,14 @@ function slotAnimation(available) {
       const r2 = available[Math.floor(Math.random() * available.length)];
       if (n1) n1.textContent = r1.n;
       if (n2) n2.textContent = r2.n;
-      // Only tick every 3 iterations to avoid cacophonous pitch-sliding effect
-      if (idx % 3 === 0) {
-        const progress = idx / total;
-        SFX.tick(progress);
-      }
+      if (idx % 2 === 0) SFX.tick(idx / total);
       idx++;
       if (idx < total) {
         setTimeout(nextTick, startMs * Math.pow(ratio, idx));
       } else {
         if (c1) { c1.style.opacity = '1'; c1.style.transform = 'scale(1)'; }
         if (c2) { c2.style.opacity = '1'; c2.style.transform = 'scale(1)'; }
-        setTimeout(resolve, 95);
+        setTimeout(resolve, 40);
       }
     }
 
