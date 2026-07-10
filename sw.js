@@ -1,4 +1,4 @@
-const CACHE = 'eafc26-v26';
+const CACHE = 'eafc26-v27';
 const ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,15 @@ const ASSETS = [
   './js/stats.js',
   './js/tournament.js',
   './teams.json',
-  './assets/logo.svg'
+  './assets/logo.svg',
+  './assets/fonts/rajdhani-500.woff2',
+  './assets/fonts/rajdhani-600.woff2',
+  './assets/fonts/rajdhani-700.woff2',
+  './assets/fonts/barlow-condensed-300.woff2',
+  './assets/fonts/barlow-condensed-600.woff2',
+  './assets/fonts/barlow-condensed-700.woff2',
+  './assets/fonts/barlow-condensed-900.woff2',
+  './assets/fonts/barlow-condensed-italic-900.woff2',
 ];
 
 self.addEventListener('install', e => {
