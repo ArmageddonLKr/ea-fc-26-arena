@@ -758,27 +758,28 @@ button, a, [role="button"] {
 
 /* ===== TEAM CARD ===== */
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background:
+    linear-gradient(165deg, color-mix(in srgb, var(--team-color, var(--accent)) 16%, var(--surface) 84%) 0%, var(--surface) 60%);
+  border: 1px solid color-mix(in srgb, var(--team-color, var(--accent)) 32%, var(--border) 68%);
   border-radius: var(--radius-lg);
   position: relative;
   overflow: hidden;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
   animation: cardIn 0.4s cubic-bezier(0.34,1.4,0.64,1);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5), inset 0 0 0 1px color-mix(in srgb, var(--team-color, var(--accent)) 10%, transparent);
 }
 
 .card-stripe {
   position: absolute; top: 0; left: 0; right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--team-color, var(--accent)), transparent 80%);
+  height: 4px;
+  background: linear-gradient(90deg, var(--team-color, var(--accent)), color-mix(in srgb, var(--team-color, var(--accent)) 30%, transparent) 90%);
 }
 
 .card-glow {
   position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
-  width: 240px; height: 100px;
+  width: 260px; height: 130px;
   background: radial-gradient(ellipse, var(--team-color, var(--accent)), transparent 70%);
-  opacity: 0.07;
+  opacity: 0.16;
   pointer-events: none;
 }
 
@@ -828,6 +829,7 @@ button, a, [role="button"] {
   border: 1px solid var(--border2);
   border-radius: 6px;
   padding: 4px 11px;
+  transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
 }
 
 .ovr-label {
@@ -847,7 +849,19 @@ button, a, [role="button"] {
 
 .ovr-base  { color: var(--text2); }
 .ovr-gold  { color: var(--gold); text-shadow: 0 0 14px rgba(240,192,64,0.4); }
-.ovr-elite { color: var(--accent2); text-shadow: 0 0 14px rgba(255,23,68,0.4); }
+.ovr-elite { color: var(--accent2); text-shadow: 0 0 14px rgba(167,139,250,0.45); }
+
+/* Hero (85+) — tema verde escuro/dourado, referência às cartas "Hero" do Ultimate Team */
+.ovr-num.ovr-hero {
+  color: #ffd84d;
+  text-shadow: 0 0 12px rgba(255,216,77,0.55);
+}
+.ovr-badge.ovr-badge-hero {
+  background: linear-gradient(160deg, #0f4a2c 0%, #062616 100%);
+  border-color: rgba(60,220,140,0.4);
+  box-shadow: 0 0 16px rgba(30,200,120,0.28), inset 0 0 0 1px rgba(255,216,77,0.15);
+}
+.ovr-badge.ovr-badge-hero .ovr-label { color: #7fe8ac; }
 
 /* ===== TEAM IDENTITY ===== */
 .team-identity {
