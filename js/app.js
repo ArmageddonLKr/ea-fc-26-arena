@@ -397,6 +397,15 @@ function renderLogoInto(wrapEl, team) {
   }
 }
 
+function preloadTeamLogos() {
+  teams.forEach(t => {
+    const url = getLogoUrl(t);
+    if (!url) return;
+    const img = new Image();
+    img.src = url;
+  });
+}
+
 /* ===== INIT ===== */
 function hideSplash() {
   const splash = document.getElementById('splash');
@@ -439,6 +448,10 @@ async function init() {
       ...t,
       ovr: Math.round((t.a + t.m + t.d) / 3),
     }));
+
+    // Pré-carrega os escudos em segundo plano — evita o "pop" tardio do
+    // logo depois do suspense do sorteio (fica no cache do browser).
+    preloadTeamLogos();
 
     // Restaura nomes dos jogadores
     try {
@@ -839,12 +852,15 @@ function renderCard(num, team, owner) {
   const ownerEl = document.getElementById(`n${num}_owner`);
   if(ownerEl) ownerEl.textContent = owner || `P${num}`;
 
-  // OVR
+  // OVR — tiers: base < 75 · gold 75-79 · elite 80-84 · hero 85+ (tema verde escuro)
   const ovrEl = document.getElementById(`o${num}`);
+  const ovrTier = ovr >= 85 ? 'ovr-hero' : ovr >= 80 ? 'ovr-elite' : ovr >= 75 ? 'ovr-gold' : 'ovr-base';
   if (ovrEl) {
     ovrEl.textContent = ovr;
-    ovrEl.className = 'ovr-num ' + (ovr >= 80 ? 'ovr-elite' : ovr >= 75 ? 'ovr-gold' : 'ovr-base');
+    ovrEl.className = 'ovr-num ' + ovrTier;
   }
+  const ovrBadgeEl = document.getElementById(`c${num}`)?.querySelector('.ovr-badge');
+  if (ovrBadgeEl) ovrBadgeEl.classList.toggle('ovr-badge-hero', ovrTier === 'ovr-hero');
 
   // Logo
   renderLogoInto(document.getElementById(`logoWrap${num}`), team);
