@@ -153,6 +153,37 @@ const SFX = (() => {
 document.addEventListener('touchstart', () => SFX.unlock(), { passive: true });
 document.addEventListener('click',      () => SFX.unlock(), { passive: true });
 
+/* ===== RNG JUSTO (sorteio) =====
+ * crypto.getRandomValues em vez de Math.random(): gerador criptográfico do
+ * próprio navegador, não determinístico/seedável — ninguém (nem o app) tem
+ * como prever ou forçar o próximo resultado. Usado só onde o RESULTADO do
+ * sorteio é decidido (escolha de times, embaralhamento de chaveamento).
+ * Efeitos cosméticos (som, confete, ticks do suspense) seguem com
+ * Math.random(), pois não influenciam o time sorteado. */
+function fairRandom() {
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return buf[0] / 4294967296; // [0, 1)
+}
+
+function fairInt(maxExclusive) {
+  return Math.floor(fairRandom() * maxExclusive);
+}
+
+function fairPick(arr) {
+  return arr[fairInt(arr.length)];
+}
+
+// Fisher-Yates — shuffle real e uniforme (diferente de array.sort(() => Math.random()-0.5), que é viesado)
+function fairShuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = fairInt(i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 /* ===== UCL 2026-27 — 32 times participantes ===== */
 const UCL_26_27 = new Set([
   // Bundesliga (4)
@@ -668,7 +699,7 @@ function startDraft() {
   if (poolT1.length < 2) poolT1 = base.filter(t => !recentQueue.slice(0, 4).includes(t.n));
   if (poolT1.length < 1) poolT1 = base;
 
-  const t1 = poolT1[Math.floor(Math.random() * poolT1.length)];
+  const t1 = fairPick(poolT1);
 
   // ── ESCOLHA DE t2 ────────────────────────────────────────────────────────
   // Sempre parte de TODOS os não-banidos exceto t1 (não filtra por recentes).
@@ -686,7 +717,7 @@ function startDraft() {
         // Dentro do threshold, prefere times não-recentes
         const fresh  = within.filter(t => !recentQueue.includes(t.n));
         const source = fresh.length > 0 ? fresh : within;
-        t2 = source[Math.floor(Math.random() * source.length)];
+        t2 = fairPick(source);
         break;
       }
     }
@@ -701,7 +732,7 @@ function startDraft() {
     // Sem balanceamento: escolhe aleatório, preferindo não-recentes
     const fresh  = candidatesAll.filter(t => !recentQueue.includes(t.n));
     const source = fresh.length > 0 ? fresh : candidatesAll;
-    t2 = source[Math.floor(Math.random() * source.length)];
+    t2 = fairPick(source);
   }
 
   // ── REGISTRA (síncrono) e REVELA com suspense ────────────────────────────
@@ -1128,7 +1159,7 @@ function startChampionsBracket() {
   }
 
   // Shuffle the selected teams
-  const picked = [...championsSelected].sort(() => Math.random() - 0.5);
+  const picked = fairShuffle(championsSelected);
   tourn = { teams: picked, bracket: [], idx: 0, done: false };
 
   for (let i = 0; i < picked.length; i += 2) {
@@ -1166,7 +1197,7 @@ function generateTournament() {
     showToast(`Precisa de ${size} times elegíveis. Ajuste os filtros.`, 'warn'); return;
   }
 
-  const picked = [...eligible].sort(()=>Math.random()-0.5).slice(0, size);
+  const picked = fairShuffle(eligible).slice(0, size);
   tourn = { teams: picked, bracket: [], idx: 0, done: false };
 
   for (let i = 0; i < picked.length; i += 2) {
