@@ -305,6 +305,7 @@ let roundCount    = 0;
 let sessionActive = false;
 let uclMode         = false;   // modo UCL ativo
 let uclSelectedTeams = [];     // times escolhidos no modal UCL
+let champMode       = false;   // modo Champions 26-27 (bracket) ativo
 
 const SK = {
   teams:    'fc26_teams_v2',
@@ -517,6 +518,30 @@ function P(idx) {
   } catch(e) { return `P${idx+1}`; }
 }
 
+/* ===== VALIDAÇÃO OBRIGATÓRIA DE NOMES ANTES DE SORTEAR ===== */
+function requirePlayerNames() {
+  const p1 = document.getElementById('p1Input');
+  const p2 = document.getElementById('p2Input');
+  const v1 = ((p1 && p1.value) || '').trim();
+  const v2 = ((p2 && p2.value) || '').trim();
+  if (v1 && v2) return true;
+
+  switchTab('home');
+  showToast('⚠ Preencha os dois nomes antes de sortear!', 'warn');
+
+  [[p1, v1], [p2, v2]].forEach(([el, v]) => {
+    if (!el || v) return;
+    const slot = el.closest('.player-slot');
+    if (slot) {
+      slot.classList.remove('slot-error');
+      void slot.offsetWidth; // reflow — permite reanimar o shake em tentativas seguidas
+      slot.classList.add('slot-error');
+    }
+  });
+  (v1 ? p2 : p1)?.focus();
+  return false;
+}
+
 function updateScoreNames() {
   const p1 = P(0), p2 = P(1);
   ['scoreName1','ah_p1'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=p1; });
@@ -552,7 +577,9 @@ function resetScore() {
 
 /* ===== BOOT ARENA ===== */
 function bootArena() {
+  if (!requirePlayerNames()) return;
   uclMode = false;
+  champMode = false;
   document.body.classList.remove('ucl-mode');
   rebuildPool();
   if (pool.length < 2) {
@@ -564,6 +591,7 @@ function bootArena() {
 
 /* ===== UCL MODE — MODAL DE SELEÇÃO ===== */
 function bootArenaUCL() {
+  if (!requirePlayerNames()) return;
   const allUCL = teams.filter(t => t.active !== false && t.ucl === true);
   if (allUCL.length < 2) {
     showToast('Nenhum time UCL disponível.', 'warn'); return;
@@ -654,6 +682,7 @@ function startArenaUCL() {
 
   closeUCLModal();
   uclMode = true;
+  champMode = false;
   uclSelectedTeams = finalPool;
   document.body.classList.add('ucl-mode');
   pool = finalPool;
@@ -686,6 +715,7 @@ function _startSession() {
 
 /* ===== DRAFT ===== */
 function startDraft() {
+  if (!requirePlayerNames()) return;
   SFX.unlock();
   const base = pool.filter(t => !bannedTeams.has(t.n));
   if (base.length < 2) {
@@ -824,6 +854,8 @@ function renderCard(num, team, owner) {
   if (leagueEl) {
     if (uclMode) {
       leagueEl.innerHTML = `⭐ UEFA Champions League`;
+    } else if (champMode) {
+      leagueEl.innerHTML = `🏆 Champions 26-27`;
     } else {
       const lgUrl = getLeagueLogoUrl(team.league);
       leagueEl.innerHTML = lgUrl
@@ -1048,6 +1080,11 @@ function launchConfetti() {
 
 /* ===== BANS ===== */
 function openBanMenu() {
+  if (!requirePlayerNames()) return;
+  if (!uclMode && champMode) {
+    champMode = false;
+    document.body.classList.remove('ucl-mode');
+  }
   if (pool.length < 2) { showToast('Pool insuficiente.', 'warn'); return; }
   const saved = JSON.parse(localStorage.getItem(SK.bans)||'[]');
   bannedTeams = new Set(saved);
@@ -1095,8 +1132,14 @@ function applyBansAndStart() {
 let championsSelected = []; // array of team objects currently selected
 
 function openChampionsModal() {
-  if (pool.length < 4) { showToast('Precisa de ao menos 4 times no pool.', 'warn'); return; }
-  championsSelected = [];
+  if (!requirePlayerNames()) return;
+  const activeTeams = teams.filter(t => t.active !== false);
+  if (activeTeams.length < 4) { showToast('Precisa de ao menos 4 times ativos.', 'warn'); return; }
+
+  // Pré-seleciona os times da Champions 26-27 (até o máximo de 16 do chaveamento)
+  const champTeams = activeTeams.filter(t => UCL_26_27.has(t.n));
+  championsSelected = champTeams.length >= 4 ? champTeams.slice(0, 16) : [];
+
   renderChampionsGrid();
   updateChampionsCounter();
   document.getElementById('championsModal').classList.add('open');
@@ -1109,7 +1152,11 @@ function closeChampionsModal() {
 function renderChampionsGrid() {
   const grid = document.getElementById('championsGrid');
   if (!grid) return;
-  grid.innerHTML = pool.map(t => {
+  const activeTeams = teams.filter(t => t.active !== false);
+  const official = activeTeams.filter(t =>  UCL_26_27.has(t.n));
+  const extras   = activeTeams.filter(t => !UCL_26_27.has(t.n));
+
+  const chipHtml = t => {
     const selected = championsSelected.some(s => s.n === t.n);
     const badge    = makeBadge(t.n, t.c);
     const logo     = getLogoUrl(t) || badge;
@@ -1120,11 +1167,22 @@ function renderChampionsGrid() {
              style="width:36px;height:36px;object-fit:contain;">
         <div class="champions-team-name">${t.n.split(/\s+/)[0]}</div>
       </div>`;
-  }).join('');
+  };
+
+  let html = '';
+  if (official.length > 0) {
+    html += `<div style="grid-column:1/-1;font-family:var(--font-head);font-size:0.55rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:2px 0 4px;">Champions 26-27</div>`;
+    html += official.map(chipHtml).join('');
+  }
+  if (extras.length > 0) {
+    html += `<div style="grid-column:1/-1;font-family:var(--font-head);font-size:0.55rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:8px 0 4px;">Outros times</div>`;
+    html += extras.map(chipHtml).join('');
+  }
+  grid.innerHTML = html;
 }
 
 function toggleChampionsTeam(name) {
-  const team = pool.find(t => t.n === name);
+  const team = teams.find(t => t.n === name);
   if (!team) return;
   const idx = championsSelected.findIndex(s => s.n === name);
   if (idx >= 0) {
@@ -1167,6 +1225,9 @@ function startChampionsBracket() {
   }
 
   closeChampionsModal();
+  champMode = true;
+  uclMode = false;
+  document.body.classList.add('ucl-mode');
   switchTab('torneio');
 
   // Show bracket, hide setup controls
@@ -1175,7 +1236,7 @@ function startChampionsBracket() {
   document.getElementById('tournSetupControls').style.display = 'none';
   document.getElementById('btnNextMatch').style.display = 'block';
 
-  showToast(`🏆 Chaveamento com ${n} times gerado!`);
+  showToast(`🏆 Chaveamento Champions 26-27 com ${n} times gerado!`);
 }
 
 /* ===== TORNEIO ===== */
@@ -1184,6 +1245,9 @@ let tourn = { teams:[], bracket:[], idx:0, done:false };
 function openTournamentMenu() { switchTab('torneio'); }
 
 function generateTournament() {
+  if (!requirePlayerNames()) return;
+  champMode = false;
+  document.body.classList.remove('ucl-mode');
   const size  = parseInt(document.getElementById('tourneySize').value);
   const level = document.getElementById('tourneyLevel').value;
 
@@ -1250,6 +1314,14 @@ function playNextMatch() {
   renderCard(1, m.t1, P(0));
   renderCard(2, m.t2, P(1));
   updateOVRAdv(m.t1, m.t2);
+
+  const uclBadge = document.getElementById('uclArenaBadge');
+  const uclBadgeText = document.getElementById('uclArenaBadgeText');
+  if (uclBadge) {
+    uclBadge.style.display = champMode ? 'block' : 'none';
+    if (champMode && uclBadgeText) uclBadgeText.textContent = '🏆 Champions 26-27';
+  }
+
   switchTab('arena');
 
   // Botão de salvar vai registrar o vencedor no bracket
@@ -1273,6 +1345,12 @@ function recordTournamentResult(winner) {
 
 function backToLobbyFromTournament() {
   tourn = { teams:[], bracket:[], idx:0, done:false };
+  if (champMode) {
+    champMode = false;
+    document.body.classList.remove('ucl-mode');
+  }
+  const uclBadge = document.getElementById('uclArenaBadge');
+  if (uclBadge) uclBadge.style.display = 'none';
   const bw = document.getElementById('bracketWrap');
   const sc = document.getElementById('tournSetupControls');
   if(bw) bw.style.display = 'none';

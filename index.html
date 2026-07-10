@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#060608">
+<meta name="theme-color" content="#08060f">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -44,7 +44,7 @@
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" style="flex:1" onclick="closeStatsMenu()">✕ Fechar</button>
-      <button class="btn-cancel" style="color:var(--p1);border-color:rgba(200,16,46,0.3);background:rgba(200,16,46,0.06);"
+      <button class="btn-cancel" style="color:var(--p1);border-color:rgba(255,23,68,0.35);background:rgba(255,23,68,0.08);"
         onclick="clearStats()">🗑 Limpar</button>
     </div>
   </div>
@@ -79,10 +79,10 @@
   <div class="modal-sheet" style="max-height:92vh;display:flex;flex-direction:column;">
     <div class="modal-handle"></div>
     <div class="modal-title" style="margin-bottom:6px;">
-      🏆 Selecionar Times
+      🏆 Champions 26-27
     </div>
     <p style="font-size:0.65rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">
-      Selecione 4, 8 ou 16 times para o chaveamento
+      Pré-selecionados · escolha 4, 8 ou 16 times para o chaveamento
     </p>
     <div class="champions-counter" id="championsCounter">0 / 16</div>
     <div class="champions-grid" id="championsGrid"></div>
@@ -221,17 +221,18 @@
   <div id="tab-home">
     <p class="lobby-subtitle" style="margin-bottom:18px;">Defina os Comandantes</p>
     <div class="player-slots">
-      <div class="player-slot" style="--slot-color:var(--p1)">
+      <div class="player-slot" style="--slot-color:var(--p1)" id="p1Slot">
         <div class="slot-icon">🎮</div>
-        <span class="slot-label">Comandante 01</span>
+        <span class="slot-label">Comandante 01 <span class="slot-required">*</span></span>
         <input type="text" id="p1Input" class="slot-input" placeholder="Seu nome" maxlength="16" oninput="savePlayerNames()">
       </div>
-      <div class="player-slot" style="--slot-color:var(--p2)">
+      <div class="player-slot" style="--slot-color:var(--p2)" id="p2Slot">
         <div class="slot-icon">🕹️</div>
-        <span class="slot-label">Comandante 02</span>
+        <span class="slot-label">Comandante 02 <span class="slot-required">*</span></span>
         <input type="text" id="p2Input" class="slot-input" placeholder="Oponente" maxlength="16" oninput="savePlayerNames()">
       </div>
     </div>
+    <p style="text-align:center;font-size:0.56rem;letter-spacing:1px;color:var(--muted);margin-top:-12px;margin-bottom:18px;">* obrigatório para sortear</p>
 
     <div class="lobby-vs">· VS ·</div>
 
@@ -278,7 +279,7 @@
 
     <!-- UCL badge (visível apenas em modo UCL) -->
     <div id="uclArenaBadge" style="display:none;text-align:center;padding:4px 0 0;">
-      <span class="ucl-arena-badge">⭐ UEFA Champions League</span>
+      <span class="ucl-arena-badge" id="uclArenaBadgeText">⭐ UEFA Champions League</span>
     </div>
 
     <!-- Arena header -->
@@ -308,12 +309,12 @@
     <div class="cards-grid" id="arenaCardsGrid">
 
       <!-- Card 1 -->
-      <div class="card" id="c1" style="--team-color:#c8102e">
+      <div class="card" id="c1" style="--team-color:#8b5cf6">
         <div class="card-stripe"></div>
         <div class="card-glow"></div>
         <div class="card-content">
           <div class="card-top">
-            <div class="owner-badge" id="n1_owner">—</div>
+            <div class="owner-badge owner-p1" id="n1_owner">—</div>
             <div class="ovr-badge">
               <span class="ovr-label">OVR</span>
               <span class="ovr-num ovr-base" id="o1">—</span>
@@ -369,7 +370,7 @@
         <div class="card-glow"></div>
         <div class="card-content">
           <div class="card-top">
-            <div class="owner-badge" id="n2_owner">—</div>
+            <div class="owner-badge owner-p2" id="n2_owner">—</div>
             <div class="ovr-badge">
               <span class="ovr-label">OVR</span>
               <span class="ovr-num ovr-base" id="o2">—</span>
@@ -441,10 +442,8 @@
       </select>
 
       <button class="btn-enter" onclick="generateTournament()">⚡ Gerar Chaves</button>
-      <button class="btn-enter"
-        style="margin-top:10px;background:rgba(200,16,46,0.08);color:var(--accent);border:1px solid rgba(200,16,46,0.3);"
-        onclick="openChampionsModal()">
-        🏆 Modo Champions
+      <button class="btn-enter btn-ucl" style="margin-top:10px;" onclick="openChampionsModal()">
+        🏆 Champions 26-27
       </button>
     </div>
 
@@ -456,7 +455,7 @@
       </button>
     </div>
 
-    <button style="width:100%;margin-top:14px;padding:13px;background:transparent;border:1px solid rgba(200,16,46,0.22);border-radius:var(--radius);color:var(--p1);font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;"
+    <button style="width:100%;margin-top:14px;padding:13px;background:transparent;border:1px solid rgba(255,23,68,0.28);border-radius:var(--radius);color:var(--p1);font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;"
       onclick="backToLobbyFromTournament()">
       🛑 Abandonar Torneio
     </button>

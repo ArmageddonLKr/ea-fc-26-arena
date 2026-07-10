@@ -5,8 +5,8 @@
       <stop offset="100%" stop-color="#0c0c14"/>
     </linearGradient>
     <linearGradient id="ring-wm" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ff1744"/>
-      <stop offset="100%" stop-color="#c8102e"/>
+      <stop offset="0%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#6d28d9"/>
     </linearGradient>
     <linearGradient id="bolt-wm" x1="0%" y1="0%" x2="60%" y2="100%">
       <stop offset="0%" stop-color="#ffe066"/>
@@ -37,8 +37,8 @@
         stroke="url(#ring-wm)" stroke-width="1.8" fill="none" opacity="0.85"/>
 
   <!-- Corner accent dots -->
-  <circle cx="28" cy="6" r="2" fill="#c8102e" filter="url(#glow-wm)"/>
-  <circle cx="28" cy="58" r="2" fill="#c8102e" filter="url(#glow-wm)"/>
+  <circle cx="28" cy="6" r="2" fill="#8b5cf6" filter="url(#glow-wm)"/>
+  <circle cx="28" cy="58" r="2" fill="#8b5cf6" filter="url(#glow-wm)"/>
 
   <!-- Lightning bolt inside hex -->
   <g filter="url(#glow-wm)">
@@ -53,7 +53,7 @@
   </g>
 
   <!-- Vertical separator line -->
-  <line x1="66" y1="14" x2="66" y2="50" stroke="rgba(200,16,46,0.3)" stroke-width="1"/>
+  <line x1="66" y1="14" x2="66" y2="50" stroke="rgba(139,92,246,0.35)" stroke-width="1"/>
 
   <!-- Main wordmark text -->
   <!-- "FC 26" large -->
@@ -66,7 +66,7 @@
   <text x="78" y="52"
         font-family="'Barlow Condensed', 'Impact', sans-serif"
         font-weight="700" font-size="11" letter-spacing="7"
-        fill="#c8102e">ARENA</text>
+        fill="#8b5cf6">ARENA</text>
 
   <!-- Gold accent dot + "PRO" tag at far right -->
   <circle cx="228" cy="32" r="2" fill="#f0c040" opacity="0.8"/>
