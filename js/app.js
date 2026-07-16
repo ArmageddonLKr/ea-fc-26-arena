@@ -412,24 +412,47 @@ function lightenHex(hex, amt) {
   return `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`;
 }
 
+// Luminância relativa (WCAG) — usada pra decidir se o texto sobre um botão
+// pintado com a cor do time deve ser claro ou escuro. Sem isso, times com
+// cor clara (Real Madrid, Newcastle, Al Nassr, Juventus...) quebrariam o
+// contraste do botão no tema "Time do Coração".
+function relLuminance(hex) {
+  const h = (hex || '').replace('#', '');
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const num = parseInt(full, 16);
+  if (Number.isNaN(num)) return 0.3;
+  const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  return 0.2126 * lin((num >> 16) & 255) + 0.7152 * lin((num >> 8) & 255) + 0.0722 * lin(num & 255);
+}
+function pickInk(bgHex) {
+  const l = relLuminance(bgHex);
+  const withWhite = (Math.max(l, 1) + 0.05) / (Math.min(l, 1) + 0.05);
+  const withDark  = (Math.max(l, 0) + 0.05) / (Math.min(l, 0) + 0.05);
+  return withWhite >= withDark ? '#ffffff' : '#12131d';
+}
+
 function applyThemeAndFont() {
   const id = cfg.theme || 'roxo';
   document.documentElement.setAttribute('data-theme', id);
   document.documentElement.setAttribute('data-font',  cfg.font  || 'classic');
 
   // Tema dinâmico: pinta o accent com a cor real do time favorito por cima
-  // da base escura do tema "meutime". Fora dele, limpa qualquer override.
+  // da base escura do tema "meutime" — QUALQUER um dos 88 times funciona
+  // como tema completo, não só os 4 clubes com CSS dedicado. Fora dele,
+  // limpa qualquer override.
   const root = document.documentElement.style;
   if (id === 'meutime') {
     const team = teams.find(t => t.n === cfg.favoriteTeam);
     const accent = team && team.c ? team.c : '#8b5cf6';
-    root.setProperty('--accent',  accent);
-    root.setProperty('--accent2', lightenHex(accent, 0.35));
-    root.setProperty('--p1',      accent);
+    root.setProperty('--accent',      accent);
+    root.setProperty('--accent2',     lightenHex(accent, 0.35));
+    root.setProperty('--p1',          accent);
+    root.setProperty('--accent-ink',  pickInk(accent));
   } else {
     root.removeProperty('--accent');
     root.removeProperty('--accent2');
     root.removeProperty('--p1');
+    root.removeProperty('--accent-ink');
   }
 
   const metaTheme = document.querySelector('meta[name="theme-color"]');
@@ -455,15 +478,17 @@ function renderThemeGrid() {
 }
 
 function selectTheme(id) {
-  if (id === 'meutime' && !cfg.favoriteTeam) {
-    showToast('⭐ Escolha seu time do coração primeiro!', 'warn');
-    openFavoriteTeamModal();
-    return;
-  }
   cfg.theme = id;
   saveSettings();
   applyThemeAndFont();
   renderThemeGrid();
+  // "Time do Coração" funciona com qualquer um dos 88 times: já aplica na
+  // hora (com uma cor de fallback se ainda não tiver time escolhido) e abre
+  // o seletor pra trocar — cada time tocado ali já re-pinta o app ao vivo.
+  if (id === 'meutime') {
+    if (!cfg.favoriteTeam) showToast('⭐ Toque um time pra pintar o app com a cor dele!');
+    openFavoriteTeamModal();
+  }
 }
 
 function renderFontpackGrid() {

@@ -136,10 +136,11 @@
   --muted:     #6e6c94;
 
   /* ===== BRAND — preto e roxo ===== */
-  --accent:    #8b5cf6;
-  --accent2:   #a78bfa;
-  --p1:        #ff1744;
-  --p2:        #00b8e0;
+  --accent:      #8b5cf6;
+  --accent2:     #a78bfa;
+  --accent-ink:  #ffffff; /* texto sobre botões pintados com --accent — ver pickInk() no JS */
+  --p1:          #ff1744;
+  --p2:          #00b8e0;
 
   /* ===== STATUS / RANK ===== */
   --gold:      #f0c040;
@@ -404,39 +405,67 @@ html[data-theme="liverpool"] .tab-item.active svg { filter: drop-shadow(0 0 7px 
 html[data-theme="liverpool"] .card { box-shadow: 0 0 0 1px rgba(246,235,97,.10), 0 14px 44px rgba(80,0,10,.55); }
 
 /* ---- Time do Coração — a atmosfera inteira segue o --accent injetado
-   pelo JS com a cor oficial do time favorito. Funciona pra qualquer um
-   dos 88 times sem precisar de CSS específico por clube. ---- */
+   pelo JS com a cor oficial de QUALQUER um dos 88 times (não só os 4
+   clubes com CSS dedicado acima). Partículas em duas cores — a cor do
+   time + uma mistura dela com --gold, tipo trim de taça — glow ambiente,
+   facho de holofote e o botão principal ganham a identidade do clube na
+   hora, sem precisar de CSS específico por time. ---- */
 html[data-theme="meutime"] body {
   background:
-    radial-gradient(ellipse 70% 42% at 50% -5%, color-mix(in srgb, var(--accent) 22%, transparent) 0%, transparent 62%),
-    radial-gradient(ellipse 55% 35% at 100% 105%, color-mix(in srgb, var(--accent) 14%, transparent) 0%, transparent 68%),
+    radial-gradient(ellipse 72% 44% at 50% -6%, color-mix(in srgb, var(--accent) 26%, transparent) 0%, transparent 62%),
+    radial-gradient(ellipse 58% 38% at 100% 106%, color-mix(in srgb, var(--gold) 16%, transparent) 0%, transparent 68%),
+    radial-gradient(ellipse 50% 32% at 0% 100%, color-mix(in srgb, var(--accent) 14%, transparent) 0%, transparent 68%),
     var(--bg);
 }
 html[data-theme="meutime"] body::after {
   content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
-    radial-gradient(1.6px 1.6px at 10% 12%, color-mix(in srgb, var(--accent) 85%, white), transparent),
-    radial-gradient(1.2px 1.2px at 24% 30%, color-mix(in srgb, var(--accent) 60%, white), transparent),
+    radial-gradient(1.7px 1.7px at 10% 12%, color-mix(in srgb, var(--accent) 85%, white), transparent),
+    radial-gradient(1.2px 1.2px at 24% 30%, color-mix(in srgb, var(--accent) 55%, var(--gold)), transparent),
     radial-gradient(1.8px 1.8px at 40% 8%,  color-mix(in srgb, var(--accent) 80%, white), transparent),
-    radial-gradient(1.2px 1.2px at 58% 22%, color-mix(in srgb, var(--accent) 55%, white), transparent),
+    radial-gradient(1.2px 1.2px at 58% 22%, color-mix(in srgb, var(--accent) 50%, var(--gold)), transparent),
     radial-gradient(1.6px 1.6px at 74% 14%, color-mix(in srgb, var(--accent) 78%, white), transparent),
-    radial-gradient(1.2px 1.2px at 88% 28%, color-mix(in srgb, var(--accent) 50%, white), transparent),
-    radial-gradient(1.6px 1.6px at 18% 55%, color-mix(in srgb, var(--accent) 60%, white), transparent),
-    radial-gradient(1.2px 1.2px at 46% 62%, color-mix(in srgb, var(--accent) 45%, white), transparent),
-    radial-gradient(1.6px 1.6px at 68% 50%, color-mix(in srgb, var(--accent) 65%, white), transparent);
+    radial-gradient(1.3px 1.3px at 88% 28%, color-mix(in srgb, var(--accent) 45%, var(--gold)), transparent),
+    radial-gradient(1.7px 1.7px at 18% 55%, color-mix(in srgb, var(--accent) 60%, white), transparent),
+    radial-gradient(1.2px 1.2px at 46% 62%, color-mix(in srgb, var(--accent) 55%, var(--gold)), transparent),
+    radial-gradient(1.6px 1.6px at 68% 50%, color-mix(in srgb, var(--accent) 65%, white), transparent),
+    radial-gradient(1.3px 1.3px at 33% 78%, color-mix(in srgb, var(--accent) 40%, var(--gold)), transparent),
+    radial-gradient(1.6px 1.6px at 82% 80%, color-mix(in srgb, var(--accent) 70%, white), transparent);
   animation: theme-drift 4.2s ease-in-out infinite alternate;
 }
-html[data-theme="meutime"] .topbar { border-bottom-color: color-mix(in srgb, var(--accent) 35%, transparent); }
-html[data-theme="meutime"] .tab-bar { border-top-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+html[data-theme="meutime"] body::before {
+  content: ''; position: fixed; top: -20%; left: -10%; width: 60%; height: 140%;
+  z-index: 0; pointer-events: none;
+  background: linear-gradient(100deg,
+    transparent 40%,
+    color-mix(in srgb, var(--accent) 14%, transparent) 48%,
+    color-mix(in srgb, var(--gold) 12%, transparent) 52%,
+    transparent 60%);
+  animation: theme-beam-sweep 10s ease-in-out infinite;
+}
+html[data-theme="meutime"] .topbar { border-bottom-color: color-mix(in srgb, var(--accent) 38%, transparent); }
+html[data-theme="meutime"] .tab-bar { border-top-color: color-mix(in srgb, var(--accent) 32%, transparent); }
 html[data-theme="meutime"] .tab-item.active svg { filter: drop-shadow(0 0 7px color-mix(in srgb, var(--accent) 65%, transparent)); }
-html[data-theme="meutime"] .card { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent), 0 14px 44px rgba(0,0,0,.6); }
+html[data-theme="meutime"] .card {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent), 0 14px 44px rgba(0,0,0,.6);
+}
+/* Botão principal — gradiente cor-do-time → mistura dourada (o brilho
+   pulsante já vem de graça do .btn-draw base, que usa var(--accent)) */
+html[data-theme="meutime"] .btn-enter,
+html[data-theme="meutime"] .btn-draw,
+html[data-theme="meutime"] .btn-save {
+  background: linear-gradient(135deg,
+    var(--accent) 0%,
+    color-mix(in srgb, var(--accent) 60%, var(--gold) 40%) 100%);
+}
 
 @media (prefers-reduced-motion: reduce) {
   html[data-theme="pretoDourado"] body::after,
   html[data-theme="realmadrid"] body::after,
   html[data-theme="realmadrid"] body::before,
   html[data-theme="liverpool"] body::after,
-  html[data-theme="meutime"] body::after {
+  html[data-theme="meutime"] body::after,
+  html[data-theme="meutime"] body::before {
     animation: none;
   }
 }
@@ -855,7 +884,7 @@ button, a, [role="button"] {
   background: var(--accent);
   border: none;
   border-radius: var(--radius);
-  color: #fff;
+  color: var(--accent-ink, #fff);
   font-family: var(--font-head);
   font-size: 0.92rem;
   font-weight: 900;
@@ -1059,7 +1088,7 @@ button, a, [role="button"] {
   background: linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 55%, black) 100%);
   border: none;
   border-radius: var(--radius-lg);
-  color: #fff;
+  color: var(--accent-ink, #fff);
   font-family: var(--font-head);
   font-size: 1rem;
   font-weight: 900;
@@ -1714,7 +1743,7 @@ button, a, [role="button"] {
   background: var(--accent);
   border: none;
   border-radius: var(--radius);
-  color: #fff;
+  color: var(--accent-ink, #fff);
   font-family: var(--font-head);
   font-size: 0.78rem;
   font-weight: 900;
