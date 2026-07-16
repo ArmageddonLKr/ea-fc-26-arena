@@ -279,7 +279,7 @@
   --bg:#060608; --surface:#0d0d11; --surface2:#131318; --surface3:#1a1a22;
   --border:#24242e; --border2:#32323f;
   --text:#f5f5fa; --text2:#c2c2d1; --muted:#77778c;
-  --accent:#8b5cf6; --accent2:#a78bfa;
+  --accent:#8b5cf6; --accent2:#a78bfa; --accent3:#d4af37;
   --p1:#8b5cf6; --p2:#00b8e0;
   --gold:#d4af37; --gold2:#f0d878; --green:#22c55e;
 }
@@ -404,33 +404,33 @@ html[data-theme="liverpool"] .tab-item.active { color: var(--gold); }
 html[data-theme="liverpool"] .tab-item.active svg { filter: drop-shadow(0 0 7px rgba(246,235,97,.6)); }
 html[data-theme="liverpool"] .card { box-shadow: 0 0 0 1px rgba(246,235,97,.10), 0 14px 44px rgba(80,0,10,.55); }
 
-/* ---- Time do Coração — a atmosfera inteira segue o --accent injetado
-   pelo JS com a cor oficial de QUALQUER um dos 88 times (não só os 4
-   clubes com CSS dedicado acima). Partículas em duas cores — a cor do
-   time + uma mistura dela com --gold, tipo trim de taça — glow ambiente,
-   facho de holofote e o botão principal ganham a identidade do clube na
-   hora, sem precisar de CSS específico por time. ---- */
+/* ---- Time do Coração — a atmosfera inteira segue --accent/--accent2/
+   --accent3, que o JS injeta com as cores OFICIAIS reais (c/c2/c3) de
+   QUALQUER um dos 88 times, não só os 4 clubes com CSS dedicado acima.
+   Partículas em três cores = a identidade real do clube (ex.: Real
+   Madrid vira branco+dourado+preto, Bayern vira vermelho+azul+branco),
+   sem precisar de CSS específico por time. ---- */
 html[data-theme="meutime"] body {
   background:
     radial-gradient(ellipse 72% 44% at 50% -6%, color-mix(in srgb, var(--accent) 26%, transparent) 0%, transparent 62%),
-    radial-gradient(ellipse 58% 38% at 100% 106%, color-mix(in srgb, var(--gold) 16%, transparent) 0%, transparent 68%),
-    radial-gradient(ellipse 50% 32% at 0% 100%, color-mix(in srgb, var(--accent) 14%, transparent) 0%, transparent 68%),
+    radial-gradient(ellipse 58% 38% at 100% 106%, color-mix(in srgb, var(--accent2) 18%, transparent) 0%, transparent 68%),
+    radial-gradient(ellipse 50% 32% at 0% 100%, color-mix(in srgb, var(--accent3) 14%, transparent) 0%, transparent 68%),
     var(--bg);
 }
 html[data-theme="meutime"] body::after {
   content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
-    radial-gradient(1.7px 1.7px at 10% 12%, color-mix(in srgb, var(--accent) 85%, white), transparent),
-    radial-gradient(1.2px 1.2px at 24% 30%, color-mix(in srgb, var(--accent) 55%, var(--gold)), transparent),
-    radial-gradient(1.8px 1.8px at 40% 8%,  color-mix(in srgb, var(--accent) 80%, white), transparent),
-    radial-gradient(1.2px 1.2px at 58% 22%, color-mix(in srgb, var(--accent) 50%, var(--gold)), transparent),
-    radial-gradient(1.6px 1.6px at 74% 14%, color-mix(in srgb, var(--accent) 78%, white), transparent),
-    radial-gradient(1.3px 1.3px at 88% 28%, color-mix(in srgb, var(--accent) 45%, var(--gold)), transparent),
-    radial-gradient(1.7px 1.7px at 18% 55%, color-mix(in srgb, var(--accent) 60%, white), transparent),
-    radial-gradient(1.2px 1.2px at 46% 62%, color-mix(in srgb, var(--accent) 55%, var(--gold)), transparent),
-    radial-gradient(1.6px 1.6px at 68% 50%, color-mix(in srgb, var(--accent) 65%, white), transparent),
-    radial-gradient(1.3px 1.3px at 33% 78%, color-mix(in srgb, var(--accent) 40%, var(--gold)), transparent),
-    radial-gradient(1.6px 1.6px at 82% 80%, color-mix(in srgb, var(--accent) 70%, white), transparent);
+    radial-gradient(1.7px 1.7px at 10% 12%, var(--accent), transparent),
+    radial-gradient(1.2px 1.2px at 24% 30%, color-mix(in srgb, var(--accent2) 90%, white), transparent),
+    radial-gradient(1.8px 1.8px at 40% 8%,  var(--accent), transparent),
+    radial-gradient(1.2px 1.2px at 58% 22%, color-mix(in srgb, var(--accent3) 85%, white), transparent),
+    radial-gradient(1.6px 1.6px at 74% 14%, color-mix(in srgb, var(--accent) 85%, white), transparent),
+    radial-gradient(1.3px 1.3px at 88% 28%, color-mix(in srgb, var(--accent2) 80%, white), transparent),
+    radial-gradient(1.7px 1.7px at 18% 55%, color-mix(in srgb, var(--accent) 70%, white), transparent),
+    radial-gradient(1.2px 1.2px at 46% 62%, color-mix(in srgb, var(--accent3) 75%, white), transparent),
+    radial-gradient(1.6px 1.6px at 68% 50%, color-mix(in srgb, var(--accent2) 70%, white), transparent),
+    radial-gradient(1.3px 1.3px at 33% 78%, color-mix(in srgb, var(--accent) 60%, white), transparent),
+    radial-gradient(1.6px 1.6px at 82% 80%, color-mix(in srgb, var(--accent3) 65%, white), transparent);
   animation: theme-drift 4.2s ease-in-out infinite alternate;
 }
 html[data-theme="meutime"] body::before {
@@ -439,7 +439,7 @@ html[data-theme="meutime"] body::before {
   background: linear-gradient(100deg,
     transparent 40%,
     color-mix(in srgb, var(--accent) 14%, transparent) 48%,
-    color-mix(in srgb, var(--gold) 12%, transparent) 52%,
+    color-mix(in srgb, var(--accent2) 12%, transparent) 52%,
     transparent 60%);
   animation: theme-beam-sweep 10s ease-in-out infinite;
 }
@@ -449,14 +449,12 @@ html[data-theme="meutime"] .tab-item.active svg { filter: drop-shadow(0 0 7px co
 html[data-theme="meutime"] .card {
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent), 0 14px 44px rgba(0,0,0,.6);
 }
-/* Botão principal — gradiente cor-do-time → mistura dourada (o brilho
-   pulsante já vem de graça do .btn-draw base, que usa var(--accent)) */
+/* Botão principal — gradiente com a 1ª e 2ª cor OFICIAIS do clube (o
+   brilho pulsante já vem de graça do .btn-draw base, que usa var(--accent)) */
 html[data-theme="meutime"] .btn-enter,
 html[data-theme="meutime"] .btn-draw,
 html[data-theme="meutime"] .btn-save {
-  background: linear-gradient(135deg,
-    var(--accent) 0%,
-    color-mix(in srgb, var(--accent) 60%, var(--gold) 40%) 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1157,17 +1155,26 @@ button, a, [role="button"] {
   box-shadow: 0 4px 20px rgba(0,0,0,0.5), inset 0 0 0 1px color-mix(in srgb, var(--team-color, var(--accent)) 10%, transparent);
 }
 
+/* Faixa tricolor com as cores oficiais do clube — primária/secundária/
+   terciária em blocos sólidos, tipo trim de kit. Times bicolores (sem c3)
+   repetem a 2ª cor no último terço em vez de deixar uma banda "morta". */
 .card-stripe {
   position: absolute; top: 0; left: 0; right: 0;
   height: 4px;
-  background: linear-gradient(90deg, var(--team-color, var(--accent)), color-mix(in srgb, var(--team-color, var(--accent)) 30%, transparent) 90%);
+  background: linear-gradient(90deg,
+    var(--team-color, var(--accent)) 0%, var(--team-color, var(--accent)) 33%,
+    var(--team-color2, var(--team-color, var(--accent))) 33%, var(--team-color2, var(--team-color, var(--accent))) 66%,
+    var(--team-color3, var(--team-color2, var(--team-color, var(--accent)))) 66%, var(--team-color3, var(--team-color2, var(--team-color, var(--accent)))) 100%);
 }
 
 .card-glow {
   position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
   width: 260px; height: 130px;
-  background: radial-gradient(ellipse, var(--team-color, var(--accent)), transparent 70%);
-  opacity: 0.16;
+  background: radial-gradient(ellipse,
+    var(--team-color, var(--accent)) 0%,
+    color-mix(in srgb, var(--team-color2, var(--team-color, var(--accent))) 65%, transparent) 55%,
+    transparent 75%);
+  opacity: 0.18;
   pointer-events: none;
 }
 
@@ -1357,7 +1364,7 @@ button, a, [role="button"] {
 
 .stat-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--team-color, var(--accent)), color-mix(in srgb, var(--team-color, var(--accent)) 70%, #fff 30%));
+  background: linear-gradient(90deg, var(--team-color, var(--accent)), var(--team-color2, var(--team-color, var(--accent))));
   border-radius: 2px;
   transition: width 0.65s cubic-bezier(0.4, 0, 0.2, 1);
   width: 0%;
