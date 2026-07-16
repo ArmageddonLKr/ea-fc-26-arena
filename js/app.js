@@ -443,14 +443,20 @@ function applyThemeAndFont() {
   const root = document.documentElement.style;
   if (id === 'meutime') {
     const team = teams.find(t => t.n === cfg.favoriteTeam);
-    const accent = team && team.c ? team.c : '#8b5cf6';
+    const accent  = team && team.c  ? team.c  : '#8b5cf6';
+    // Usa a 2ª/3ª cor OFICIAL do clube (c2/c3) quando existem — só cai pro
+    // clareamento sintético se um time não tiver cor secundária cadastrada.
+    const accent2 = team && team.c2 ? team.c2 : lightenHex(accent, 0.35);
+    const accent3 = team && (team.c3 || team.c2) ? (team.c3 || team.c2) : accent2;
     root.setProperty('--accent',      accent);
-    root.setProperty('--accent2',     lightenHex(accent, 0.35));
+    root.setProperty('--accent2',     accent2);
+    root.setProperty('--accent3',     accent3);
     root.setProperty('--p1',          accent);
     root.setProperty('--accent-ink',  pickInk(accent));
   } else {
     root.removeProperty('--accent');
     root.removeProperty('--accent2');
+    root.removeProperty('--accent3');
     root.removeProperty('--p1');
     root.removeProperty('--accent-ink');
   }
@@ -467,10 +473,14 @@ function renderThemeGrid() {
   if (!grid) return;
   const favTeam = teams.find(t => t.n === cfg.favoriteTeam);
   grid.innerHTML = THEMES.map(t => {
-    const accent = (t.id === 'meutime' && favTeam && favTeam.c) ? favTeam.c : t.accent;
+    // O swatch de "Time do Coração" já mostra as cores oficiais reais
+    // (primária→secundária) do time favorito escolhido, não um fallback genérico.
+    const dot = (t.id === 'meutime' && favTeam && favTeam.c)
+      ? `linear-gradient(135deg, ${favTeam.c}, ${favTeam.c2 || t.bg})`
+      : `linear-gradient(135deg, ${t.accent}, ${t.bg})`;
     return `
     <button type="button" class="theme-swatch${cfg.theme === t.id ? ' active' : ''}" onclick="selectTheme('${t.id}')">
-      <span class="theme-swatch-dot" style="background:linear-gradient(135deg, ${accent}, ${t.bg});"></span>
+      <span class="theme-swatch-dot" style="background:${dot};"></span>
       <span class="theme-swatch-label">${t.label}</span>
     </button>
   `;
@@ -1102,7 +1112,11 @@ function renderCard(num, team, owner) {
   const card  = document.getElementById(`c${num}`);
   if (!card) return;
 
-  card.style.setProperty('--team-color', color);
+  // Cores oficiais do clube (primária/secundária/terciária) — dá vida ao
+  // gradiente do card. Quando não há 2ª/3ª cor, repete a primária.
+  card.style.setProperty('--team-color',  color);
+  card.style.setProperty('--team-color2', team.c2 || color);
+  card.style.setProperty('--team-color3', team.c3 || team.c2 || color);
   card.style.animation = 'none';
   void card.offsetWidth; // reflow
   card.style.animation = 'cardIn 0.45s cubic-bezier(0.34,1.3,0.64,1) forwards';
