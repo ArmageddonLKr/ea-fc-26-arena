@@ -82,12 +82,27 @@
   </div>
 </div>
 
+<!-- ===== MODAL: SELETOR DE COMPETIÇÃO UEFA ===== -->
+<div class="modal-backdrop" id="compPickerModal">
+  <div class="modal-sheet" style="max-height:70vh;display:flex;flex-direction:column;">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="margin-bottom:4px;">🏆 Competições UEFA</div>
+    <p style="font-size:0.65rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;">
+      Escolha a competição
+    </p>
+    <div class="comp-pick-grid" id="compPickerGrid"></div>
+    <div class="modal-actions" style="margin-top:14px;">
+      <button class="btn-cancel" style="flex:1" onclick="closeCompPicker()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== MODAL: CHAMPIONS ===== -->
 <div class="modal-backdrop" id="championsModal">
   <div class="modal-sheet" style="max-height:92vh;display:flex;flex-direction:column;">
     <div class="modal-handle"></div>
-    <div class="modal-title" style="margin-bottom:6px;">
-      🏆 Champions 26-27
+    <div class="modal-title" style="margin-bottom:6px;" id="championsModalTitle">
+      🏆 Champions League
     </div>
     <p style="font-size:0.65rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">
       Pré-selecionados · escolha 4, 8 ou 16 times para o chaveamento
@@ -125,15 +140,15 @@
   </div>
 </div>
 
-<!-- ===== MODAL: UCL SORTEIO ===== -->
+<!-- ===== MODAL: SORTEIO DE COMPETIÇÃO UEFA ===== -->
 <div class="modal-backdrop" id="uclModal">
   <div class="modal-sheet" style="max-height:92vh;display:flex;flex-direction:column;">
     <div class="modal-handle"></div>
-    <div class="modal-title" style="margin-bottom:4px;">
-      ⭐ UCL 2026-27
+    <div class="modal-title" style="margin-bottom:4px;" id="uclModalTitle">
+      🏆 Champions League
     </div>
     <p style="font-size:0.65rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">
-      32 times pré-selecionados · toque para customizar
+      Classificados pré-selecionados · toque para customizar
     </p>
 
     <!-- contador -->
@@ -161,7 +176,7 @@
 
     <div class="modal-actions" style="margin-top:10px;">
       <button class="btn-cancel" onclick="closeUCLModal()">Cancelar</button>
-      <button class="btn-save" id="btnStartUCL" onclick="startArenaUCL()">⚡ Sortear UCL</button>
+      <button class="btn-save" id="btnStartUCL" onclick="startArenaUCL()">⚡ Sortear</button>
     </div>
   </div>
 </div>
@@ -277,8 +292,8 @@
         onclick="openTournamentMenu()">
         🏆 Modo Torneio
       </button>
-      <button class="btn-enter btn-ucl" onclick="bootArenaUCL()">
-        ⭐ UEFA Champions League
+      <button class="btn-enter btn-ucl" onclick="openCompPicker('arena')">
+        🏆 Competições UEFA
       </button>
     </div>
   </div>
@@ -306,9 +321,9 @@
       </div>
     </div>
 
-    <!-- UCL badge (visível apenas em modo UCL) -->
+    <!-- Badge de competição UEFA (visível apenas em modo UEFA) -->
     <div id="uclArenaBadge" style="display:none;text-align:center;padding:4px 0 0;">
-      <span class="ucl-arena-badge" id="uclArenaBadgeText">⭐ UEFA Champions League</span>
+      <span class="ucl-arena-badge" id="uclArenaBadgeText">🏆 Competições UEFA</span>
     </div>
 
     <!-- Arena header -->
@@ -471,8 +486,8 @@
       </select>
 
       <button class="btn-enter" onclick="generateTournament()">⚡ Gerar Chaves</button>
-      <button class="btn-enter btn-ucl" style="margin-top:10px;" onclick="openChampionsModal()">
-        🏆 Champions 26-27
+      <button class="btn-enter btn-ucl" style="margin-top:10px;" onclick="openCompPicker('bracket')">
+        🏆 Chaveamento UEFA
       </button>
     </div>
 

@@ -1337,6 +1337,15 @@ button, a, [role="button"] {
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
 }
 
+/* Emblema da competição UEFA (Champions/Europa/Conference) que o time se
+   classificou — aparece junto da liga nacional, menor que o logo principal
+   pra não competir com ele. */
+.comp-logo {
+  width: 18px;
+  height: 18px;
+  margin-left: 4px;
+}
+
 .team-name {
   font-family: var(--font-head);
   font-size: 1.55rem;
@@ -2404,6 +2413,47 @@ footer {
 .champions-counter.valid { color: var(--accent); }
 
 /* =====================================================
+   SELETOR DE COMPETIÇÃO UEFA — 3 cards, cada um com a
+   identidade real da competição (logo + 2 cores oficiais)
+   ===================================================== */
+.comp-pick-grid {
+  display: flex; flex-direction: column; gap: 10px;
+  overflow-y: auto; flex: 1;
+}
+.comp-pick-card {
+  display: flex; align-items: center; gap: 14px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--cp-accent) 20%, var(--surface) 80%) 0%, var(--surface) 70%);
+  border: 1px solid color-mix(in srgb, var(--cp-accent) 42%, var(--border) 58%);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.comp-pick-card:active {
+  transform: scale(0.98);
+  border-color: var(--cp-accent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--cp-accent) 28%, transparent);
+}
+.comp-pick-card img {
+  width: 44px; height: 44px; object-fit: contain; flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.45));
+}
+.comp-pick-text { display: flex; flex-direction: column; gap: 2px; }
+.comp-pick-label {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 1rem;
+  letter-spacing: 0.3px;
+  color: var(--text);
+}
+.comp-pick-count {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+/* =====================================================
    UCL MODE — UEFA Champions League Theme
    ===================================================== */
 
@@ -2417,6 +2467,7 @@ footer {
   50%      { box-shadow: 0 0 18px 4px rgba(201,168,76,0.28); }
 }
 
+/* Padrão = UEFA Champions League (o [data-comp] abaixo cobre Europa/Conference) */
 body.ucl-mode {
   --bg:        #020b1e;
   --surface:   #030f28;
@@ -2426,8 +2477,10 @@ body.ucl-mode {
   --border2:   #1a3590;
   --accent:    #c9a84c;
   --accent2:   #f0c040;
+  --accent-ink: #12131d;
   --gold:      #f0c040;
   --gold2:     #ffe066;
+  --gold-ink:  #12131d;
   --glow-accent:        0 4px 28px rgba(201,168,76,0.32);
   --glow-accent-strong: 0 6px 40px rgba(201,168,76,0.5), 0 0 0 6px rgba(201,168,76,0.08);
   background:
@@ -2435,7 +2488,50 @@ body.ucl-mode {
     var(--bg);
 }
 
-/* Campo de estrelas gerado por CSS — sem JS */
+/* UEFA Europa League — laranja sobre preto/cinza-escuro oficial */
+body.ucl-mode[data-comp="uel"] {
+  --bg:        #140b03;
+  --surface:   #1f1206;
+  --surface2:  #2a1808;
+  --surface3:  #38200a;
+  --border:    #472809;
+  --border2:   #5c340c;
+  --accent:    #F5760A;
+  --accent2:   #ff9c47;
+  --accent-ink: #1a0e02;
+  --gold:      #F5760A;
+  --gold2:     #ffb066;
+  --gold-ink:  #1a0e02;
+  --glow-accent:        0 4px 28px rgba(245,118,10,0.35);
+  --glow-accent-strong: 0 6px 40px rgba(245,118,10,0.55), 0 0 0 6px rgba(245,118,10,0.1);
+  background:
+    radial-gradient(ellipse 75% 42% at 50% 108%, rgba(245,118,10,0.28) 0%, transparent 62%),
+    var(--bg);
+}
+
+/* UEFA Conference League — verde sobre preto oficial */
+body.ucl-mode[data-comp="uecl"] {
+  --bg:        #02120a;
+  --surface:   #041d10;
+  --surface2:  #062616;
+  --surface3:  #09321d;
+  --border:    #0d4526;
+  --border2:   #125c32;
+  --accent:    #00A94F;
+  --accent2:   #3fe08a;
+  --accent-ink: #eafff2;
+  --gold:      #00A94F;
+  --gold2:     #6bffb0;
+  --gold-ink:  #03150b;
+  --glow-accent:        0 4px 28px rgba(0,169,79,0.35);
+  --glow-accent-strong: 0 6px 40px rgba(0,169,79,0.55), 0 0 0 6px rgba(0,169,79,0.1);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,169,79,0.20) 0%, transparent 68%),
+    var(--bg);
+}
+
+/* Campo de estrelas/partículas gerado por CSS — sem JS. Usa var(--gold),
+   então já recolore sozinho pra laranja (Europa) ou verde (Conference). */
 body.ucl-mode::before {
   content: '';
   position: fixed;
@@ -2466,12 +2562,13 @@ body.ucl-mode #splash {
   z-index: 1;
 }
 
-/* Topbar UCL — borda dourada sutil */
+/* Topbar em modo UEFA — borda na cor da competição ativa */
 body.ucl-mode .topbar {
-  border-bottom-color: rgba(201,168,76,0.25);
+  border-bottom-color: color-mix(in srgb, var(--gold) 40%, transparent);
 }
 
-/* Botão UCL na home */
+/* Botão de entrada na home — sempre com a cara clássica de Champions
+   (gateway antes de escolher a competição no seletor) */
 .btn-enter.btn-ucl {
   background: linear-gradient(135deg, #051636 0%, #0d2260 100%);
   color: #f0c040;
@@ -2482,7 +2579,7 @@ body.ucl-mode .topbar {
   background: linear-gradient(135deg, #0d2260 0%, #1a3590 100%);
 }
 
-/* Badge UCL no header da arena */
+/* Badge da competição ativa no header da arena — cor dinâmica */
 .ucl-arena-badge {
   display: inline-flex;
   align-items: center;
@@ -2492,25 +2589,25 @@ body.ucl-mode .topbar {
   font-weight: 900;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: #f0c040;
-  background: rgba(201,168,76,0.12);
-  border: 1px solid rgba(201,168,76,0.3);
+  color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
   border-radius: 4px;
   padding: 3px 8px;
   margin-bottom: 6px;
 }
 
-/* Card border gold em UCL mode */
+/* Card com borda na cor da competição ativa */
 body.ucl-mode .card {
-  border-color: rgba(201,168,76,0.2);
+  border-color: color-mix(in srgb, var(--gold) 20%, transparent);
 }
 
-/* Tab bar UCL */
+/* Tab bar em modo UEFA */
 body.ucl-mode .tab-bar {
-  border-top-color: rgba(201,168,76,0.2);
+  border-top-color: color-mix(in srgb, var(--gold) 20%, transparent);
 }
 body.ucl-mode .tab-item.active {
-  color: #f0c040;
+  color: var(--gold);
 }
 body.ucl-mode .tab-item.active svg {
   filter: drop-shadow(0 0 6px color-mix(in srgb, var(--gold) 60%, transparent));
