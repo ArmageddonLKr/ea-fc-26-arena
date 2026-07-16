@@ -235,27 +235,32 @@ function fairShuffle(arr) {
   return a;
 }
 
-/* ===== UCL 2026-27 — 32 times participantes ===== */
-const UCL_26_27 = new Set([
-  // Bundesliga (4)
-  'Bayern München','Bayer Leverkusen','Borussia Dortmund','RB Leipzig',
-  // La Liga (4)
-  'Real Madrid','Barcelona','Atlético Madrid','Villarreal CF',
-  // Premier League (5)
-  'Liverpool','Arsenal','Man City','Chelsea','Aston Villa',
-  // Ligue 1 (3)
-  'PSG','AS Monaco','Marseille',
-  // Serie A (5)
-  'Inter Milan','Napoli','Juventus','Milan','Atalanta',
-  // Eredivisie (2)
-  'PSV Eindhoven','Feyenoord',
-  // Liga Portugal (3)
-  'Sporting CP','Benfica','Porto',
-  // Süper Lig / playoff (2)
-  'Galatasaray','Fenerbahçe',
-  // Classificados via playoff / 5ª vaga
-  'Ajax','Bologna','Newcastle','Stuttgart',
-]);
+/* ===== COMPETIÇÕES UEFA 2026-27 =====
+ * Cada time carrega no teams.json o campo "comp": 'ucl' | 'uel' | 'uecl'
+ * (só os times cadastrados nesta base — sem forçar clube que não temos).
+ * Cada competição tem identidade visual própria (logo + 2 cores oficiais),
+ * aplicada em --accent/--accent2/--gold/--gold2 quando o modo está ativo,
+ * do mesmo jeito que o tema "Time do Coração" faz pros clubes. */
+const UEFA_COMPS = {
+  ucl: {
+    id: 'ucl', badge: '⭐',
+    label: 'UEFA Champions League', short: 'Champions League',
+    logoUrl: './assets/leagues/1301394.png',
+    color: '#0E1E45', color2: '#C0C0C0',
+  },
+  uel: {
+    id: 'uel', badge: '🟠',
+    label: 'UEFA Europa League', short: 'Europa League',
+    logoUrl: './assets/leagues/1301396.png',
+    color: '#F5760A', color2: '#1A1A1A',
+  },
+  uecl: {
+    id: 'uecl', badge: '🟢',
+    label: 'UEFA Conference League', short: 'Conference League',
+    logoUrl: './assets/leagues/31051584.png',
+    color: '#00A94F', color2: '#000000',
+  },
+};
 
 /* ===== MAPA DE LIGAS (ID → imagem em assets/leagues/<id>.png) ===== */
 const LEAGUE_IDS = {
@@ -354,9 +359,11 @@ let score         = { a: 0, b: 0 };
 let roundHistory  = [];
 let roundCount    = 0;
 let sessionActive = false;
-let uclMode         = false;   // modo UCL ativo
-let uclSelectedTeams = [];     // times escolhidos no modal UCL
-let champMode       = false;   // modo Champions 26-27 (bracket) ativo
+let uclMode         = false;   // modo "sorteio rápido" de competição UEFA ativo
+let uclSelectedTeams = [];     // times escolhidos no modal de sorteio
+let champMode       = false;   // modo "chaveamento" de competição UEFA ativo
+let activeCompId    = 'ucl';   // qual competição está ativa (ucl/uel/uecl) nos modos acima
+let pendingCompFlow = null;    // 'arena' | 'bracket' — o que abrir depois de escolher a competição
 
 const SK = {
   teams:    'fc26_teams_v2',
@@ -429,6 +436,17 @@ function pickInk(bgHex) {
   const withWhite = (Math.max(l, 1) + 0.05) / (Math.min(l, 1) + 0.05);
   const withDark  = (Math.max(l, 0) + 0.05) / (Math.min(l, 0) + 0.05);
   return withWhite >= withDark ? '#ffffff' : '#12131d';
+}
+
+/* Pinta o app inteiro com a identidade da competição UEFA ativa. As cores
+   de cada competição (Champions/Europa/Conference) vivem em CSS —
+   body.ucl-mode[data-comp="uel"/"uecl"] — então aqui só liga o atributo;
+   quando sai do modo, o tema pessoal do usuário volta a valer sozinho. */
+function applyCompTheme(compId) {
+  document.body.dataset.comp = compId;
+}
+function clearCompTheme() {
+  delete document.body.dataset.comp;
 }
 
 function applyThemeAndFont() {
@@ -869,6 +887,7 @@ function bootArena() {
   uclMode = false;
   champMode = false;
   document.body.classList.remove('ucl-mode');
+  clearCompTheme();
   rebuildPool();
   if (pool.length < 2) {
     showToast('Pool insuficiente. Ajuste os filtros.', 'warn'); return;
@@ -877,33 +896,73 @@ function bootArena() {
   _startSession();
 }
 
-/* ===== UCL MODE — MODAL DE SELEÇÃO ===== */
+/* ===== SELETOR DE COMPETIÇÃO UEFA ===== */
+function openCompPicker(flow) {
+  if (!requirePlayerNames()) return;
+  pendingCompFlow = flow; // 'arena' (sorteio rápido) ou 'bracket' (chaveamento)
+  renderCompPicker();
+  document.getElementById('compPickerModal').classList.add('open');
+}
+
+function closeCompPicker() {
+  document.getElementById('compPickerModal').classList.remove('open');
+}
+
+function renderCompPicker() {
+  const grid = document.getElementById('compPickerGrid');
+  if (!grid) return;
+  grid.innerHTML = Object.values(UEFA_COMPS).map(comp => {
+    const n = teams.filter(t => t.active !== false && t.comp === comp.id).length;
+    return `
+    <button type="button" class="comp-pick-card" style="--cp-accent:${comp.color};--cp-accent2:${comp.color2};" onclick="pickComp('${comp.id}')">
+      <img src="${comp.logoUrl}" alt="${comp.short}" onerror="this.style.display='none'">
+      <div class="comp-pick-text">
+        <div class="comp-pick-label">${comp.short}</div>
+        <div class="comp-pick-count">${n} time${n === 1 ? '' : 's'} cadastrado${n === 1 ? '' : 's'}</div>
+      </div>
+    </button>`;
+  }).join('');
+}
+
+function pickComp(compId) {
+  activeCompId = compId;
+  closeCompPicker();
+  if (pendingCompFlow === 'bracket') openChampionsModal();
+  else bootArenaUCL();
+}
+
+/* ===== UCL MODE — MODAL DE SELEÇÃO (sorteio rápido pra qualquer competição UEFA) ===== */
 function bootArenaUCL() {
   if (!requirePlayerNames()) return;
-  const allUCL = teams.filter(t => t.active !== false && t.ucl === true);
-  if (allUCL.length < 2) {
-    showToast('Nenhum time UCL disponível.', 'warn'); return;
+  const comp = UEFA_COMPS[activeCompId];
+  const activeAll = teams.filter(t => t.active !== false);
+  if (activeAll.length < 2) {
+    showToast('Nenhum time disponível.', 'warn'); return;
   }
-  // Pré-seleciona os 32 times da UCL 26-27 por padrão
-  uclSelectedTeams = allUCL.filter(t => UCL_26_27.has(t.n));
-  if (uclSelectedTeams.length < 2) uclSelectedTeams = [...allUCL];
+  // Pré-seleciona os times classificados pra competição escolhida — se a
+  // competição tiver poucos times cadastrados (ex.: Conference League),
+  // completa com os demais times ativos pra sempre dar pra sortear.
+  const compTeams = activeAll.filter(t => t.comp === activeCompId);
+  uclSelectedTeams = compTeams.length >= 2 ? compTeams : [...activeAll];
   renderUCLModal();
+  const title = document.getElementById('uclModalTitle');
+  if (title) title.innerHTML = `<img src="${comp.logoUrl}" alt="" style="width:20px;height:20px;object-fit:contain;vertical-align:-4px;margin-right:6px;" onerror="this.remove()">${comp.short}`;
   document.getElementById('uclModal').classList.add('open');
 }
 
 function renderUCLModal() {
   const grid = document.getElementById('uclTeamsGrid');
   if (!grid) return;
-  const allUCL = teams.filter(t => t.active !== false && t.ucl === true);
+  const comp = UEFA_COMPS[activeCompId];
+  const activeAll = teams.filter(t => t.active !== false);
 
-  // Ordena: 26-27 primeiro, depois extras
-  const official = allUCL.filter(t =>  UCL_26_27.has(t.n));
-  const extras   = allUCL.filter(t => !UCL_26_27.has(t.n));
-  const ordered  = [...official, ...extras];
+  // Ordena: classificados da competição primeiro, depois o resto
+  const official = activeAll.filter(t =>  t.comp === activeCompId);
+  const extras   = activeAll.filter(t => t.comp !== activeCompId);
 
   let html = '';
-  if (extras.length > 0) {
-    html += `<div style="grid-column:1/-1;font-family:var(--font-head);font-size:0.55rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:2px 0 4px;">UCL 2026-27</div>`;
+  if (official.length > 0) {
+    html += `<div style="grid-column:1/-1;font-family:var(--font-head);font-size:0.55rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:2px 0 4px;">${comp.short}</div>`;
   }
   html += official.map(t => teamChipHtml(t)).join('');
   if (extras.length > 0) {
@@ -973,6 +1032,7 @@ function startArenaUCL() {
   champMode = false;
   uclSelectedTeams = finalPool;
   document.body.classList.add('ucl-mode');
+  applyCompTheme(activeCompId);
   pool = finalPool;
 
   cfg.handicap = balancedChk ? balancedChk.checked : false;
@@ -988,7 +1048,12 @@ function _startSession() {
   roundCount = 0;
   recentQueue = [];
   const uclBadge = document.getElementById('uclArenaBadge');
+  const uclBadgeText = document.getElementById('uclArenaBadgeText');
   if (uclBadge) uclBadge.style.display = uclMode ? 'block' : 'none';
+  if (uclMode && uclBadgeText) {
+    const comp = UEFA_COMPS[activeCompId];
+    uclBadgeText.textContent = `${comp.badge} ${comp.label}`;
+  }
   score = { a: 0, b: 0 };
   const s1=document.getElementById('scoreNum1');
   const s2=document.getElementById('scoreNum2');
@@ -1170,15 +1235,19 @@ function renderCard(num, team, owner) {
   // Liga + Nome
   const leagueEl = document.getElementById(`league${num}`);
   if (leagueEl) {
-    if (uclMode) {
-      leagueEl.innerHTML = `⭐ UEFA Champions League`;
-    } else if (champMode) {
-      leagueEl.innerHTML = `🏆 Champions 26-27`;
+    if (uclMode || champMode) {
+      const comp = UEFA_COMPS[activeCompId];
+      leagueEl.innerHTML = `<img class="league-logo" src="${comp.logoUrl}" alt="" onerror="this.remove()">${comp.label}`;
     } else {
       const lgUrl = getLeagueLogoUrl(team.league);
-      leagueEl.innerHTML = lgUrl
+      // Time classificado pra uma competição UEFA carrega o emblema dela
+      // junto da liga nacional, mesmo fora do modo de sorteio dedicado.
+      const compBadge = team.comp && UEFA_COMPS[team.comp]
+        ? `<img class="league-logo comp-logo" src="${UEFA_COMPS[team.comp].logoUrl}" alt="${UEFA_COMPS[team.comp].short}" title="${UEFA_COMPS[team.comp].label}" onerror="this.remove()">`
+        : '';
+      leagueEl.innerHTML = (lgUrl
         ? `<img class="league-logo" src="${lgUrl}" alt="" onerror="this.remove()">${team.f||''} ${team.league}`
-        : `${team.f||''} ${team.league}`;
+        : `${team.f||''} ${team.league}`) + compBadge;
     }
   }
   const nameEl = document.getElementById(`name${num}`);
@@ -1402,6 +1471,7 @@ function openBanMenu() {
   if (!uclMode && champMode) {
     champMode = false;
     document.body.classList.remove('ucl-mode');
+    clearCompTheme();
   }
   if (pool.length < 2) { showToast('Pool insuficiente.', 'warn'); return; }
   const saved = JSON.parse(localStorage.getItem(SK.bans)||'[]');
@@ -1454,12 +1524,17 @@ function openChampionsModal() {
   const activeTeams = teams.filter(t => t.active !== false);
   if (activeTeams.length < 4) { showToast('Precisa de ao menos 4 times ativos.', 'warn'); return; }
 
-  // Pré-seleciona os times da Champions 26-27 (até o máximo de 16 do chaveamento)
-  const champTeams = activeTeams.filter(t => UCL_26_27.has(t.n));
+  const comp = UEFA_COMPS[activeCompId];
+  // Pré-seleciona os times classificados pra competição (até o máximo de
+  // 16 do chaveamento); com menos de 4 (ex.: Conference League), o usuário
+  // completa manualmente na seção "Outros times".
+  const champTeams = activeTeams.filter(t => t.comp === activeCompId);
   championsSelected = champTeams.length >= 4 ? champTeams.slice(0, 16) : [];
 
   renderChampionsGrid();
   updateChampionsCounter();
+  const title = document.getElementById('championsModalTitle');
+  if (title) title.innerHTML = `<img src="${comp.logoUrl}" alt="" style="width:20px;height:20px;object-fit:contain;vertical-align:-4px;margin-right:6px;" onerror="this.remove()">${comp.short}`;
   document.getElementById('championsModal').classList.add('open');
 }
 
@@ -1470,9 +1545,10 @@ function closeChampionsModal() {
 function renderChampionsGrid() {
   const grid = document.getElementById('championsGrid');
   if (!grid) return;
+  const comp = UEFA_COMPS[activeCompId];
   const activeTeams = teams.filter(t => t.active !== false);
-  const official = activeTeams.filter(t =>  UCL_26_27.has(t.n));
-  const extras   = activeTeams.filter(t => !UCL_26_27.has(t.n));
+  const official = activeTeams.filter(t =>  t.comp === activeCompId);
+  const extras   = activeTeams.filter(t => t.comp !== activeCompId);
 
   const chipHtml = t => {
     const selected = championsSelected.some(s => s.n === t.n);
@@ -1489,7 +1565,7 @@ function renderChampionsGrid() {
 
   let html = '';
   if (official.length > 0) {
-    html += `<div style="grid-column:1/-1;font-family:var(--font-head);font-size:0.55rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:2px 0 4px;">Champions 26-27</div>`;
+    html += `<div style="grid-column:1/-1;font-family:var(--font-head);font-size:0.55rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:2px 0 4px;">${comp.short}</div>`;
     html += official.map(chipHtml).join('');
   }
   if (extras.length > 0) {
@@ -1546,6 +1622,7 @@ function startChampionsBracket() {
   champMode = true;
   uclMode = false;
   document.body.classList.add('ucl-mode');
+  applyCompTheme(activeCompId);
   switchTab('torneio');
 
   // Show bracket, hide setup controls
@@ -1554,7 +1631,7 @@ function startChampionsBracket() {
   document.getElementById('tournSetupControls').style.display = 'none';
   document.getElementById('btnNextMatch').style.display = 'block';
 
-  showToast(`🏆 Chaveamento Champions 26-27 com ${n} times gerado!`);
+  showToast(`🏆 Chaveamento ${UEFA_COMPS[activeCompId].short} com ${n} times gerado!`);
 }
 
 /* ===== TORNEIO ===== */
@@ -1566,6 +1643,7 @@ function generateTournament() {
   if (!requirePlayerNames()) return;
   champMode = false;
   document.body.classList.remove('ucl-mode');
+  clearCompTheme();
   const size  = parseInt(document.getElementById('tourneySize').value);
   const level = document.getElementById('tourneyLevel').value;
 
@@ -1637,7 +1715,10 @@ function playNextMatch() {
   const uclBadgeText = document.getElementById('uclArenaBadgeText');
   if (uclBadge) {
     uclBadge.style.display = champMode ? 'block' : 'none';
-    if (champMode && uclBadgeText) uclBadgeText.textContent = '🏆 Champions 26-27';
+    if (champMode && uclBadgeText) {
+      const comp = UEFA_COMPS[activeCompId];
+      uclBadgeText.textContent = `🏆 ${comp.short}`;
+    }
   }
 
   switchTab('arena');
@@ -1666,6 +1747,7 @@ function backToLobbyFromTournament() {
   if (champMode) {
     champMode = false;
     document.body.classList.remove('ucl-mode');
+    clearCompTheme();
   }
   const uclBadge = document.getElementById('uclArenaBadge');
   if (uclBadge) uclBadge.style.display = 'none';
