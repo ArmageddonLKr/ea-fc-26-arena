@@ -497,6 +497,32 @@ function applyThemeAndFont() {
     const t = THEMES.find(x => x.id === id);
     if (t) metaTheme.setAttribute('content', t.bg);
   }
+
+  updateThemeWatermark(id);
+}
+
+// Escudo + nome gigantes atrás de tudo, tipo pôster de estádio — só nos
+// temas realmente ligados a um clube específico (Real Madrid, Liverpool
+// e Time do Coração, este com o time favorito escolhido pelo usuário).
+function updateThemeWatermark(id) {
+  const el = document.getElementById('themeWatermark');
+  if (!el) return;
+  const img  = document.getElementById('themeWatermarkImg');
+  const text = document.getElementById('themeWatermarkText');
+
+  const watermarkTeam = id === 'meutime'   ? teams.find(t => t.n === cfg.favoriteTeam)
+                      : id === 'realmadrid' ? teams.find(t => t.n === 'Real Madrid')
+                      : id === 'liverpool'  ? teams.find(t => t.n === 'Liverpool')
+                      : null;
+
+  if (watermarkTeam) {
+    const url = getLogoUrl(watermarkTeam);
+    if (img) { img.style.display = url ? '' : 'none'; if (url) img.src = url; }
+    if (text) text.textContent = watermarkTeam.n;
+    el.classList.add('active');
+  } else {
+    el.classList.remove('active');
+  }
 }
 
 function renderThemeGrid() {
@@ -1195,6 +1221,11 @@ function renderCard(num, team, owner) {
   card.style.setProperty('--team-color',  color);
   card.style.setProperty('--team-color2', team.c2 || color);
   card.style.setProperty('--team-color3', team.c3 || team.c2 || color);
+  // O card agora é preenchido com a cor de verdade do clube (não só um
+  // filete) — --card-ink escolhe texto claro ou escuro conforme a
+  // luminância, pra funcionar em qualquer time (Real Madrid branco,
+  // Bayern vermelho, Juventus preto...).
+  card.style.setProperty('--card-ink', pickInk(color));
   card.style.animation = 'none';
   void card.offsetWidth; // reflow
   card.style.animation = 'cardIn 0.45s cubic-bezier(0.34,1.3,0.64,1) forwards';
