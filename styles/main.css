@@ -145,6 +145,7 @@
   /* ===== STATUS / RANK ===== */
   --gold:      #f0c040;
   --gold2:     #ffd700;
+  --gold-ink:  #1a1400; /* texto sobre badges preenchidos com --gold/--gold2 */
   --green:     #00e676;
 
   /* ===== RADII ===== */
@@ -1203,6 +1204,9 @@ button, a, [role="button"] {
   letter-spacing: 2px;
   text-transform: uppercase;
   color: #fff;
+  /* --p1 no tema "Time do Coração" pode ser qualquer cor de clube, inclusive
+     clara (Real Madrid, Juventus...) — a sombra garante leitura sempre. */
+  text-shadow: 0 1px 3px rgba(0,0,0,0.55);
   border-radius: 5px;
   padding: 4px 10px;
   border: 1px solid transparent;
@@ -1221,7 +1225,7 @@ button, a, [role="button"] {
 .ovr-badge {
   display: flex; align-items: baseline; gap: 4px;
   background: rgba(0,0,0,0.45);
-  border: 1px solid var(--border2);
+  border: 1px solid color-mix(in srgb, var(--team-color, var(--border2)) 30%, var(--border2) 70%);
   border-radius: 6px;
   padding: 4px 11px;
   transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
@@ -1242,21 +1246,48 @@ button, a, [role="button"] {
   line-height: 1;
 }
 
-.ovr-base  { color: var(--text2); }
-.ovr-gold  { color: var(--gold); text-shadow: 0 0 14px color-mix(in srgb, var(--gold) 40%, transparent); }
-.ovr-elite { color: var(--accent2); text-shadow: 0 0 14px rgba(167,139,250,0.45); }
+/* Os 3 tiers de base seguem a mesma lógica de qualidade de sempre (cinza →
+   dourado → elite), só que a cor do clube entra na mistura — o card de um
+   85 do Real Madrid e um 85 do Bayern continuam claramente "tier hero",
+   mas cada um brilha na própria cor. */
+.ovr-base  { color: color-mix(in srgb, var(--team-color, var(--text2)) 40%, var(--text2) 60%); }
+.ovr-gold  {
+  color: color-mix(in srgb, var(--team-color, var(--gold)) 55%, var(--gold) 45%);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--team-color, var(--gold)) 45%, transparent);
+}
+.ovr-elite {
+  color: color-mix(in srgb, var(--team-color, var(--accent2)) 55%, var(--accent2) 45%);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--team-color, var(--accent2)) 45%, transparent);
+}
 
-/* Hero (85+) — tema verde escuro/dourado, referência às cartas "Hero" do Ultimate Team */
+/* Hero (85+) — acabamento metálico/foil com as cores REAIS do clube
+   (primária → secundária → terciária), referência às cartas "Hero" do
+   Ultimate Team só que com a identidade de cada time em vez de um dourado genérico. */
 .ovr-num.ovr-hero {
-  color: #ffd84d;
-  text-shadow: 0 0 12px rgba(255,216,77,0.55);
+  background: linear-gradient(100deg,
+    var(--team-color, #ffd84d) 0%,
+    var(--team-color3, var(--team-color2, #fff6cf)) 42%,
+    var(--team-color2, #ffd84d) 68%,
+    var(--team-color, #ffd84d) 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--team-color, #ffd84d) 55%, transparent));
+  animation: heroFoilShift 3.5s ease-in-out infinite;
+}
+@keyframes heroFoilShift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
 }
 .ovr-badge.ovr-badge-hero {
   background: linear-gradient(160deg, #0f4a2c 0%, #062616 100%);
-  border-color: rgba(60,220,140,0.4);
-  box-shadow: 0 0 16px rgba(30,200,120,0.28), inset 0 0 0 1px rgba(255,216,77,0.15);
+  border-color: color-mix(in srgb, var(--team-color, #3cdc8c) 45%, rgba(60,220,140,0.4) 55%);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--team-color, rgba(30,200,120,0.28)) 35%, rgba(30,200,120,0.28) 65%),
+              inset 0 0 0 1px rgba(255,216,77,0.15);
 }
 .ovr-badge.ovr-badge-hero .ovr-label { color: #7fe8ac; }
+@media (prefers-reduced-motion: reduce) {
+  .ovr-num.ovr-hero { animation: none; }
+}
 
 /* ===== TEAM IDENTITY ===== */
 .team-identity {
@@ -1370,11 +1401,14 @@ button, a, [role="button"] {
   width: 0%;
 }
 
+/* Número de ATA/MEI/DEF tingido com a cor do clube daquele card — mistura
+   com --text garante leitura em qualquer superfície, clara ou escura. */
 .stat-num {
   font-family: var(--font-head);
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--text);
+  color: color-mix(in srgb, var(--team-color, var(--text)) 55%, var(--text) 45%);
+  text-shadow: 0 0 9px color-mix(in srgb, var(--team-color, transparent) 35%, transparent);
 }
 
 /* ===== OVR ADVANTAGE ===== */
@@ -2008,7 +2042,7 @@ button, a, [role="button"] {
   top: 10px; left: 50%;
   transform: translateX(-50%);
   background: linear-gradient(135deg, var(--gold), var(--gold2));
-  color: #1a1400;
+  color: var(--gold-ink, #1a1400);
   font-family: var(--font-head);
   font-weight: 900;
   font-size: 0.58rem;

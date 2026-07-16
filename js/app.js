@@ -453,12 +453,25 @@ function applyThemeAndFont() {
     root.setProperty('--accent3',     accent3);
     root.setProperty('--p1',          accent);
     root.setProperty('--accent-ink',  pickInk(accent));
+
+    // "Pinta tudo": até os badges/textos dourados (fav-badge, toasts,
+    // campeão do torneio...) passam a usar a cor do clube. Clareada pra
+    // manter o acabamento "metal precioso" em vez de virar um tom escuro
+    // sem graça quando a 2ª/3ª cor do time é escura.
+    const goldTint  = lightenHex(accent2, 0.3);
+    const gold2Tint = lightenHex(accent3, 0.3);
+    root.setProperty('--gold',      goldTint);
+    root.setProperty('--gold2',     gold2Tint);
+    root.setProperty('--gold-ink',  pickInk(goldTint));
   } else {
     root.removeProperty('--accent');
     root.removeProperty('--accent2');
     root.removeProperty('--accent3');
     root.removeProperty('--p1');
     root.removeProperty('--accent-ink');
+    root.removeProperty('--gold');
+    root.removeProperty('--gold2');
+    root.removeProperty('--gold-ink');
   }
 
   const metaTheme = document.querySelector('meta[name="theme-color"]');
