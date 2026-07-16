@@ -753,6 +753,43 @@ button, a, [role="button"] {
   z-index: 1;
 }
 
+/* Marca d'água do tema de clube — escudo + nome gigantes atrás de tudo,
+   tipo pôster de estádio. .active liga via JS só nos temas ligados a um
+   clube (Real Madrid, Liverpool, Time do Coração); nos demais fica oculta. */
+.theme-watermark {
+  display: none;
+  position: fixed; inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+.theme-watermark.active { display: flex; }
+.theme-watermark img {
+  width: min(78vw, 380px);
+  height: min(78vw, 380px);
+  object-fit: contain;
+  opacity: 0.10;
+  filter: grayscale(0.15) blur(0.3px);
+}
+.theme-watermark span {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: min(15vw, 82px);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent-ink, var(--text));
+  opacity: 0.07;
+  white-space: nowrap;
+  text-align: center;
+}
+
 /* Telas largas (tablet/desktop): a app vira um painel flutuante centralizado,
    com um glow ambiente atrás — em vez de flutuar solta num fundo vazio. */
 @media (min-width: 700px) {
@@ -1144,16 +1181,23 @@ button, a, [role="button"] {
 }
 
 /* ===== TEAM CARD ===== */
+/* Card na cor SÓLIDA e oficial do clube — sem degradê entre duas cores,
+   igual camisa/uniforme. Um leve brilho radial no canto (mesmo tom, só
+   uma pitada de luz) dá profundidade sem virar gradiente de verdade.
+   --card-ink (luminância, calculado no JS) garante texto legível em
+   cima de qualquer cor, clara ou escura. */
 .card {
   background:
-    linear-gradient(165deg, color-mix(in srgb, var(--team-color, var(--accent)) 16%, var(--surface) 84%) 0%, var(--surface) 60%);
-  border: 1px solid color-mix(in srgb, var(--team-color, var(--accent)) 32%, var(--border) 68%);
+    radial-gradient(ellipse 130% 90% at 15% -10%,
+      color-mix(in srgb, var(--team-color, var(--accent)) 88%, white 12%) 0%,
+      var(--team-color, var(--accent)) 55%);
+  border: 1px solid color-mix(in srgb, var(--card-ink, var(--border)) 22%, var(--border) 78%);
   border-radius: var(--radius-lg);
   position: relative;
   overflow: hidden;
   transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
   animation: cardIn 0.4s cubic-bezier(0.34,1.4,0.64,1);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5), inset 0 0 0 1px color-mix(in srgb, var(--team-color, var(--accent)) 10%, transparent);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.55), inset 0 0 0 1px color-mix(in srgb, var(--card-ink, white) 14%, transparent);
 }
 
 /* Faixa tricolor com as cores oficiais do clube — primária/secundária/
@@ -1224,8 +1268,8 @@ button, a, [role="button"] {
 
 .ovr-badge {
   display: flex; align-items: baseline; gap: 4px;
-  background: rgba(0,0,0,0.45);
-  border: 1px solid color-mix(in srgb, var(--team-color, var(--border2)) 30%, var(--border2) 70%);
+  background: color-mix(in srgb, var(--card-ink, black) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--card-ink, var(--border2)) 25%, transparent);
   border-radius: 6px;
   padding: 4px 11px;
   transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
@@ -1236,7 +1280,7 @@ button, a, [role="button"] {
   font-size: 0.65rem;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: color-mix(in srgb, var(--card-ink, var(--muted)) 70%, transparent);
 }
 
 .ovr-num {
@@ -1246,18 +1290,17 @@ button, a, [role="button"] {
   line-height: 1;
 }
 
-/* Os 3 tiers de base seguem a mesma lógica de qualidade de sempre (cinza →
-   dourado → elite), só que a cor do clube entra na mistura — o card de um
-   85 do Real Madrid e um 85 do Bayern continuam claramente "tier hero",
-   mas cada um brilha na própria cor. */
-.ovr-base  { color: color-mix(in srgb, var(--team-color, var(--text2)) 40%, var(--text2) 60%); }
+/* Os 3 tiers de base seguem a cor de tinta do card (sempre legível em
+   cima de qualquer cor de clube) — o brilho da cor de cada tier (cinza →
+   dourado → elite) continua marcando a qualidade do time. */
+.ovr-base  { color: var(--card-ink, var(--text2)); }
 .ovr-gold  {
-  color: color-mix(in srgb, var(--team-color, var(--gold)) 55%, var(--gold) 45%);
-  text-shadow: 0 0 14px color-mix(in srgb, var(--team-color, var(--gold)) 45%, transparent);
+  color: var(--card-ink, var(--gold));
+  text-shadow: 0 0 14px color-mix(in srgb, var(--gold) 55%, transparent);
 }
 .ovr-elite {
-  color: color-mix(in srgb, var(--team-color, var(--accent2)) 55%, var(--accent2) 45%);
-  text-shadow: 0 0 14px color-mix(in srgb, var(--team-color, var(--accent2)) 45%, transparent);
+  color: var(--card-ink, var(--accent2));
+  text-shadow: 0 0 14px color-mix(in srgb, var(--accent2) 55%, transparent);
 }
 
 /* Hero (85+) — acabamento metálico/foil com as cores REAIS do clube
@@ -1322,7 +1365,7 @@ button, a, [role="button"] {
   font-size: 0.56rem;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: color-mix(in srgb, var(--card-ink, var(--muted)) 65%, transparent);
   margin-bottom: 3px;
   display: flex;
   align-items: center;
@@ -1353,7 +1396,7 @@ button, a, [role="button"] {
   text-transform: uppercase;
   letter-spacing: 1px;
   line-height: 1.1;
-  color: var(--text);
+  color: var(--card-ink, var(--text));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1364,19 +1407,19 @@ button, a, [role="button"] {
   margin-top: 5px;
 }
 
-.star-icon { font-size: 0.62rem; opacity: 0.65; }
+.star-icon { font-size: 0.62rem; opacity: 0.75; }
 
 .star-names {
   font-family: var(--font-body);
   font-size: 0.72rem;
-  color: var(--text2);
+  color: color-mix(in srgb, var(--card-ink, var(--text2)) 78%, transparent);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 /* ===== STATS ===== */
 .stats-divider {
   height: 1px;
-  background: var(--border);
+  background: color-mix(in srgb, var(--card-ink, var(--border)) 20%, transparent);
   margin: 10px 0;
 }
 
@@ -1392,32 +1435,34 @@ button, a, [role="button"] {
   font-size: 0.65rem;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: color-mix(in srgb, var(--card-ink, var(--muted)) 60%, transparent);
 }
 
 .stat-track {
   height: 3px;
-  background: var(--border2);
+  background: color-mix(in srgb, var(--card-ink, var(--border2)) 18%, transparent);
   border-radius: 2px;
   overflow: hidden;
 }
 
+/* A barra preenche na cor de tinta do card — some no fundo se usasse a
+   própria cor do clube (a barra E o fundo seriam o mesmo tom). */
 .stat-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--team-color, var(--accent)), var(--team-color2, var(--team-color, var(--accent))));
+  background: var(--card-ink, var(--accent));
   border-radius: 2px;
   transition: width 0.65s cubic-bezier(0.4, 0, 0.2, 1);
   width: 0%;
 }
 
-/* Número de ATA/MEI/DEF tingido com a cor do clube daquele card — mistura
-   com --text garante leitura em qualquer superfície, clara ou escura. */
+/* Número de ATA/MEI/DEF na cor de tinta do card, com um leve brilho na 2ª
+   cor do clube — legível em qualquer fundo, ainda com toque de identidade. */
 .stat-num {
   font-family: var(--font-head);
   font-size: 0.95rem;
   font-weight: 700;
-  color: color-mix(in srgb, var(--team-color, var(--text)) 55%, var(--text) 45%);
-  text-shadow: 0 0 9px color-mix(in srgb, var(--team-color, transparent) 35%, transparent);
+  color: var(--card-ink, var(--text));
+  text-shadow: 0 0 8px color-mix(in srgb, var(--team-color2, var(--team-color, transparent)) 40%, transparent);
 }
 
 /* ===== OVR ADVANTAGE ===== */
