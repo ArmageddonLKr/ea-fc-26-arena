@@ -394,6 +394,12 @@ const THEMES = [
   { id: 'champions', label: 'Champions', bg: '#07070a', accent: '#d4af37' },
   { id: 'sunset',    label: 'Sunset',    bg: '#0d0710', accent: '#ff5f6d' },
   { id: 'gelo',      label: 'Gelo',      bg: '#eef1f8', accent: '#3b5bfd' },
+  { id: 'dourado',   label: 'Dourado',   bg: '#060504', accent: '#d4af37' },
+  { id: 'merengue',  label: 'Merengue',  bg: '#f7f5f0', accent: '#c9a227', hint: 'Inspirado no Real Madrid' },
+  { id: 'blaugrana', label: 'Blaugrana', bg: '#05070f', accent: '#1959a8', hint: 'Inspirado no Barcelona' },
+  { id: 'citizens',  label: 'Citizens',  bg: '#050b14', accent: '#6cabdd', hint: 'Inspirado no Manchester City' },
+  { id: 'reds',      label: 'Reds',      bg: '#0d0505', accent: '#c8102e', hint: 'Inspirado no Liverpool' },
+  { id: 'boca',      label: 'Boca',      bg: '#05081a', accent: '#ffd100', hint: 'Inspirado no Boca Juniors' },
 ];
 
 const FONT_PACKS = [
@@ -417,9 +423,11 @@ function renderThemeGrid() {
   const grid = document.getElementById('themeSwatchGrid');
   if (!grid) return;
   grid.innerHTML = THEMES.map(t => `
-    <button type="button" class="theme-swatch${cfg.theme === t.id ? ' active' : ''}" onclick="selectTheme('${t.id}')">
+    <button type="button" class="theme-swatch${cfg.theme === t.id ? ' active' : ''}"
+      onclick="selectTheme('${t.id}')" ${t.hint ? `title="${t.hint}"` : ''}>
       <span class="theme-swatch-dot" style="background:linear-gradient(135deg, ${t.accent}, ${t.bg});"></span>
       <span class="theme-swatch-label">${t.label}</span>
+      ${t.hint ? `<span class="theme-swatch-hint">${t.hint.replace('Inspirado no ', '')}</span>` : ''}
     </button>
   `).join('');
 }
@@ -589,6 +597,9 @@ function preloadTeamLogos() {
     if (!url) return;
     const img = new Image();
     img.src = url;
+    // decode() força o browser a terminar de decodificar o bitmap agora,
+    // em vez de na hora do reveal — elimina qualquer pop tardio no sorteio.
+    if (img.decode) img.decode().catch(() => {});
   });
 }
 
@@ -943,8 +954,8 @@ function startDraft() {
   if (cfg.handicap && candidatesAll.length > 0) {
     const target = getOVR(t1);
 
-    // Busca progressiva: ±2 → ±4 → ±6 → mais próximo disponível
-    for (const th of [2, 4, 6]) {
+    // Busca progressiva bem apertada: igual → ±1 → ±2 → ±3 → mais próximo disponível
+    for (const th of [0, 1, 2, 3]) {
       const within = candidatesAll.filter(t => Math.abs(getOVR(t) - target) <= th);
       if (within.length > 0) {
         // Dentro do threshold, prefere times não-recentes
