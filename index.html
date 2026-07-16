@@ -44,7 +44,7 @@
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" style="flex:1" onclick="closeStatsMenu()">✕ Fechar</button>
-      <button class="btn-cancel" style="color:var(--p1);border-color:rgba(200,16,46,0.3);background:rgba(200,16,46,0.06);"
+      <button class="btn-cancel" style="color:var(--p1);border-color:rgba(255,23,68,0.3);background:rgba(255,23,68,0.06);"
         onclick="clearStats()">🗑 Limpar</button>
     </div>
   </div>
@@ -103,8 +103,8 @@
     <div class="modal-title" style="margin-bottom:4px;">
       ⭐ UCL 2026-27
     </div>
-    <p style="font-size:0.65rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">
-      32 times pré-selecionados · toque para customizar
+    <p style="font-size:0.65rem;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">
+      Todos os times UCL pré-selecionados · toque para customizar
     </p>
 
     <!-- contador -->
@@ -223,13 +223,13 @@
     <div class="player-slots">
       <div class="player-slot" style="--slot-color:var(--p1)">
         <div class="slot-icon">🎮</div>
-        <span class="slot-label">Comandante 01</span>
-        <input type="text" id="p1Input" class="slot-input" placeholder="Seu nome" maxlength="16" oninput="savePlayerNames()">
+        <span class="slot-label">Comandante 01 <span class="slot-required">*</span></span>
+        <input type="text" id="p1Input" class="slot-input" placeholder="Seu nome" maxlength="16" required oninput="savePlayerNames()">
       </div>
       <div class="player-slot" style="--slot-color:var(--p2)">
         <div class="slot-icon">🕹️</div>
-        <span class="slot-label">Comandante 02</span>
-        <input type="text" id="p2Input" class="slot-input" placeholder="Oponente" maxlength="16" oninput="savePlayerNames()">
+        <span class="slot-label">Comandante 02 <span class="slot-required">*</span></span>
+        <input type="text" id="p2Input" class="slot-input" placeholder="Oponente" maxlength="16" required oninput="savePlayerNames()">
       </div>
     </div>
 
@@ -283,7 +283,7 @@
 
     <!-- Arena header -->
     <div class="arena-header" id="arenaHeader">
-      <div class="ah-player">
+      <div class="ah-player ah-player-p1">
         <span class="ah-name" id="ah_p1">—</span>
         <span class="ah-badge red">Vermelho</span>
       </div>
@@ -291,7 +291,7 @@
         <span class="round-label">Rodada</span>
         <span class="round-num" id="roundNum">0</span>
       </div>
-      <div class="ah-player" style="align-items:flex-end;">
+      <div class="ah-player ah-player-p2" style="align-items:flex-end;">
         <span class="ah-name" id="ah_p2">—</span>
         <span class="ah-badge blue">Azul</span>
       </div>
@@ -308,7 +308,7 @@
     <div class="cards-grid" id="arenaCardsGrid">
 
       <!-- Card 1 -->
-      <div class="card" id="c1" style="--team-color:#c8102e">
+      <div class="card" id="c1" style="--team-color:#8b5cf6">
         <div class="card-stripe"></div>
         <div class="card-glow"></div>
         <div class="card-content">
@@ -442,7 +442,7 @@
 
       <button class="btn-enter" onclick="generateTournament()">⚡ Gerar Chaves</button>
       <button class="btn-enter"
-        style="margin-top:10px;background:rgba(200,16,46,0.08);color:var(--accent);border:1px solid rgba(200,16,46,0.3);"
+        style="margin-top:10px;background:rgba(var(--accent-rgb),0.08);color:var(--accent);border:1px solid rgba(var(--accent-rgb),0.3);"
         onclick="openChampionsModal()">
         🏆 Modo Champions
       </button>
@@ -456,7 +456,7 @@
       </button>
     </div>
 
-    <button style="width:100%;margin-top:14px;padding:13px;background:transparent;border:1px solid rgba(200,16,46,0.22);border-radius:var(--radius);color:var(--p1);font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;"
+    <button style="width:100%;margin-top:14px;padding:13px;background:transparent;border:1px solid rgba(255,23,68,0.22);border-radius:var(--radius);color:var(--p1);font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;"
       onclick="backToLobbyFromTournament()">
       🛑 Abandonar Torneio
     </button>

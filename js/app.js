@@ -184,28 +184,6 @@ function fairShuffle(arr) {
   return a;
 }
 
-/* ===== UCL 2026-27 — 32 times participantes ===== */
-const UCL_26_27 = new Set([
-  // Bundesliga (4)
-  'Bayern München','Bayer Leverkusen','Borussia Dortmund','RB Leipzig',
-  // La Liga (4)
-  'Real Madrid','Barcelona','Atlético Madrid','Villarreal CF',
-  // Premier League (5)
-  'Liverpool','Arsenal','Man City','Chelsea','Aston Villa',
-  // Ligue 1 (3)
-  'PSG','AS Monaco','Marseille',
-  // Serie A (5)
-  'Inter Milan','Napoli','Juventus','Milan','Atalanta',
-  // Eredivisie (2)
-  'PSV Eindhoven','Feyenoord',
-  // Liga Portugal (3)
-  'Sporting CP','Benfica','Porto',
-  // Süper Lig / playoff (2)
-  'Galatasaray','Fenerbahçe',
-  // Classificados via playoff / 5ª vaga
-  'Ajax','Bologna','Newcastle','Stuttgart',
-]);
-
 /* ===== MAPA DE LIGAS (ID → imagem em assets/leagues/<id>.png) ===== */
 const LEAGUE_IDS = {
   'Premier League':              11,
@@ -353,7 +331,7 @@ function darken(hex, amt) {
 function makeBadge(name, color) {
   const parts = (name||'??').split(/[\s&\-]+/).filter(Boolean);
   const initials = parts.map(w=>w[0]).join('').slice(0,3).toUpperCase();
-  const c = color || '#c8102e';
+  const c = color || '#8b5cf6';
   const tc = isColorDark(c) ? '#fff' : '#000';
   const fs = initials.length >= 3 ? 14 : 17;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 74">
@@ -504,9 +482,11 @@ function rebuildPool() {
 
 /* ===== NOMES ===== */
 function savePlayerNames() {
-  const p1 = document.getElementById('p1Input').value;
-  const p2 = document.getElementById('p2Input').value;
-  localStorage.setItem(SK.players, JSON.stringify([p1, p2]));
+  const in1 = document.getElementById('p1Input');
+  const in2 = document.getElementById('p2Input');
+  localStorage.setItem(SK.players, JSON.stringify([in1.value, in2.value]));
+  if (in1.value.trim()) in1.classList.remove('input-invalid');
+  if (in2.value.trim()) in2.classList.remove('input-invalid');
   updateScoreNames();
 }
 
@@ -515,6 +495,23 @@ function P(idx) {
     const n = JSON.parse(localStorage.getItem(SK.players)||'["",""]');
     return n[idx] || `P${idx+1}`;
   } catch(e) { return `P${idx+1}`; }
+}
+
+// Exige os dois nomes preenchidos antes de qualquer modo começar a jogar.
+function ensureNamesFilled() {
+  const in1 = document.getElementById('p1Input');
+  const in2 = document.getElementById('p2Input');
+  const missing1 = !in1.value.trim();
+  const missing2 = !in2.value.trim();
+  in1.classList.toggle('input-invalid', missing1);
+  in2.classList.toggle('input-invalid', missing2);
+  if (missing1 || missing2) {
+    switchTab('home');
+    showToast('Preencha o nome dos dois comandantes para começar.', 'warn');
+    (missing1 ? in1 : in2).focus();
+    return false;
+  }
+  return true;
 }
 
 function updateScoreNames() {
@@ -552,6 +549,7 @@ function resetScore() {
 
 /* ===== BOOT ARENA ===== */
 function bootArena() {
+  if (!ensureNamesFilled()) return;
   uclMode = false;
   document.body.classList.remove('ucl-mode');
   rebuildPool();
@@ -568,9 +566,8 @@ function bootArenaUCL() {
   if (allUCL.length < 2) {
     showToast('Nenhum time UCL disponível.', 'warn'); return;
   }
-  // Pré-seleciona os 32 times da UCL 26-27 por padrão
-  uclSelectedTeams = allUCL.filter(t => UCL_26_27.has(t.n));
-  if (uclSelectedTeams.length < 2) uclSelectedTeams = [...allUCL];
+  // Todo time marcado como UCL (via editor de ratings) entra pré-selecionado
+  uclSelectedTeams = [...allUCL];
   renderUCLModal();
   document.getElementById('uclModal').classList.add('open');
 }
@@ -579,22 +576,7 @@ function renderUCLModal() {
   const grid = document.getElementById('uclTeamsGrid');
   if (!grid) return;
   const allUCL = teams.filter(t => t.active !== false && t.ucl === true);
-
-  // Ordena: 26-27 primeiro, depois extras
-  const official = allUCL.filter(t =>  UCL_26_27.has(t.n));
-  const extras   = allUCL.filter(t => !UCL_26_27.has(t.n));
-  const ordered  = [...official, ...extras];
-
-  let html = '';
-  if (extras.length > 0) {
-    html += `<div style="grid-column:1/-1;font-family:var(--font-head);font-size:0.55rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:2px 0 4px;">UCL 2026-27</div>`;
-  }
-  html += official.map(t => teamChipHtml(t)).join('');
-  if (extras.length > 0) {
-    html += `<div style="grid-column:1/-1;font-family:var(--font-head);font-size:0.55rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:8px 0 4px;">Outras opções</div>`;
-    html += extras.map(t => teamChipHtml(t)).join('');
-  }
-  grid.innerHTML = html;
+  grid.innerHTML = allUCL.map(t => teamChipHtml(t)).join('');
   updateUCLCounter();
 }
 
@@ -638,6 +620,7 @@ function closeUCLModal() {
 }
 
 function startArenaUCL() {
+  if (!ensureNamesFilled()) return;
   if (uclSelectedTeams.length < 2) {
     showToast('Selecione ao menos 2 times.', 'warn'); return;
   }
@@ -796,7 +779,7 @@ function _suspenseReveal(t1, t2) {
 /* ===== RENDER CARD ===== */
 function renderCard(num, team, owner) {
   const ovr   = getOVR(team);
-  const color = team.c || '#c8102e';
+  const color = team.c || '#8b5cf6';
   const card  = document.getElementById(`c${num}`);
   if (!card) return;
 
@@ -1014,7 +997,7 @@ function launchConfetti() {
   canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight;
   const ctx = canvas.getContext('2d');
-  const COLORS = ['#c8102e','#ffd700','#00b4d8','#fff','#ff6b6b','#4ecdc4','#f39c12'];
+  const COLORS = ['#8b5cf6','#ffd700','#00b4d8','#fff','#ff6b6b','#4ecdc4','#f39c12'];
   const pieces = Array.from({length:130}, () => ({
     x: Math.random()*canvas.width, y: -10,
     w: Math.random()*10+5, h: Math.random()*6+3,
@@ -1087,6 +1070,7 @@ function closeBanMenu() {
 }
 
 function applyBansAndStart() {
+  if (!ensureNamesFilled()) return;
   closeBanMenu();
   _startSession();
 }
@@ -1153,6 +1137,7 @@ function updateChampionsCounter() {
 }
 
 function startChampionsBracket() {
+  if (!ensureNamesFilled()) return;
   const n = championsSelected.length;
   if (n !== 4 && n !== 8 && n !== 16) {
     showToast('Selecione 4, 8 ou 16 times.', 'warn'); return;
@@ -1184,6 +1169,7 @@ let tourn = { teams:[], bracket:[], idx:0, done:false };
 function openTournamentMenu() { switchTab('torneio'); }
 
 function generateTournament() {
+  if (!ensureNamesFilled()) return;
   const size  = parseInt(document.getElementById('tourneySize').value);
   const level = document.getElementById('tourneyLevel').value;
 

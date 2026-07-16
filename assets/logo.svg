@@ -9,9 +9,9 @@
       <stop offset="100%" stop-color="#0c0c14"/>
     </linearGradient>
     <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#c8102e"/>
-      <stop offset="50%" stop-color="#ff1744"/>
-      <stop offset="100%" stop-color="#8a000f"/>
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="50%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#3b0764"/>
     </linearGradient>
     <linearGradient id="bolt-grad" x1="0%" y1="0%" x2="60%" y2="100%">
       <stop offset="0%" stop-color="#ffe066"/>
@@ -45,9 +45,9 @@
     <!-- Top-right arc segment -->
     <path d="M 256 24 A 232 232 0 0 1 430 108" stroke="url(#ring-grad)" stroke-width="5" fill="none" stroke-linecap="round"/>
     <!-- Bottom-left arc segment -->
-    <path d="M 82 404 A 232 232 0 0 0 256 488" stroke="#c8102e" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/>
+    <path d="M 82 404 A 232 232 0 0 0 256 488" stroke="#7c3aed" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/>
     <!-- Bottom-right arc segment -->
-    <path d="M 430 404 A 232 232 0 0 1 256 488" stroke="#c8102e" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/>
+    <path d="M 430 404 A 232 232 0 0 1 256 488" stroke="#7c3aed" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/>
   </g>
 
   <!-- Thin accent ring -->
@@ -82,12 +82,12 @@
         stroke="rgba(200,16,46,0.15)" stroke-width="1" fill="none"/>
 
   <!-- Corner accent dots (red) -->
-  <circle cx="256" cy="56" r="5" fill="#c8102e" filter="url(#glow-red)"/>
-  <circle cx="434" cy="158" r="4" fill="#c8102e" opacity="0.7"/>
-  <circle cx="434" cy="354" r="4" fill="#c8102e" opacity="0.7"/>
-  <circle cx="256" cy="456" r="5" fill="#c8102e" filter="url(#glow-red)"/>
-  <circle cx="78" cy="354" r="4" fill="#c8102e" opacity="0.7"/>
-  <circle cx="78" cy="158" r="4" fill="#c8102e" opacity="0.7"/>
+  <circle cx="256" cy="56" r="5" fill="#7c3aed" filter="url(#glow-red)"/>
+  <circle cx="434" cy="158" r="4" fill="#7c3aed" opacity="0.7"/>
+  <circle cx="434" cy="354" r="4" fill="#7c3aed" opacity="0.7"/>
+  <circle cx="256" cy="456" r="5" fill="#7c3aed" filter="url(#glow-red)"/>
+  <circle cx="78" cy="354" r="4" fill="#7c3aed" opacity="0.7"/>
+  <circle cx="78" cy="158" r="4" fill="#7c3aed" opacity="0.7"/>
 
   <!-- Lightning bolt — main shape, gold -->
   <g filter="url(#glow-gold)">

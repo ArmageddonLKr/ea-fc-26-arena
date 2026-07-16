@@ -84,11 +84,12 @@
   --text2:     #8888a8;
   --muted:     #40405a;
 
-  /* ===== BRAND ===== */
-  --accent:    #c8102e;
-  --accent2:   #ff1744;
-  --p1:        #ff1744;
-  --p2:        #00b8e0;
+  /* ===== BRAND (preto + roxo dark) ===== */
+  --accent:     #8b5cf6;
+  --accent-rgb: 139,92,246;
+  --accent2:    #a855f7;
+  --p1:         #ff1744;
+  --p2:         #00b8e0;
 
   /* ===== STATUS / RANK ===== */
   --gold:      #f0c040;
@@ -101,8 +102,8 @@
   --radius-xl: 24px;
 
   /* ===== GLOWS ===== */
-  --glow-accent:        0 4px 28px rgba(200,16,46,0.28);
-  --glow-accent-strong: 0 6px 40px rgba(200,16,46,0.5), 0 0 0 6px rgba(200,16,46,0.08);
+  --glow-accent:        0 4px 28px rgba(var(--accent-rgb),0.28);
+  --glow-accent-strong: 0 6px 40px rgba(var(--accent-rgb),0.5), 0 0 0 6px rgba(var(--accent-rgb),0.08);
   --glow-p1:   0 0 30px rgba(255,23,68,0.35);
   --glow-p2:   0 0 30px rgba(0,184,224,0.35);
   --glow-gold: 0 0 14px rgba(240,192,64,0.4);
@@ -147,7 +148,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(200,16,46,0.04) 0%, transparent 70%), var(--bg);
+  background: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(var(--accent-rgb),0.04) 0%, transparent 70%), var(--bg);
 }
 
 
@@ -237,8 +238,8 @@ button, a, [role="button"] {
 @keyframes toastIn     { from { transform: translateX(-50%) translateY(16px); opacity: 0 } to { transform: translateX(-50%) translateY(0); opacity: 1 } }
 @keyframes scorePop    { 0% { transform: scale(1) } 40% { transform: scale(1.32) } 100% { transform: scale(1) } }
 @keyframes glowPulse   {
-  0%, 100% { box-shadow: 0 4px 32px rgba(200,16,46,0.38), 0 0 0 0 rgba(200,16,46,0.0); }
-  50%       { box-shadow: 0 8px 48px rgba(200,16,46,0.65),  0 0 0 8px rgba(200,16,46,0.12); }
+  0%, 100% { box-shadow: 0 4px 32px rgba(var(--accent-rgb),0.38), 0 0 0 0 rgba(var(--accent-rgb),0.0); }
+  50%       { box-shadow: 0 8px 48px rgba(var(--accent-rgb),0.65),  0 0 0 8px rgba(var(--accent-rgb),0.12); }
 }
 @keyframes victoryBadge {
   0%   { transform: scale(0.7) translateY(20px); opacity: 0 }
@@ -317,8 +318,8 @@ button, a, [role="button"] {
   background: rgba(6,6,10,0.96);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid rgba(200,16,46,0.18);
-  box-shadow: 0 1px 0 rgba(200,16,46,0.06), 0 2px 16px rgba(0,0,0,0.5);
+  border-bottom: 1px solid rgba(var(--accent-rgb),0.18);
+  box-shadow: 0 1px 0 rgba(var(--accent-rgb),0.06), 0 2px 16px rgba(0,0,0,0.5);
   display: flex; align-items: center; gap: 10px;
   padding: 0 16px;
   height: 52px;
@@ -435,7 +436,11 @@ button, a, [role="button"] {
   font-size: 0.56rem;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--text2);
+}
+
+.slot-required {
+  color: var(--p1);
 }
 
 .slot-input {
@@ -450,11 +455,23 @@ button, a, [role="button"] {
   outline: none;
   padding: 4px 0;
   width: 100%;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .slot-input::placeholder { color: var(--muted); font-weight: 400; }
 .slot-input:focus { border-color: var(--slot-color, var(--accent)); }
+
+.slot-input.input-invalid {
+  border-bottom-color: var(--p1);
+  animation: input-shake 0.3s ease;
+}
+.slot-input.input-invalid::placeholder { color: var(--p1); }
+
+@keyframes input-shake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  75%      { transform: translateX(4px); }
+}
 
 .lobby-vs {
   font-family: var(--font-head);
@@ -521,11 +538,14 @@ button, a, [role="button"] {
 
 .score-name {
   font-family: var(--font-head);
-  font-size: 0.6rem;
+  font-size: 0.62rem;
+  font-weight: 700;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: var(--muted);
 }
+
+.score-p1 .score-name { color: var(--p1); }
+.score-p2 .score-name { color: var(--p2); }
 
 .score-num {
   font-family: var(--font-head);
@@ -626,6 +646,9 @@ button, a, [role="button"] {
   color: var(--text);
 }
 
+.ah-player-p1 .ah-name { color: var(--p1); }
+.ah-player-p2 .ah-name { color: var(--p2); }
+
 .ah-badge {
   font-family: var(--font-head);
   font-size: 0.65rem;
@@ -674,7 +697,7 @@ button, a, [role="button"] {
 .btn-draw {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   width: 100%; padding: 17px 16px;
-  background: linear-gradient(135deg, #d4112e 0%, #a00020 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 60%, black) 100%);
   border: none;
   border-radius: var(--radius-lg);
   color: #fff;
@@ -779,15 +802,25 @@ button, a, [role="button"] {
 
 .owner-badge {
   font-family: var(--font-head);
-  font-size: 0.58rem;
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--muted);
-  background: var(--surface2);
-  border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 3px 9px;
+  padding: 4px 10px;
+}
+
+/* Card 1 = Comandante 01 (vermelho), Card 2 = Comandante 02 (azul) —
+   fundo tintado + texto na cor do jogador, pra ficar óbvio de quem é o time. */
+#c1 .owner-badge {
+  color: var(--p1);
+  background: rgba(255,23,68,0.14);
+  border: 1px solid rgba(255,23,68,0.3);
+}
+#c2 .owner-badge {
+  color: var(--p2);
+  background: rgba(0,184,224,0.14);
+  border: 1px solid rgba(0,184,224,0.3);
 }
 
 .ovr-badge {
@@ -1049,7 +1082,7 @@ button, a, [role="button"] {
 
 .bracket-match.active {
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px rgba(200,16,46,0.12), 0 4px 20px rgba(200,16,46,0.1);
+  box-shadow: 0 0 0 1px rgba(var(--accent-rgb),0.12), 0 4px 20px rgba(var(--accent-rgb),0.1);
 }
 
 .bracket-match.done { opacity: 0.6; }
@@ -1144,7 +1177,7 @@ button, a, [role="button"] {
 
 .league-chip.active {
   border-color: var(--accent);
-  background: rgba(200,16,46,0.12);
+  background: rgba(var(--accent-rgb),0.12);
 }
 
 .league-chip-all {
@@ -1192,7 +1225,7 @@ button, a, [role="button"] {
 }
 
 .league-mode-row:has(input:checked) {
-  border-color: rgba(200,16,46,0.3);
+  border-color: rgba(var(--accent-rgb),0.3);
 }
 
 .league-mode-row input[type="checkbox"] {
@@ -1336,8 +1369,8 @@ button, a, [role="button"] {
 .ban-item:active { transform: scale(0.95); }
 
 .ban-item.banned {
-  background: rgba(200,16,46,0.1);
-  border-color: rgba(200,16,46,0.32);
+  background: rgba(var(--accent-rgb),0.1);
+  border-color: rgba(var(--accent-rgb),0.32);
   opacity: 0.7;
 }
 
@@ -1476,7 +1509,7 @@ footer {
 #victoryOverlay::before {
   content: '';
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(200,16,46,0.12), transparent 70%);
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(var(--accent-rgb),0.12), transparent 70%);
   pointer-events: none;
 }
 
@@ -1507,8 +1540,8 @@ footer {
   width: 100%;
   margin-top: 8px;
   padding: 11px;
-  background: rgba(200,16,46,0.07);
-  border: 1px solid rgba(200,16,46,0.2);
+  background: rgba(var(--accent-rgb),0.07);
+  border: 1px solid rgba(var(--accent-rgb),0.2);
   border-radius: var(--radius);
   color: var(--p1);
   font-family: var(--font-head);
@@ -1520,8 +1553,8 @@ footer {
 }
 
 .btn-save-match:active {
-  background: rgba(200,16,46,0.15);
-  border-color: rgba(200,16,46,0.42);
+  background: rgba(var(--accent-rgb),0.15);
+  border-color: rgba(var(--accent-rgb),0.42);
 }
 
 /* ===== SCROLLBAR ===== */
@@ -1657,7 +1690,7 @@ footer {
 
 .champions-team.selected {
   border-color: var(--accent);
-  background: rgba(200,16,46,0.12);
+  background: rgba(var(--accent-rgb),0.12);
 }
 
 .champions-team img {
