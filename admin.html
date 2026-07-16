@@ -147,6 +147,71 @@ html, body {
 .btn-toolbar.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
 .btn-toolbar.primary:hover { opacity: 0.88; }
 
+/* ===== ATUALIZAÇÃO RÁPIDA (bulk update) ===== */
+.bulk-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.bulk-toggle {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 16px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-family: var(--font-head);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+#bulkChevron { color: var(--muted); transition: transform 0.2s; }
+.bulk-card.open #bulkChevron { transform: rotate(180deg); }
+
+#bulkBody { padding: 0 16px 16px; }
+
+.bulk-hint {
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--text2);
+  margin-bottom: 10px;
+}
+.bulk-hint code {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: var(--font-body);
+  color: var(--gold);
+}
+
+.bulk-textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 12px;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+.bulk-textarea:focus { border-color: var(--accent); }
+.bulk-textarea::placeholder { color: var(--muted); }
+
+.bulk-result {
+  margin-top: 10px;
+  font-size: 0.72rem;
+  line-height: 1.7;
+}
+
 /* ===== SORT ROW ===== */
 .sort-row {
   display: flex; gap: 6px; align-items: center;
@@ -873,6 +938,27 @@ html, body {
     <button class="btn-toolbar primary" onclick="openEditModal(null)">＋ Novo Time</button>
   </div>
 
+  <!-- ===== ATUALIZAÇÃO RÁPIDA (colar lista) ===== -->
+  <div class="bulk-card" id="bulkCard">
+    <button type="button" class="bulk-toggle" onclick="toggleBulkCard()">
+      <span>⚡ Atualização Rápida — colar lista de times</span>
+      <span id="bulkChevron">▾</span>
+    </button>
+    <div id="bulkBody" style="display:none;">
+      <p class="bulk-hint">
+        Uma linha por time, separando por vírgula:<br>
+        <code>Nome do time, Ataque, Meio, Defesa, Jogador 1 e Jogador 2</code><br>
+        Exemplo: <code>Atlético Madrid, 84, 81, 82, Julián Álvarez e Oblak</code>
+      </p>
+      <textarea id="bulkText" class="bulk-textarea" rows="6"
+        placeholder="Atlético Madrid, 84, 81, 82, Julián Álvarez e Oblak
+Barcelona, 86, 85, 83, Raphinha e Yamal"></textarea>
+      <button class="btn-toolbar primary" style="width:100%;justify-content:center;margin-top:8px;"
+        onclick="applyBulkUpdate()">✓ Aplicar Atualizações</button>
+      <div id="bulkResult" class="bulk-result"></div>
+    </div>
+  </div>
+
   <!-- SORT -->
   <div class="sort-row">
     <span class="sort-label">Ordenar:</span>
@@ -1177,6 +1263,99 @@ function saveTeam() {
   renderTeams();
   showAdminToast(editIdx === null ? '✅ Time adicionado!' : '✅ Time atualizado!');
   editIdx = null;
+}
+
+// ===== ATUALIZAÇÃO RÁPIDA (bulk update via lista colada) =====
+function toggleBulkCard() {
+  var card = document.getElementById('bulkCard');
+  var body = document.getElementById('bulkBody');
+  var open = card.classList.toggle('open');
+  body.style.display = open ? 'block' : 'none';
+}
+
+// Apelidos comuns que não batem exatamente com o nome oficial no banco.
+var TEAM_ALIASES = {
+  'atletico bilbao': 'athletic bilbao',
+  'atletico de bilbao': 'athletic bilbao',
+  'athletic de bilbao': 'athletic bilbao',
+  'atletico de madrid': 'atletico madrid',
+  'celta de vigo': 'celta vigo',
+  'barca': 'barcelona',
+  'fc barcelona': 'barcelona'
+};
+
+function normalizeTeamName(s) {
+  return (s || '')
+    .toString()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function findTeamByName(input) {
+  var norm = normalizeTeamName(input);
+  norm = TEAM_ALIASES[norm] || norm;
+
+  var exact = teams.filter(function(t) { return normalizeTeamName(t.n) === norm; });
+  if (exact.length === 1) return { team: exact[0] };
+
+  var partial = teams.filter(function(t) {
+    var tn = normalizeTeamName(t.n);
+    return tn.indexOf(norm) !== -1 || norm.indexOf(tn) !== -1;
+  });
+  if (partial.length === 1) return { team: partial[0] };
+  if (partial.length > 1)  return { ambiguous: true, candidates: partial.map(function(t) { return t.n; }) };
+
+  return null;
+}
+
+function applyBulkUpdate() {
+  var raw = (document.getElementById('bulkText').value || '');
+  var lines = raw.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
+
+  var updated = [], notFound = [], ambiguous = [], badFormat = [];
+
+  lines.forEach(function(line) {
+    var parts = line.split(',');
+    if (parts.length < 4) { badFormat.push(line); return; }
+
+    var name = parts[0].trim();
+    var a = parseInt(parts[1], 10);
+    var m = parseInt(parts[2], 10);
+    var d = parseInt(parts[3], 10);
+    var players = parts.slice(4).join(',').trim();
+
+    if (!name || isNaN(a) || isNaN(m) || isNaN(d)) { badFormat.push(line); return; }
+
+    var match = findTeamByName(name);
+    if (!match) { notFound.push(name); return; }
+    if (match.ambiguous) { ambiguous.push(name + ' → ' + match.candidates.join(' / ')); return; }
+
+    var t = match.team;
+    var clamp = function(v) { return Math.max(60, Math.min(99, v)); };
+    t.a = clamp(a);
+    t.m = clamp(m);
+    t.d = clamp(d);
+    t.ovr = Math.round((t.a + t.m + t.d) / 3);
+    if (players) t.s = players;
+
+    updated.push(t.n + ' → OVR ' + t.ovr);
+  });
+
+  if (updated.length) { save(); renderTeams(); }
+
+  var resultEl = document.getElementById('bulkResult');
+  var html = '';
+  if (updated.length)   html += '<div style="color:#00c850;margin-bottom:6px;">✅ Atualizados (' + updated.length + '): ' + updated.join(' · ') + '</div>';
+  if (notFound.length)  html += '<div style="color:#ff1744;margin-bottom:6px;">❌ Não encontrados: ' + notFound.join(', ') + ' <span style="color:var(--muted);">(confira o nome exato na lista abaixo e tente de novo)</span></div>';
+  if (ambiguous.length) html += '<div style="color:var(--gold);margin-bottom:6px;">⚠ Nome ambíguo: ' + ambiguous.join(' · ') + '</div>';
+  if (badFormat.length) html += '<div style="color:var(--muted);">⚠ ' + badFormat.length + ' linha(s) fora do formato "Nome, Ata, Meio, Def, Jogadores"</div>';
+  resultEl.innerHTML = html || '<div style="color:var(--muted);">Nada para processar — cole ao menos uma linha.</div>';
+
+  showAdminToast(updated.length ? ('✅ ' + updated.length + ' time(s) atualizado(s)!') : '⚠ Nenhum time foi atualizado');
+
+  if (updated.length) document.getElementById('bulkText').value = '';
 }
 
 // ===== DELETAR =====
