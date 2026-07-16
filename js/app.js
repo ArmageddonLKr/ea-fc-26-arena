@@ -188,13 +188,6 @@ const SFX = (() => {
       fire(bigBuf, t0 + 0.20 + 0.008, 1.0,  0.5);
     },
 
-    // Clique seco de "trava" — usado quando um card lock-a antes do outro no suspense
-    lock(pan) {
-      const a = ctx(); if (!a) return;
-      if (a.state === 'suspended') a.resume().catch(() => {});
-      fire(buildTick(), a.currentTime + 0.005, 0.62, pan);
-    },
-
     // Time favorito saiu no sorteio: arpejo ascendente (tríade) varrendo estéreo + slam dourado
     favReveal() {
       const a = ctx(); if (!a) return;
@@ -386,14 +379,18 @@ let cfg = {
 
 /* ===== TEMAS & FONTES ===== */
 const THEMES = [
-  { id: 'roxo',      label: 'Roxo',      bg: '#08060f', accent: '#8b5cf6' },
-  { id: 'neon',      label: 'Neon',      bg: '#05060d', accent: '#00e5ff' },
-  { id: 'esmeralda', label: 'Esmeralda', bg: '#040d08', accent: '#12b76a' },
-  { id: 'carmesim',  label: 'Carmesim',  bg: '#0a0505', accent: '#e11d2e' },
-  { id: 'royal',     label: 'Royal',     bg: '#050810', accent: '#3b6bff' },
-  { id: 'champions', label: 'Champions', bg: '#07070a', accent: '#d4af37' },
-  { id: 'sunset',    label: 'Sunset',    bg: '#0d0710', accent: '#ff5f6d' },
-  { id: 'gelo',      label: 'Gelo',      bg: '#eef1f8', accent: '#3b5bfd' },
+  { id: 'roxo',        label: 'Roxo',            bg: '#08060f', accent: '#8b5cf6' },
+  { id: 'neon',        label: 'Neon',            bg: '#05060d', accent: '#00e5ff' },
+  { id: 'esmeralda',   label: 'Esmeralda',       bg: '#040d08', accent: '#12b76a' },
+  { id: 'carmesim',    label: 'Carmesim',        bg: '#0a0505', accent: '#e11d2e' },
+  { id: 'royal',       label: 'Royal',           bg: '#050810', accent: '#3b6bff' },
+  { id: 'champions',   label: 'Champions',       bg: '#07070a', accent: '#d4af37' },
+  { id: 'sunset',      label: 'Sunset',          bg: '#0d0710', accent: '#ff5f6d' },
+  { id: 'gelo',        label: 'Gelo',            bg: '#eef1f8', accent: '#3b5bfd' },
+  { id: 'pretoDourado',label: 'Preto & Dourado', bg: '#000000', accent: '#e9c14d' },
+  { id: 'realmadrid',  label: 'Real Madrid',     bg: '#050912', accent: '#f4f4f4' },
+  { id: 'liverpool',   label: 'Liverpool',       bg: '#0a0303', accent: '#c8102e' },
+  { id: 'meutime',     label: 'Time do Coração', bg: '#060608', accent: '#8b5cf6' },
 ];
 
 const FONT_PACKS = [
@@ -403,12 +400,41 @@ const FONT_PACKS = [
   { id: 'retro',   label: 'Estádio Retrô',    sample: 'Aa', family: "'Bebas Neue', sans-serif" },
 ];
 
+// Clareia uma cor hex misturando com branco — usada pra derivar o --accent2
+// do tema dinâmico "Time do Coração" a partir da cor real do time (t.c).
+function lightenHex(hex, amt) {
+  const h = (hex || '#8b5cf6').replace('#', '');
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const num = parseInt(full, 16);
+  if (Number.isNaN(num)) return '#a78bfa';
+  const mix = (v) => Math.round(v + (255 - v) * amt);
+  const r = mix((num >> 16) & 255), g = mix((num >> 8) & 255), b = mix(num & 255);
+  return `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
 function applyThemeAndFont() {
-  document.documentElement.setAttribute('data-theme', cfg.theme || 'roxo');
+  const id = cfg.theme || 'roxo';
+  document.documentElement.setAttribute('data-theme', id);
   document.documentElement.setAttribute('data-font',  cfg.font  || 'classic');
+
+  // Tema dinâmico: pinta o accent com a cor real do time favorito por cima
+  // da base escura do tema "meutime". Fora dele, limpa qualquer override.
+  const root = document.documentElement.style;
+  if (id === 'meutime') {
+    const team = teams.find(t => t.n === cfg.favoriteTeam);
+    const accent = team && team.c ? team.c : '#8b5cf6';
+    root.setProperty('--accent',  accent);
+    root.setProperty('--accent2', lightenHex(accent, 0.35));
+    root.setProperty('--p1',      accent);
+  } else {
+    root.removeProperty('--accent');
+    root.removeProperty('--accent2');
+    root.removeProperty('--p1');
+  }
+
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   if (metaTheme) {
-    const t = THEMES.find(x => x.id === cfg.theme);
+    const t = THEMES.find(x => x.id === id);
     if (t) metaTheme.setAttribute('content', t.bg);
   }
 }
@@ -416,15 +442,24 @@ function applyThemeAndFont() {
 function renderThemeGrid() {
   const grid = document.getElementById('themeSwatchGrid');
   if (!grid) return;
-  grid.innerHTML = THEMES.map(t => `
+  const favTeam = teams.find(t => t.n === cfg.favoriteTeam);
+  grid.innerHTML = THEMES.map(t => {
+    const accent = (t.id === 'meutime' && favTeam && favTeam.c) ? favTeam.c : t.accent;
+    return `
     <button type="button" class="theme-swatch${cfg.theme === t.id ? ' active' : ''}" onclick="selectTheme('${t.id}')">
-      <span class="theme-swatch-dot" style="background:linear-gradient(135deg, ${t.accent}, ${t.bg});"></span>
+      <span class="theme-swatch-dot" style="background:linear-gradient(135deg, ${accent}, ${t.bg});"></span>
       <span class="theme-swatch-label">${t.label}</span>
     </button>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function selectTheme(id) {
+  if (id === 'meutime' && !cfg.favoriteTeam) {
+    showToast('⭐ Escolha seu time do coração primeiro!', 'warn');
+    openFavoriteTeamModal();
+    return;
+  }
   cfg.theme = id;
   saveSettings();
   applyThemeAndFont();
@@ -506,6 +541,8 @@ function setFavoriteTeam(name) {
   saveSettings();
   updateFavTeamButton();
   renderFavTeamGrid();
+  if (cfg.theme === 'meutime') applyThemeAndFont(); // atualiza o accent na hora
+  renderThemeGrid();
   if (!name) showToast('☆ Time favorito removido');
 }
 
@@ -943,8 +980,8 @@ function startDraft() {
   if (cfg.handicap && candidatesAll.length > 0) {
     const target = getOVR(t1);
 
-    // Busca progressiva: ±2 → ±4 → ±6 → mais próximo disponível
-    for (const th of [2, 4, 6]) {
+    // Busca progressiva: ±1 → ±2 → ±3 → mais próximo disponível (confrontos bem justos)
+    for (const th of [1, 2, 3]) {
       const within = candidatesAll.filter(t => Math.abs(getOVR(t) - target) <= th);
       if (within.length > 0) {
         // Dentro do threshold, prefere times não-recentes
@@ -968,7 +1005,7 @@ function startDraft() {
     t2 = fairPick(source);
   }
 
-  // ── REGISTRA (síncrono) e REVELA com suspense ────────────────────────────
+  // ── REGISTRA (síncrono) e REVELA na hora ─────────────────────────────────
   recentQueue = [t1.n, t2.n, ...recentQueue].slice(0, 8);
   roundTeams  = [t1, t2];
   roundCount++;
@@ -977,49 +1014,15 @@ function startDraft() {
   _suspenseReveal(t1, t2);
 }
 
-/* Animação de suspense: 7 ticks (35 → 105ms) ≈ 450ms, mesmo orçamento de
-   tempo de sempre — só a APRESENTAÇÃO mudou. O card 1 trava um tick antes
-   do card 2 (lock-in escalonado, cria expectativa), com blur/pulse durante
-   o giro. O par já foi calculado — o suspense é puramente visual. */
+/* Revelação instantânea: o par já foi calculado no ato do clique, então o
+   time entra em campo na hora — zero espera entre o sorteio e a exibição.
+   O impacto visual vem do reveal-sweep (brilho) e do cardIn (entrada com
+   leve "bounce"), ambos decorativos e não bloqueiam nada. */
 function _suspenseReveal(t1, t2) {
   const c1 = document.getElementById('c1');
   const c2 = document.getElementById('c2');
-  const n1 = document.getElementById('name1');
-  const n2 = document.getElementById('name2');
-
-  [c1, c2].forEach(c => { if (c) c.classList.remove('card-locked', 'reveal-sweep'); });
-  if (c1) c1.classList.add('card-spinning');
-  if (c2) c2.classList.add('card-spinning');
-
-  const src   = pool.length >= 2 ? pool : [t1, t2];
-  const TICKS = 7, T0 = 35, T1 = 105;
-  const ratio = Math.pow(T1 / T0, 1 / (TICKS - 1));
-  const LOCK1_AT = TICKS - 2; // card 1 trava um tick antes — lock-in escalonado
-  let i = 0;
-  let locked1 = false;
-
-  function tick() {
-    if (!locked1 && n1) n1.textContent = src[Math.floor(Math.random() * src.length)].n;
-    if (n2) n2.textContent = src[Math.floor(Math.random() * src.length)].n;
-    if (i % 2 === 0) SFX.tick(i / TICKS);
-
-    if (!locked1 && i >= LOCK1_AT) {
-      locked1 = true;
-      if (n1) n1.textContent = t1.n;
-      if (c1) { c1.classList.remove('card-spinning'); c1.classList.add('card-locked'); }
-      SFX.lock(-0.4);
-      if (navigator.vibrate) navigator.vibrate(10);
-    }
-
-    i++;
-    if (i < TICKS) {
-      setTimeout(tick, T0 * Math.pow(ratio, i));
-    } else {
-      _finishReveal(t1, t2, c1, c2);
-    }
-  }
-
-  setTimeout(tick, T0);
+  [c1, c2].forEach(c => { if (c) c.classList.remove('card-spinning', 'card-locked', 'reveal-sweep'); });
+  _finishReveal(t1, t2, c1, c2);
 }
 
 /* Reveal final: injeta dados reais, dispara sweep de luz e som de impacto —
