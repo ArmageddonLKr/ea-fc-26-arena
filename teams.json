@@ -87,6 +87,6 @@
   {"n":"Beşiktaş","f":"🇹🇷","league":"Süper Lig","i":"⚫⚪","s":"Orkun Kökçü","c":"#000000","a":73,"m":77,"d":74,"logoId":"1866.png","c2":"#FFFFFF"},
   {"n":"Fenerbahçe","f":"🇹🇷","league":"Süper Lig","i":"🟡🔵","s":"Ederson Santana","c":"#FFEB00","a":81,"m":80,"d":76,"logoId":"1870.png","ucl":true,"c2":"#002B5C","c3":"#FFFFFF"},
   {"n":"Galatasaray","f":"🇹🇷","league":"Süper Lig","i":"🟡🔴","s":"Victor Osimhen","c":"#A90432","a":81,"m":80,"d":78,"pid":946846,"logoId":"1871.png","ucl":true,"c2":"#FFB300"},
-  {"n":"Orlando City","f":"🇺🇸","league":"MLS","i":"🟣🟡","s":"Facundo Torres","c":"#633492","c2":"#FDE192","a":75,"m":74,"d":71,"logoId":""},
-  {"n":"Chicago Fire","f":"🇺🇸","league":"MLS","i":"🔴🔵","s":"Hugo Cuypers","c":"#A81E2D","c2":"#00274C","c3":"#FFFFFF","a":73,"m":71,"d":69,"logoId":""}
+  {"n":"Orlando City","f":"🇺🇸","league":"MLS","i":"🟣🟡","s":"Antoine Griezmann","c":"#633492","c2":"#FDE192","a":84,"m":68,"d":65,"logoId":""},
+  {"n":"Chicago Fire","f":"🇺🇸","league":"MLS","i":"🔴🔵","s":"Robert Lewandowski","c":"#A81E2D","c2":"#00274C","c3":"#FFFFFF","a":79,"m":69,"d":67,"logoId":""}
 ]
