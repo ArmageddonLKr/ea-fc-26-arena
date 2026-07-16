@@ -11,13 +11,20 @@ const SFX = (() => {
     return _ac;
   }
 
-  function fire(buf, when, rate) {
+  function fire(buf, when, rate, pan) {
     const a = ctx(); if (!a || !buf) return;
     try {
       const s = a.createBufferSource();
       s.buffer = buf;
       if (rate != null) s.playbackRate.value = rate;
-      s.connect(a.destination);
+      let node = s;
+      if (pan != null && a.createStereoPanner) {
+        const p = a.createStereoPanner();
+        p.pan.value = Math.max(-1, Math.min(1, pan));
+        s.connect(p);
+        node = p;
+      }
+      node.connect(a.destination);
       s.start(when);
     } catch(e) {}
   }
@@ -49,6 +56,27 @@ const SFX = (() => {
         shimPrev = raw;
       }
       d[i] = Math.tanh((sub + ping + shim) * 1.10 * atk) * 0.82;
+    }
+    return buf;
+  }
+
+  // CHIME: sino sintético breve (senoide + parciais harmônicos, decaimento suave)
+  // usado só no reveal do time favorito — textura "premium", não é melodia.
+  function buildChime(freq, dur) {
+    const a = ctx(); if (!a) return null;
+    const sr  = a.sampleRate;
+    const len = Math.floor(sr * dur);
+    const buf = a.createBuffer(1, len, sr);
+    const d   = buf.getChannelData(0);
+    const atkN = Math.floor(sr * 0.004);
+    for (let i = 0; i < len; i++) {
+      const t   = i / sr;
+      const atk = i < atkN ? i / atkN : 1;
+      const env = Math.exp(-3.2 * t);
+      const tone = Math.sin(2*Math.PI*freq*t)        * 0.55
+                 + Math.sin(2*Math.PI*freq*2.0*t)     * 0.18
+                 + Math.sin(2*Math.PI*freq*3.01*t)    * 0.09;
+      d[i] = Math.tanh(tone * env * atk * 1.1) * 0.5;
     }
     return buf;
   }
@@ -115,11 +143,15 @@ const SFX = (() => {
       fire(buildTick(), a.currentTime + 0.01, rate);
     },
 
-    // Slam único pesado: engrenagem trancando com eco industrial
+    // Slam único pesado: engrenagem trancando com eco industrial — largura estéreo
     reveal() {
       const a = ctx(); if (!a) return;
       if (a.state === 'suspended') a.resume().catch(() => {});
-      fire(buildImpact(1.0, 1.0), a.currentTime + 0.04);
+      const buf = buildImpact(1.0, 1.0);
+      const t0  = a.currentTime + 0.04;
+      fire(buf, t0,        null, 0);
+      fire(buf, t0 + 0.008, 1.0, -0.45);
+      fire(buf, t0 + 0.008, 1.0,  0.45);
     },
 
     // Confirmação de gol: dois impactos rápidos (peso → impacto final)
@@ -134,18 +166,44 @@ const SFX = (() => {
     victory() {
       const a = ctx(); if (!a) return;
       if (a.state === 'suspended') a.resume().catch(() => {});
-      fire(buildImpact(0.50, 0),   a.currentTime + 0.04);
-      fire(buildImpact(0.72, 0),   a.currentTime + 0.04 + 0.20);
-      fire(buildImpact(0.94, 0),   a.currentTime + 0.04 + 0.40);
-      fire(buildImpact(1.35, 1.0), a.currentTime + 0.04 + 0.66);
+      const finalBuf = buildImpact(1.35, 1.0);
+      const t0 = a.currentTime;
+      fire(buildImpact(0.50, 0), t0 + 0.04);
+      fire(buildImpact(0.72, 0), t0 + 0.04 + 0.20);
+      fire(buildImpact(0.94, 0), t0 + 0.04 + 0.40);
+      fire(finalBuf, t0 + 0.04 + 0.66, null, 0);
+      fire(finalBuf, t0 + 0.04 + 0.668, 1.0, -0.5);
+      fire(finalBuf, t0 + 0.04 + 0.668, 1.0,  0.5);
     },
 
-    // UCL: dois hits majestosos — buildup leve + slam épico
+    // UCL: dois hits majestosos — buildup leve + slam épico, largura estéreo
     revealUCL() {
       const a = ctx(); if (!a) return;
       if (a.state === 'suspended') a.resume().catch(() => {});
-      fire(buildImpact(0.55, 0.2), a.currentTime + 0.02);
-      fire(buildImpact(1.3,  1.0), a.currentTime + 0.20);
+      const bigBuf = buildImpact(1.3, 1.0);
+      const t0 = a.currentTime;
+      fire(buildImpact(0.55, 0.2), t0 + 0.02);
+      fire(bigBuf, t0 + 0.20,        null, 0);
+      fire(bigBuf, t0 + 0.20 + 0.008, 1.0, -0.5);
+      fire(bigBuf, t0 + 0.20 + 0.008, 1.0,  0.5);
+    },
+
+    // Clique seco de "trava" — usado quando um card lock-a antes do outro no suspense
+    lock(pan) {
+      const a = ctx(); if (!a) return;
+      if (a.state === 'suspended') a.resume().catch(() => {});
+      fire(buildTick(), a.currentTime + 0.005, 0.62, pan);
+    },
+
+    // Time favorito saiu no sorteio: arpejo ascendente (tríade) varrendo estéreo + slam dourado
+    favReveal() {
+      const a = ctx(); if (!a) return;
+      if (a.state === 'suspended') a.resume().catch(() => {});
+      const t0 = a.currentTime;
+      fire(buildChime(880,  0.5), t0 + 0.02, null, -0.5);
+      fire(buildChime(1108, 0.5), t0 + 0.10, null,  0);
+      fire(buildChime(1318, 0.6), t0 + 0.18, null,  0.5);
+      fire(buildImpact(1.15, 0.9), t0 + 0.05);
     },
   };
 })();
@@ -317,11 +375,139 @@ const SK = {
 };
 
 let cfg = {
-  leagueFilter: 'all',
-  leagueMode:   false,
-  elite80:      false,
-  handicap:     false,
+  leagueFilter:  'all',
+  leagueMode:    false,
+  elite80:       false,
+  handicap:      false,
+  theme:         'roxo',
+  font:          'classic',
+  favoriteTeam:  null,
 };
+
+/* ===== TEMAS & FONTES ===== */
+const THEMES = [
+  { id: 'roxo',      label: 'Roxo',      bg: '#08060f', accent: '#8b5cf6' },
+  { id: 'neon',      label: 'Neon',      bg: '#05060d', accent: '#00e5ff' },
+  { id: 'esmeralda', label: 'Esmeralda', bg: '#040d08', accent: '#12b76a' },
+  { id: 'carmesim',  label: 'Carmesim',  bg: '#0a0505', accent: '#e11d2e' },
+  { id: 'royal',     label: 'Royal',     bg: '#050810', accent: '#3b6bff' },
+  { id: 'champions', label: 'Champions', bg: '#07070a', accent: '#d4af37' },
+  { id: 'sunset',    label: 'Sunset',    bg: '#0d0710', accent: '#ff5f6d' },
+  { id: 'gelo',      label: 'Gelo',      bg: '#eef1f8', accent: '#3b5bfd' },
+];
+
+const FONT_PACKS = [
+  { id: 'classic', label: 'Esports Clássico', sample: 'Aa', family: "'Barlow Condensed', sans-serif" },
+  { id: 'impacto', label: 'Impacto Total',    sample: 'Aa', family: "'Anton', sans-serif" },
+  { id: 'cyber',   label: 'Cyber Neon',       sample: 'Aa', family: "'Orbitron', sans-serif" },
+  { id: 'retro',   label: 'Estádio Retrô',    sample: 'Aa', family: "'Bebas Neue', sans-serif" },
+];
+
+function applyThemeAndFont() {
+  document.documentElement.setAttribute('data-theme', cfg.theme || 'roxo');
+  document.documentElement.setAttribute('data-font',  cfg.font  || 'classic');
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (metaTheme) {
+    const t = THEMES.find(x => x.id === cfg.theme);
+    if (t) metaTheme.setAttribute('content', t.bg);
+  }
+}
+
+function renderThemeGrid() {
+  const grid = document.getElementById('themeSwatchGrid');
+  if (!grid) return;
+  grid.innerHTML = THEMES.map(t => `
+    <button type="button" class="theme-swatch${cfg.theme === t.id ? ' active' : ''}" onclick="selectTheme('${t.id}')">
+      <span class="theme-swatch-dot" style="background:linear-gradient(135deg, ${t.accent}, ${t.bg});"></span>
+      <span class="theme-swatch-label">${t.label}</span>
+    </button>
+  `).join('');
+}
+
+function selectTheme(id) {
+  cfg.theme = id;
+  saveSettings();
+  applyThemeAndFont();
+  renderThemeGrid();
+}
+
+function renderFontpackGrid() {
+  const grid = document.getElementById('fontpackGrid');
+  if (!grid) return;
+  grid.innerHTML = FONT_PACKS.map(f => `
+    <button type="button" class="fontpack-btn${cfg.font === f.id ? ' active' : ''}" onclick="selectFontPack('${f.id}')">
+      <span class="fontpack-preview" style="font-family:${f.family};">${f.sample}</span>
+      <span class="fontpack-name">${f.label}</span>
+      <span class="fontpack-check">✓</span>
+    </button>
+  `).join('');
+}
+
+function selectFontPack(id) {
+  cfg.font = id;
+  saveSettings();
+  applyThemeAndFont();
+  renderFontpackGrid();
+}
+
+/* ===== TIME FAVORITO ===== */
+function updateFavTeamButton() {
+  const btn      = document.getElementById('favTeamBtn');
+  const nameEl   = document.getElementById('favTeamBtnName');
+  const badgeWrap= document.getElementById('favTeamBtnBadgeWrap');
+  if (!btn || !nameEl || !badgeWrap) return;
+  const team = teams.find(t => t.n === cfg.favoriteTeam);
+  if (team) {
+    btn.classList.add('has-team');
+    nameEl.textContent = team.n;
+    const badge = makeBadge(team.n, team.c);
+    const url = getLogoUrl(team) || badge;
+    badgeWrap.innerHTML = `<img class="favteam-btn-badge" src="${url}" alt="${team.n}" onerror="this.src='${badge}'">`;
+  } else {
+    btn.classList.remove('has-team');
+    nameEl.textContent = 'Escolher time';
+    badgeWrap.innerHTML = `<span class="favteam-btn-icon">⚽</span>`;
+  }
+}
+
+function openFavoriteTeamModal() {
+  const search = document.getElementById('favTeamSearch');
+  if (search) search.value = '';
+  renderFavTeamGrid();
+  document.getElementById('favTeamModal').classList.add('open');
+}
+
+function closeFavoriteTeamModal() {
+  document.getElementById('favTeamModal').classList.remove('open');
+}
+
+function renderFavTeamGrid() {
+  const grid = document.getElementById('favTeamGrid');
+  if (!grid) return;
+  const q = (document.getElementById('favTeamSearch')?.value || '').trim().toLowerCase();
+  const active = teams.filter(t => t.active !== false);
+  const list = q ? active.filter(t => t.n.toLowerCase().includes(q)) : active;
+  grid.innerHTML = list.slice(0, 400).map(t => {
+    const sel   = cfg.favoriteTeam === t.n;
+    const badge = makeBadge(t.n, t.c);
+    const logo  = getLogoUrl(t) || badge;
+    const safeN = t.n.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    return `
+      <div class="champions-team${sel ? ' selected' : ''}" onclick="setFavoriteTeam('${safeN}')">
+        <img src="${logo}" alt="${t.n}" onerror="this.src='${badge}'"
+             style="width:36px;height:36px;object-fit:contain;">
+        <div class="champions-team-name">${t.n.split(/\s+/)[0]}</div>
+      </div>`;
+  }).join('');
+}
+
+function setFavoriteTeam(name) {
+  cfg.favoriteTeam = name || null;
+  saveSettings();
+  updateFavTeamButton();
+  renderFavTeamGrid();
+  if (!name) showToast('☆ Time favorito removido');
+}
 
 /* ===== HELPERS DE COR / LOGO ===== */
 function getOVR(t) {
@@ -462,6 +648,10 @@ async function init() {
 
     // Aplica settings na UI
     try {
+      applyThemeAndFont();
+      renderThemeGrid();
+      renderFontpackGrid();
+      updateFavTeamButton();
       renderLeagueFilter();
       document.getElementById('leagueModeToggle').checked = cfg.leagueMode;
       document.getElementById('elite80Toggle').checked = cfg.elite80;
@@ -787,52 +977,93 @@ function startDraft() {
   _suspenseReveal(t1, t2);
 }
 
-/* Animação de suspense: 7 ticks (35 → 105ms) ≈ 450ms, depois revela.
-   O par já foi calculado — o suspense é puramente visual. */
+/* Animação de suspense: 7 ticks (35 → 105ms) ≈ 450ms, mesmo orçamento de
+   tempo de sempre — só a APRESENTAÇÃO mudou. O card 1 trava um tick antes
+   do card 2 (lock-in escalonado, cria expectativa), com blur/pulse durante
+   o giro. O par já foi calculado — o suspense é puramente visual. */
 function _suspenseReveal(t1, t2) {
   const c1 = document.getElementById('c1');
   const c2 = document.getElementById('c2');
   const n1 = document.getElementById('name1');
   const n2 = document.getElementById('name2');
 
-  if (c1) { c1.style.opacity = '0.25'; c1.style.transform = 'scale(0.97)'; }
-  if (c2) { c2.style.opacity = '0.25'; c2.style.transform = 'scale(0.97)'; }
+  [c1, c2].forEach(c => { if (c) c.classList.remove('card-locked', 'reveal-sweep'); });
+  if (c1) c1.classList.add('card-spinning');
+  if (c2) c2.classList.add('card-spinning');
 
   const src   = pool.length >= 2 ? pool : [t1, t2];
   const TICKS = 7, T0 = 35, T1 = 105;
   const ratio = Math.pow(T1 / T0, 1 / (TICKS - 1));
+  const LOCK1_AT = TICKS - 2; // card 1 trava um tick antes — lock-in escalonado
   let i = 0;
+  let locked1 = false;
 
   function tick() {
-    const r1 = src[Math.floor(Math.random() * src.length)];
-    const r2 = src[Math.floor(Math.random() * src.length)];
-    if (n1) n1.textContent = r1.n;
-    if (n2) n2.textContent = r2.n;
+    if (!locked1 && n1) n1.textContent = src[Math.floor(Math.random() * src.length)].n;
+    if (n2) n2.textContent = src[Math.floor(Math.random() * src.length)].n;
     if (i % 2 === 0) SFX.tick(i / TICKS);
+
+    if (!locked1 && i >= LOCK1_AT) {
+      locked1 = true;
+      if (n1) n1.textContent = t1.n;
+      if (c1) { c1.classList.remove('card-spinning'); c1.classList.add('card-locked'); }
+      SFX.lock(-0.4);
+      if (navigator.vibrate) navigator.vibrate(10);
+    }
+
     i++;
     if (i < TICKS) {
       setTimeout(tick, T0 * Math.pow(ratio, i));
     } else {
-      // Reveal — restaura cards e injeta dados reais
-      if (c1) { c1.style.opacity = '1'; c1.style.transform = ''; }
-      if (c2) { c2.style.opacity = '1'; c2.style.transform = ''; }
-      renderCard(1, t1, P(0));
-      renderCard(2, t2, P(1));
-      updateOVRAdv(t1, t2);
-      uclMode ? SFX.revealUCL() : SFX.reveal();
-
-      const rn = document.getElementById('roundNum');
-      if (rn) rn.textContent = roundCount;
-
-      if (roundHistory.length > 0) {
-        const hw = document.getElementById('historyWrap');
-        if (hw) hw.style.display = 'block';
-        renderRoundHistory();
-      }
+      _finishReveal(t1, t2, c1, c2);
     }
   }
 
   setTimeout(tick, T0);
+}
+
+/* Reveal final: injeta dados reais, dispara sweep de luz e som de impacto —
+   ou, se o time favorito estiver em campo, um fanfarra dourada + confete. */
+function _finishReveal(t1, t2, c1, c2) {
+  if (c1) { c1.classList.remove('card-spinning', 'card-locked'); c1.classList.add('reveal-sweep'); }
+  if (c2) { c2.classList.remove('card-spinning', 'card-locked'); c2.classList.add('reveal-sweep'); }
+
+  renderCard(1, t1, P(0));
+  renderCard(2, t2, P(1));
+  updateOVRAdv(t1, t2);
+
+  const favTeam = !cfg.favoriteTeam ? null
+    : (t1.n === cfg.favoriteTeam ? t1 : (t2.n === cfg.favoriteTeam ? t2 : null));
+
+  const flash = document.getElementById('flashOverlay');
+  if (flash) {
+    flash.style.background = favTeam ? 'radial-gradient(circle, #ffe680, #f0c040)' : '#fff';
+    flash.style.opacity = favTeam ? '0.22' : '0.09';
+    setTimeout(() => { flash.style.opacity = '0'; flash.style.background = '#fff'; }, 200);
+  }
+
+  if (favTeam) {
+    SFX.favReveal();
+    if (navigator.vibrate) navigator.vibrate([30, 40, 30, 40, 90]);
+    launchConfetti([favTeam.c || '#f0c040', '#ffd700', '#ffffff'], 90);
+    showToast(`⭐ ${favTeam.n} entrou em campo!`);
+  } else {
+    uclMode ? SFX.revealUCL() : SFX.reveal();
+  }
+
+  setTimeout(() => {
+    if (c1) c1.classList.remove('reveal-sweep');
+    if (c2) c2.classList.remove('reveal-sweep');
+  }, 520);
+
+  const rn = document.getElementById('roundNum');
+  if (rn) rn.textContent = roundCount;
+
+  if (roundHistory.length > 0) {
+    const hw = document.getElementById('historyWrap');
+    if (hw) hw.style.display = 'block';
+    renderRoundHistory();
+  }
 }
 
 
@@ -847,6 +1078,22 @@ function renderCard(num, team, owner) {
   card.style.animation = 'none';
   void card.offsetWidth; // reflow
   card.style.animation = 'cardIn 0.45s cubic-bezier(0.34,1.3,0.64,1) forwards';
+
+  // Destaque de time favorito
+  const isFav = !!cfg.favoriteTeam && team.n === cfg.favoriteTeam;
+  const existingBadge = card.querySelector('.fav-badge');
+  if (isFav) {
+    card.classList.add('fav-hit');
+    if (!existingBadge) {
+      const b = document.createElement('div');
+      b.className = 'fav-badge';
+      b.textContent = '⭐ SEU TIME!';
+      card.appendChild(b);
+    }
+  } else {
+    card.classList.remove('fav-hit');
+    if (existingBadge) existingBadge.remove();
+  }
 
   // Owner
   const ownerEl = document.getElementById(`n${num}_owner`);
@@ -1056,14 +1303,14 @@ function shareToWhatsApp() {
 }
 
 /* ===== CONFETTI ===== */
-function launchConfetti() {
+function launchConfetti(colors, count) {
   const canvas = document.getElementById('confettiCanvas');
   if (!canvas) return;
   canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight;
   const ctx = canvas.getContext('2d');
-  const COLORS = ['#c8102e','#ffd700','#00b4d8','#fff','#ff6b6b','#4ecdc4','#f39c12'];
-  const pieces = Array.from({length:130}, () => ({
+  const COLORS = colors && colors.length ? colors : ['#c8102e','#ffd700','#00b4d8','#fff','#ff6b6b','#4ecdc4','#f39c12'];
+  const pieces = Array.from({length: count || 130}, () => ({
     x: Math.random()*canvas.width, y: -10,
     w: Math.random()*10+5, h: Math.random()*6+3,
     color: COLORS[Math.floor(Math.random()*COLORS.length)],

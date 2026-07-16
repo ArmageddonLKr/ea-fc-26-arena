@@ -9,6 +9,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FC 26 Arena">
 <title>FC 26 Arena · Competitive</title>
+<script>
+  // Aplica tema/fonte salvos antes do primeiro paint — evita flash do tema padrão.
+  try {
+    var __s = JSON.parse(localStorage.getItem('fc26_settings') || '{}');
+    if (__s.theme) document.documentElement.setAttribute('data-theme', __s.theme);
+    if (__s.font)  document.documentElement.setAttribute('data-font',  __s.font);
+  } catch(e) {}
+</script>
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./assets/logo.svg">
 <link rel="stylesheet" href="./styles/main.css">
@@ -92,6 +100,27 @@
         style="opacity:0.45;cursor:not-allowed;">
         ⚡ Sortear Chaveamento
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: TIME FAVORITO ===== -->
+<div class="modal-backdrop" id="favTeamModal">
+  <div class="modal-sheet" style="max-height:88vh;display:flex;flex-direction:column;">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⭐ Time Favorito</div>
+    <p style="font-size:0.65rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">
+      Ele ganha um destaque especial quando sair no sorteio
+    </p>
+    <input type="text" class="favteam-search" id="favTeamSearch" placeholder="Buscar time..." oninput="renderFavTeamGrid()">
+    <div class="favteam-clear-row">
+      <button type="button" class="favteam-clear-btn" onclick="setFavoriteTeam(null)">✕ Nenhum time favorito</button>
+    </div>
+    <div id="favTeamGrid"
+      style="display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:8px;overflow-y:auto;padding-bottom:16px;flex:1;">
+    </div>
+    <div class="modal-actions" style="margin-top:4px;">
+      <button class="btn-cancel" style="flex:1" onclick="closeFavoriteTeamModal()">✓ Concluído</button>
     </div>
   </div>
 </div>
@@ -466,6 +495,28 @@
     <p class="lobby-subtitle" style="margin-bottom:20px;">Configurações</p>
 
     <div class="form-group">
+      <label class="form-label">🎨 Tema</label>
+      <div class="theme-swatch-grid" id="themeSwatchGrid"></div>
+    </div>
+
+    <div class="form-group" style="margin-top:18px;">
+      <label class="form-label">🔤 Fonte</label>
+      <div class="fontpack-grid" id="fontpackGrid"></div>
+    </div>
+
+    <div class="form-group" style="margin-top:18px;">
+      <label class="form-label">⭐ Time Favorito</label>
+      <button type="button" class="favteam-btn" id="favTeamBtn" onclick="openFavoriteTeamModal()">
+        <span id="favTeamBtnBadgeWrap"><span class="favteam-btn-icon">⚽</span></span>
+        <span class="favteam-btn-text">
+          <span class="favteam-btn-label">Ao sortear, ganha destaque</span>
+          <div class="favteam-btn-name" id="favTeamBtnName">Escolher time</div>
+        </span>
+        <span class="favteam-btn-arrow">›</span>
+      </button>
+    </div>
+
+    <div class="form-group" style="margin-top:18px;">
       <label class="form-label">Filtro de Liga</label>
       <div class="league-filter-grid" id="leagueFilterGrid"></div>
     </div>
