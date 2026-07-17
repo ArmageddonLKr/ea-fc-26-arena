@@ -423,6 +423,7 @@ const THEMES = [
   { id: 'champions',   label: 'Champions',       bg: '#07070a', accent: '#d4af37' },
   { id: 'sunset',      label: 'Sunset',          bg: '#0d0710', accent: '#ff5f6d' },
   { id: 'gelo',        label: 'Gelo',            bg: '#eef1f8', accent: '#3b5bfd' },
+  { id: 'ouroPremium', label: 'Ouro Premium',    bg: '#f7f6f2', accent: '#febe10' },
   { id: 'pretoDourado',label: 'Preto & Dourado', bg: '#000000', accent: '#e9c14d' },
   { id: 'realmadrid',  label: 'Real Madrid',     bg: '#050912', accent: '#f4f4f4' },
   { id: 'liverpool',   label: 'Liverpool',       bg: '#0a0303', accent: '#c8102e' },
@@ -667,24 +668,71 @@ function closeFavoriteTeamModal() {
   document.getElementById('favTeamModal').classList.remove('open');
 }
 
+// Mesmos limiares de tier usados no badge de OVR do card de partida
+// (renderCard) — reaproveitados aqui pra não ter duas fontes de verdade
+// sobre o que é "hero"/"elite"/"gold"/"base".
+function ovrTierOf(t) {
+  const ovr = getOVR(t);
+  return ovr >= 85 ? { cls: 'ovr-hero',  label: 'Hero'  }
+       : ovr >= 80 ? { cls: 'ovr-elite', label: 'Elite' }
+       : ovr >= 75 ? { cls: 'ovr-gold',  label: 'Gold'  }
+       :             { cls: 'ovr-base',  label: 'Base'  };
+}
+
+// Um card do grid: escudo real com anel na cor primária do clube + fundo
+// na secundária (mesma leitura visual de "camisa" dos cards de partida),
+// nome e uma pílula de tier — dá pra ver a força e a identidade do time
+// de cara, antes mesmo de escolher.
+function favTeamCardHtml(t) {
+  const sel    = cfg.favoriteTeam === t.n;
+  const badge  = makeBadge(t.n, t.c);
+  const logo   = getLogoUrl(t) || badge;
+  const safeN  = t.n.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  const ring   = t.c || 'var(--border2)';
+  const fill   = t.c2 || t.c || 'var(--surface2)';
+  const tier   = ovrTierOf(t);
+  return `
+    <div class="favteam-card${sel ? ' selected' : ''}" onclick="setFavoriteTeam('${safeN}')">
+      <span class="favteam-badge" style="border-color:${ring};background:${fill};">
+        <img src="${logo}" alt="${t.n}" onerror="this.src='${badge}'">
+      </span>
+      <div class="favteam-card-name">${t.n.split(/\s+/)[0]}</div>
+      <span class="favteam-tier ${tier.cls}">${tier.label}</span>
+    </div>`;
+}
+
 function renderFavTeamGrid() {
   const grid = document.getElementById('favTeamGrid');
   if (!grid) return;
   const q = (document.getElementById('favTeamSearch')?.value || '').trim().toLowerCase();
   const active = teams.filter(t => t.active !== false);
-  const list = q ? active.filter(t => t.n.toLowerCase().includes(q)) : active;
-  grid.innerHTML = list.slice(0, 400).map(t => {
-    const sel   = cfg.favoriteTeam === t.n;
-    const badge = makeBadge(t.n, t.c);
-    const logo  = getLogoUrl(t) || badge;
-    const safeN = t.n.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    return `
-      <div class="champions-team${sel ? ' selected' : ''}" onclick="setFavoriteTeam('${safeN}')">
-        <img src="${logo}" alt="${t.n}" onerror="this.src='${badge}'"
-             style="width:36px;height:36px;object-fit:contain;">
-        <div class="champions-team-name">${t.n.split(/\s+/)[0]}</div>
-      </div>`;
-  }).join('');
+
+  if (q) {
+    // Buscando: lista plana, sem cabeçalho de liga.
+    const list = active.filter(t => t.n.toLowerCase().includes(q));
+    grid.innerHTML = list.slice(0, 400).map(favTeamCardHtml).join('');
+    return;
+  }
+
+  // Sem busca: agrupado por liga, na mesma ordem do filtro de ligas do
+  // app — mais fácil de achar o time quando você já sabe o campeonato.
+  let html = '';
+  LEAGUE_LIST.forEach(league => {
+    if (league.value === 'all') return;
+    const inLeague = active.filter(t => t.league === league.value);
+    if (inLeague.length === 0) return;
+    html += `<div class="favteam-league-head">${league.emoji} ${league.label}</div>`;
+    html += inLeague.map(favTeamCardHtml).join('');
+  });
+  // Qualquer time cuja liga não esteja no LEAGUE_LIST (não deveria
+  // acontecer, mas evita sumir time silenciosamente se acontecer).
+  const known = new Set(LEAGUE_LIST.map(l => l.value));
+  const orphans = active.filter(t => !known.has(t.league));
+  if (orphans.length > 0) {
+    html += `<div class="favteam-league-head">🌍 Outros</div>`;
+    html += orphans.map(favTeamCardHtml).join('');
+  }
+  grid.innerHTML = html;
 }
 
 function setFavoriteTeam(name) {
@@ -1148,8 +1196,8 @@ function _startSession() {
   const s1=document.getElementById('scoreNum1');
   const s2=document.getElementById('scoreNum2');
   const rn=document.getElementById('roundNum');
-  if(s1) s1.textContent=0;
-  if(s2) s2.textContent=0;
+  if(s1) { s1.textContent=0; s1.style.color=''; s1.style.textShadow=''; }
+  if(s2) { s2.textContent=0; s2.style.color=''; s2.style.textShadow=''; }
   if(rn) rn.textContent=0;
   const hw = document.getElementById('historyWrap');
   if(hw) hw.style.display='none';
@@ -1294,6 +1342,15 @@ function renderCard(num, team, owner) {
   card.style.animation = 'none';
   void card.offsetWidth; // reflow
   card.style.animation = 'cardIn 0.45s cubic-bezier(0.34,1.3,0.64,1) forwards';
+
+  // O placar grande (P1/P2) passa a brilhar na cor REAL do time sorteado
+  // em vez do --p1/--p2 genérico do tema — o "0" já denuncia quem é quem
+  // antes mesmo de olhar pro card.
+  const scoreNumEl = document.getElementById(`scoreNum${num}`);
+  if (scoreNumEl) {
+    scoreNumEl.style.color = color;
+    scoreNumEl.style.textShadow = `0 0 30px color-mix(in srgb, ${color} 35%, transparent)`;
+  }
 
   // Destaque de time favorito
   const isFav = !!cfg.favoriteTeam && team.n === cfg.favoriteTeam;
