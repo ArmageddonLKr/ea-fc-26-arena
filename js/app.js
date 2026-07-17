@@ -423,6 +423,7 @@ const THEMES = [
   { id: 'champions',   label: 'Champions',       bg: '#07070a', accent: '#d4af37' },
   { id: 'sunset',      label: 'Sunset',          bg: '#0d0710', accent: '#ff5f6d' },
   { id: 'gelo',        label: 'Gelo',            bg: '#eef1f8', accent: '#3b5bfd' },
+  { id: 'ouroPremium', label: 'Ouro Premium',    bg: '#f7f6f2', accent: '#febe10' },
   { id: 'pretoDourado',label: 'Preto & Dourado', bg: '#000000', accent: '#e9c14d' },
   { id: 'realmadrid',  label: 'Real Madrid',     bg: '#050912', accent: '#f4f4f4' },
   { id: 'liverpool',   label: 'Liverpool',       bg: '#0a0303', accent: '#c8102e' },
