@@ -256,14 +256,14 @@
   --p1:#ffd700; --p2:#e8e8e8;
   --gold:#ffd700; --gold2:#fff2a8; --green:#22c55e;
 }
-/* Inspirado no Real Madrid — branco imponente sobre azul-marinho quase preto, trim dourado */
+/* Inspirado no Real Madrid — branco imponente sobre azul-marinho quase preto, trim azul claro */
 [data-theme="realmadrid"] {
   --bg:#050912; --surface:#0a1120; --surface2:#0e1830; --surface3:#152140;
   --border:#1c2a4a; --border2:#28396a;
   --text:#ffffff; --text2:#c9d3ea; --muted:#6f7ba0;
-  --accent:#f4f4f4; --accent2:#c9a961;
-  --p1:#c9a961; --p2:#3b6bff;
-  --gold:#c9a961; --gold2:#e8cf8e; --green:#22c55e;
+  --accent:#f4f4f4; --accent2:#4fa8e0;
+  --p1:#4fa8e0; --p2:#1e3a6e;
+  --gold:#4fa8e0; --gold2:#82c4ee; --green:#22c55e;
 }
 /* Inspirado no Liverpool — vermelho de Anfield com trim dourado do escudo */
 [data-theme="liverpool"] {
@@ -338,39 +338,39 @@ html[data-theme="pretoDourado"] .tab-item.active { color: var(--gold); }
 html[data-theme="pretoDourado"] .tab-item.active svg { filter: drop-shadow(0 0 7px rgba(233,193,77,.65)); }
 html[data-theme="pretoDourado"] .card { box-shadow: 0 0 0 1px rgba(233,193,77,.10), 0 14px 44px rgba(0,0,0,.7); }
 
-/* ---- Real Madrid — "Los Blancos": galáxia branco-e-ouro + facho de holofote no Bernabéu ---- */
+/* ---- Real Madrid — "Los Blancos": galáxia branco-e-azul + facho de holofote no Bernabéu ---- */
 html[data-theme="realmadrid"] body {
   background:
     radial-gradient(ellipse 65% 40% at 50% -4%, rgba(244,244,244,0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 35% at 15% 100%, rgba(201,169,97,0.10) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 35% at 15% 100%, rgba(79,168,224,0.10) 0%, transparent 65%),
     var(--bg);
 }
 html[data-theme="realmadrid"] body::after {
   content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
   background-image:
     radial-gradient(1.5px 1.5px at 14% 10%, rgba(255,255,255,.8), transparent),
-    radial-gradient(1.1px 1.1px at 30% 22%, rgba(201,169,97,.65), transparent),
+    radial-gradient(1.1px 1.1px at 30% 22%, rgba(79,168,224,.65), transparent),
     radial-gradient(1.6px 1.6px at 48% 6%,  rgba(255,255,255,.7), transparent),
-    radial-gradient(1.1px 1.1px at 64% 18%, rgba(201,169,97,.55), transparent),
+    radial-gradient(1.1px 1.1px at 64% 18%, rgba(79,168,224,.55), transparent),
     radial-gradient(1.5px 1.5px at 80% 12%, rgba(255,255,255,.75), transparent),
-    radial-gradient(1.1px 1.1px at 92% 26%, rgba(201,169,97,.5),  transparent),
+    radial-gradient(1.1px 1.1px at 92% 26%, rgba(79,168,224,.5),  transparent),
     radial-gradient(1.1px 1.1px at 8%  42%, rgba(255,255,255,.5), transparent),
-    radial-gradient(1.5px 1.5px at 56% 34%, rgba(201,169,97,.55), transparent),
+    radial-gradient(1.5px 1.5px at 56% 34%, rgba(79,168,224,.55), transparent),
     radial-gradient(1.1px 1.1px at 86% 44%, rgba(255,255,255,.5), transparent);
   animation: theme-drift 4s ease-in-out infinite alternate;
 }
 html[data-theme="realmadrid"] body::before {
   content: ''; position: fixed; top: -20%; left: -10%; width: 60%; height: 140%;
   z-index: 0; pointer-events: none;
-  background: linear-gradient(100deg, transparent 40%, rgba(244,244,244,.05) 48%, rgba(201,169,97,.08) 52%, transparent 60%);
+  background: linear-gradient(100deg, transparent 40%, rgba(244,244,244,.05) 48%, rgba(79,168,224,.08) 52%, transparent 60%);
   animation: theme-beam-sweep 9s ease-in-out infinite;
 }
-html[data-theme="realmadrid"] .topbar { border-bottom-color: rgba(201,169,97,.32); }
-html[data-theme="realmadrid"] .tab-bar { border-top-color: rgba(201,169,97,.28); }
+html[data-theme="realmadrid"] .topbar { border-bottom-color: rgba(79,168,224,.32); }
+html[data-theme="realmadrid"] .tab-bar { border-top-color: rgba(79,168,224,.28); }
 html[data-theme="realmadrid"] .tab-item.active { color: var(--accent2); }
-html[data-theme="realmadrid"] .tab-item.active svg { filter: drop-shadow(0 0 7px rgba(201,169,97,.6)); }
-html[data-theme="realmadrid"] .card { border-color: rgba(244,244,244,.24); box-shadow: 0 0 0 1px rgba(201,169,97,.12), 0 14px 44px rgba(0,0,0,.6); }
-/* Botão branco+ouro precisa de texto escuro — o branco puro do accent quebraria em cima de #fff */
+html[data-theme="realmadrid"] .tab-item.active svg { filter: drop-shadow(0 0 7px rgba(79,168,224,.6)); }
+html[data-theme="realmadrid"] .card { border-color: rgba(244,244,244,.24); box-shadow: 0 0 0 1px rgba(79,168,224,.12), 0 14px 44px rgba(0,0,0,.6); }
+/* Botão branco+azul precisa de texto escuro — o branco puro do accent quebraria em cima de #fff */
 html[data-theme="realmadrid"] .btn-enter,
 html[data-theme="realmadrid"] .btn-draw,
 html[data-theme="realmadrid"] .btn-save {
@@ -768,12 +768,16 @@ button, a, [role="button"] {
   gap: 18px;
 }
 .theme-watermark.active { display: flex; }
+/* Os escudos-fonte são pequenos (100×100 na maioria) — esticar demais
+   pixela. Mantém um upscale leve (o dobro do tamanho original, no
+   máximo) e SEM blur: numa arte "flat" de escudo, blur só borra os
+   contornos em vez de suavizar, deixa com aspecto de baixa qualidade. */
 .theme-watermark img {
-  width: min(78vw, 380px);
-  height: min(78vw, 380px);
+  width: min(42vw, 200px);
+  height: min(42vw, 200px);
   object-fit: contain;
-  opacity: 0.10;
-  filter: grayscale(0.15) blur(0.3px);
+  opacity: 0.12;
+  image-rendering: -webkit-optimize-contrast;
 }
 .theme-watermark span {
   position: absolute;
