@@ -11,6 +11,20 @@ const SFX = (() => {
     return _ac;
   }
 
+  // Cada build*() sintetiza sample a sample (milhares de Math.sin/exp por
+  // chamada) — sem cache isso rodava de novo a CADA sorteio e travava o
+  // reveal (visível principalmente em CPU mais fraca, já que o suspense
+  // visual que escondia esse custo não existe mais). Os parâmetros usados
+  // são um conjunto fixo e pequeno, então cachear por chave resolve: gera
+  // uma vez, reaproveita o AudioBuffer pra sempre.
+  const _bufCache = new Map();
+  function cached(key, factory) {
+    if (_bufCache.has(key)) return _bufCache.get(key);
+    const buf = factory();
+    _bufCache.set(key, buf);
+    return buf;
+  }
+
   function fire(buf, when, rate, pan) {
     const a = ctx(); if (!a || !buf) return;
     try {
@@ -140,14 +154,14 @@ const SFX = (() => {
       if (a.state === 'suspended') a.resume().catch(() => {});
       // rate 1.80→0.72 — pitch desce exponencialmente como slot desacelerando
       const rate = 1.80 * Math.pow(0.40, progress);
-      fire(buildTick(), a.currentTime + 0.01, rate);
+      fire(cached('tick', buildTick), a.currentTime + 0.01, rate);
     },
 
     // Slam único pesado: engrenagem trancando com eco industrial — largura estéreo
     reveal() {
       const a = ctx(); if (!a) return;
       if (a.state === 'suspended') a.resume().catch(() => {});
-      const buf = buildImpact(1.0, 1.0);
+      const buf = cached('impact:1:1', () => buildImpact(1.0, 1.0));
       const t0  = a.currentTime + 0.04;
       fire(buf, t0,        null, 0);
       fire(buf, t0 + 0.008, 1.0, -0.45);
@@ -158,19 +172,19 @@ const SFX = (() => {
     goal() {
       const a = ctx(); if (!a) return;
       if (a.state === 'suspended') a.resume().catch(() => {});
-      fire(buildImpact(0.65, 0),   a.currentTime + 0.04);
-      fire(buildImpact(1.05, 0.7), a.currentTime + 0.04 + 0.16);
+      fire(cached('impact:0.65:0',   () => buildImpact(0.65, 0)),   a.currentTime + 0.04);
+      fire(cached('impact:1.05:0.7', () => buildImpact(1.05, 0.7)), a.currentTime + 0.04 + 0.16);
     },
 
     // Vitória: 3 impactos crescentes + slam final — sem melodia, só peso
     victory() {
       const a = ctx(); if (!a) return;
       if (a.state === 'suspended') a.resume().catch(() => {});
-      const finalBuf = buildImpact(1.35, 1.0);
+      const finalBuf = cached('impact:1.35:1', () => buildImpact(1.35, 1.0));
       const t0 = a.currentTime;
-      fire(buildImpact(0.50, 0), t0 + 0.04);
-      fire(buildImpact(0.72, 0), t0 + 0.04 + 0.20);
-      fire(buildImpact(0.94, 0), t0 + 0.04 + 0.40);
+      fire(cached('impact:0.50:0', () => buildImpact(0.50, 0)), t0 + 0.04);
+      fire(cached('impact:0.72:0', () => buildImpact(0.72, 0)), t0 + 0.04 + 0.20);
+      fire(cached('impact:0.94:0', () => buildImpact(0.94, 0)), t0 + 0.04 + 0.40);
       fire(finalBuf, t0 + 0.04 + 0.66, null, 0);
       fire(finalBuf, t0 + 0.04 + 0.668, 1.0, -0.5);
       fire(finalBuf, t0 + 0.04 + 0.668, 1.0,  0.5);
@@ -180,9 +194,9 @@ const SFX = (() => {
     revealUCL() {
       const a = ctx(); if (!a) return;
       if (a.state === 'suspended') a.resume().catch(() => {});
-      const bigBuf = buildImpact(1.3, 1.0);
+      const bigBuf = cached('impact:1.3:1', () => buildImpact(1.3, 1.0));
       const t0 = a.currentTime;
-      fire(buildImpact(0.55, 0.2), t0 + 0.02);
+      fire(cached('impact:0.55:0.2', () => buildImpact(0.55, 0.2)), t0 + 0.02);
       fire(bigBuf, t0 + 0.20,        null, 0);
       fire(bigBuf, t0 + 0.20 + 0.008, 1.0, -0.5);
       fire(bigBuf, t0 + 0.20 + 0.008, 1.0,  0.5);
@@ -193,10 +207,25 @@ const SFX = (() => {
       const a = ctx(); if (!a) return;
       if (a.state === 'suspended') a.resume().catch(() => {});
       const t0 = a.currentTime;
-      fire(buildChime(880,  0.5), t0 + 0.02, null, -0.5);
-      fire(buildChime(1108, 0.5), t0 + 0.10, null,  0);
-      fire(buildChime(1318, 0.6), t0 + 0.18, null,  0.5);
-      fire(buildImpact(1.15, 0.9), t0 + 0.05);
+      fire(cached('chime:880:0.5',  () => buildChime(880,  0.5)), t0 + 0.02, null, -0.5);
+      fire(cached('chime:1108:0.5', () => buildChime(1108, 0.5)), t0 + 0.10, null,  0);
+      fire(cached('chime:1318:0.6', () => buildChime(1318, 0.6)), t0 + 0.18, null,  0.5);
+      fire(cached('impact:1.15:0.9', () => buildImpact(1.15, 0.9)), t0 + 0.05);
+    },
+
+    // Gera todos os buffers usados de uma vez, fora do caminho crítico do
+    // sorteio (chamado no boot do app) — assim o primeiro reveal da sessão
+    // já sai instantâneo também, não só os seguintes.
+    prewarm() {
+      if (!ctx()) return;
+      cached('tick', buildTick);
+      ['1:1','0.65:0','1.05:0.7','1.35:1','0.50:0','0.72:0','0.94:0','1.3:1','0.55:0.2','1.15:0.9']
+        .forEach(k => cached(`impact:${k}`, () => {
+          const [w, e] = k.split(':').map(Number);
+          return buildImpact(w, e);
+        }));
+      [[880,0.5],[1108,0.5],[1318,0.6]]
+        .forEach(([f,d]) => cached(`chime:${f}:${d}`, () => buildChime(f, d)));
     },
   };
 })();
@@ -768,6 +797,11 @@ async function init() {
     // logo depois do suspense do sorteio (fica no cache do browser).
     preloadTeamLogos();
 
+    // Gera os buffers de som com a splash ainda na tela, não no primeiro
+    // sorteio — setTimeout joga pra depois do paint atual, então não
+    // atrasa a primeira renderização da splash.
+    setTimeout(() => SFX.prewarm(), 0);
+
     // Restaura nomes dos jogadores
     try {
       const names = JSON.parse(localStorage.getItem(SK.players) || '["",""]');
@@ -1218,9 +1252,10 @@ function renderCard(num, team, owner) {
 
   // Cores oficiais do clube (primária/secundária/terciária) — dá vida ao
   // gradiente do card. Quando não há 2ª/3ª cor, repete a primária.
+  const color2 = team.c2 || color;
   card.style.setProperty('--team-color',  color);
-  card.style.setProperty('--team-color2', team.c2 || color);
-  card.style.setProperty('--team-color3', team.c3 || team.c2 || color);
+  card.style.setProperty('--team-color2', color2);
+  card.style.setProperty('--team-color3', team.c3 || color2 || color);
   // O card agora é preenchido com a cor de verdade do clube (não só um
   // filete) — --card-ink escolhe texto claro ou escuro conforme a
   // luminância, pra funcionar em qualquer time (Real Madrid branco,
