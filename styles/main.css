@@ -2489,6 +2489,83 @@ footer {
 
 .champions-counter.valid { color: var(--accent); }
 
+/* ===== GRADE RICA DE CLUBES (Time Favorito) =====
+   Cartão maior que o .champions-team padrão: escudo com anel na cor
+   primária do clube + fundo na secundária, e uma pílula de faixa (mesmos
+   tiers do OVR do card de partida: hero/elite/gold/base) — pra escolher
+   o time favorito já dar uma prévia forte da identidade de cada um. */
+.favteam-league-head {
+  grid-column: 1/-1;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-head);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 10px 0 4px;
+}
+.favteam-league-head:first-child { padding-top: 0; }
+
+.favteam-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 6px 8px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border2);
+  border-radius: 12px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  user-select: none;
+}
+.favteam-card:active { transform: scale(0.94); }
+.favteam-card.selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.favteam-badge {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border-width: 3px; border-style: solid;
+  overflow: hidden;
+}
+.favteam-badge img { width: 68%; height: 68%; object-fit: contain; }
+
+.favteam-card-name {
+  font-family: var(--font-head);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text2);
+  text-align: center;
+  line-height: 1.2;
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.favteam-card.selected .favteam-card-name { color: var(--text); }
+
+.favteam-tier {
+  font-family: var(--font-head);
+  font-size: 0.46rem;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted) 18%, transparent);
+  color: var(--muted);
+}
+.favteam-tier.ovr-gold  { background: color-mix(in srgb, var(--gold) 20%, transparent); color: var(--gold); }
+.favteam-tier.ovr-elite { background: color-mix(in srgb, var(--accent2) 20%, transparent); color: var(--accent2); }
+.favteam-tier.ovr-hero  { background: color-mix(in srgb, var(--green) 22%, transparent); color: var(--green); }
+
 /* =====================================================
    SELETOR DE COMPETIÇÃO UEFA — 3 cards, cada um com a
    identidade real da competição (logo + 2 cores oficiais)
