@@ -413,9 +413,9 @@ html[data-theme="liverpool"] .card { box-shadow: 0 0 0 1px rgba(246,235,97,.10),
    sem precisar de CSS específico por time. ---- */
 html[data-theme="meutime"] body {
   background:
-    radial-gradient(ellipse 72% 44% at 50% -6%, color-mix(in srgb, var(--accent) 26%, transparent) 0%, transparent 62%),
-    radial-gradient(ellipse 58% 38% at 100% 106%, color-mix(in srgb, var(--accent2) 18%, transparent) 0%, transparent 68%),
-    radial-gradient(ellipse 50% 32% at 0% 100%, color-mix(in srgb, var(--accent3) 14%, transparent) 0%, transparent 68%),
+    radial-gradient(ellipse 85% 55% at 50% -8%, color-mix(in srgb, var(--accent) 42%, transparent) 0%, transparent 66%),
+    radial-gradient(ellipse 70% 48% at 100% 108%, color-mix(in srgb, var(--accent2) 30%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 62% 42% at 0% 100%, color-mix(in srgb, var(--accent3) 24%, transparent) 0%, transparent 70%),
     var(--bg);
 }
 html[data-theme="meutime"] body::after {
@@ -439,8 +439,8 @@ html[data-theme="meutime"] body::before {
   z-index: 0; pointer-events: none;
   background: linear-gradient(100deg,
     transparent 40%,
-    color-mix(in srgb, var(--accent) 14%, transparent) 48%,
-    color-mix(in srgb, var(--accent2) 12%, transparent) 52%,
+    color-mix(in srgb, var(--accent) 22%, transparent) 48%,
+    color-mix(in srgb, var(--accent2) 18%, transparent) 52%,
     transparent 60%);
   animation: theme-beam-sweep 10s ease-in-out infinite;
 }
@@ -768,6 +768,23 @@ button, a, [role="button"] {
   gap: 18px;
 }
 .theme-watermark.active { display: flex; }
+/* Escudo pequeno de verdade (100×100 na fonte) não vira "gigante" sem
+   pixelar — então quem carrega a presença/tamanho é um glow colorido
+   nas cores do clube atrás dele; o escudo em si fica nítido, só um
+   pouco maior que o tamanho original, por cima do glow. */
+.theme-watermark::before {
+  content: '';
+  width: min(70vw, 420px);
+  height: min(70vw, 420px);
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    color-mix(in srgb, var(--accent) 32%, transparent) 0%,
+    color-mix(in srgb, var(--accent2) 16%, transparent) 55%,
+    transparent 78%);
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
 /* Os escudos-fonte são pequenos (100×100 na maioria) — esticar demais
    pixela. Mantém um upscale leve (o dobro do tamanho original, no
    máximo) e SEM blur: numa arte "flat" de escudo, blur só borra os
@@ -776,8 +793,9 @@ button, a, [role="button"] {
   width: min(42vw, 200px);
   height: min(42vw, 200px);
   object-fit: contain;
-  opacity: 0.12;
+  opacity: 0.16;
   image-rendering: -webkit-optimize-contrast;
+  position: relative;
 }
 .theme-watermark span {
   position: absolute;
