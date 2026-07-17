@@ -448,6 +448,22 @@ function lightenHex(hex, amt) {
   return `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`;
 }
 
+// Mistura duas cores hex — usado pra "tingir" o preto de fundo do tema
+// "Time do Coração" com a cor real do clube, em vez de deixar o fundo
+// neutro e só depender das partículas/gradientes pra dar identidade.
+function mixHex(hexA, hexB, ratio) {
+  const toRgb = (hex) => {
+    const h = (hex || '#000000').replace('#', '');
+    const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+    const num = parseInt(full, 16);
+    return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+  };
+  const [ar, ag, ab] = toRgb(hexA), [br, bg, bb] = toRgb(hexB);
+  const mix = (a, b) => Math.round(a + (b - a) * ratio);
+  const r = mix(ar, br), g = mix(ag, bg), b = mix(ab, bb);
+  return `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
 // Luminância relativa (WCAG) — usada pra decidir se o texto sobre um botão
 // pintado com a cor do time deve ser claro ou escuro. Sem isso, times com
 // cor clara (Real Madrid, Newcastle, Al Nassr, Juventus...) quebrariam o
@@ -501,6 +517,15 @@ function applyThemeAndFont() {
     root.setProperty('--p1',          accent);
     root.setProperty('--accent-ink',  pickInk(accent));
 
+    // O fundo deixa de ser um preto neutro e passa a ser "preto tingido"
+    // com a cor real do clube — é isso que faz o tema parecer a
+    // identidade do time e não o roxo/preto padrão genérico.
+    root.setProperty('--bg',      mixHex('#050507', accent,  0.20));
+    root.setProperty('--surface', mixHex('#0d0d11', accent,  0.16));
+    root.setProperty('--surface2', mixHex('#131318', accent2, 0.14));
+    root.setProperty('--surface3', mixHex('#1a1a22', accent2, 0.12));
+    root.setProperty('--border',  mixHex('#24242e', accent,  0.28));
+
     // "Pinta tudo": até os badges/textos dourados (fav-badge, toasts,
     // campeão do torneio...) passam a usar a cor do clube. Clareada pra
     // manter o acabamento "metal precioso" em vez de virar um tom escuro
@@ -519,6 +544,11 @@ function applyThemeAndFont() {
     root.removeProperty('--gold');
     root.removeProperty('--gold2');
     root.removeProperty('--gold-ink');
+    root.removeProperty('--bg');
+    root.removeProperty('--surface');
+    root.removeProperty('--surface2');
+    root.removeProperty('--surface3');
+    root.removeProperty('--border');
   }
 
   const metaTheme = document.querySelector('meta[name="theme-color"]');
