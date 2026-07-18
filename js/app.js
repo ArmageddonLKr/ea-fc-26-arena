@@ -518,14 +518,22 @@ function applyThemeAndFont() {
     root.setProperty('--p1',          accent);
     root.setProperty('--accent-ink',  pickInk(accent));
 
+    // Cor-fonte do tingimento de fundo: se a cor PRIMÁRIA do clube for
+    // branco puro (Real Madrid, Tottenham, Leeds, Sevilla...), tingir o
+    // fundo com branco é invisível — usa a secundária nesse caso. Mesma
+    // regra do handoff de design (heartColor).
+    const bgTint = accent.toUpperCase() === '#FFFFFF' ? (accent2 || accent) : accent;
+
     // O fundo deixa de ser um preto neutro e passa a ser "preto tingido"
     // com a cor real do clube — é isso que faz o tema parecer a
-    // identidade do time e não o roxo/preto padrão genérico.
-    root.setProperty('--bg',      mixHex('#050507', accent,  0.20));
-    root.setProperty('--surface', mixHex('#0d0d11', accent,  0.16));
-    root.setProperty('--surface2', mixHex('#131318', accent2, 0.14));
-    root.setProperty('--surface3', mixHex('#1a1a22', accent2, 0.12));
-    root.setProperty('--border',  mixHex('#24242e', accent,  0.28));
+    // identidade do time e não o roxo/preto padrão genérico. Bases e
+    // proporções alinhadas ao token set oficial (colors_and_type.css).
+    root.setProperty('--bg',       mixHex('#06060a', bgTint, 0.12));
+    root.setProperty('--surface',  mixHex('#0c0c14', bgTint, 0.08));
+    root.setProperty('--surface2', mixHex('#111120', bgTint, 0.08));
+    root.setProperty('--surface3', mixHex('#16162a', bgTint, 0.08));
+    root.setProperty('--border',   mixHex('#1a1a2e', bgTint, 0.20));
+    root.setProperty('--border2',  mixHex('#242440', bgTint, 0.30));
 
     // "Pinta tudo": até os badges/textos dourados (fav-badge, toasts,
     // campeão do torneio...) passam a usar a cor do clube. Clareada pra
@@ -550,6 +558,7 @@ function applyThemeAndFont() {
     root.removeProperty('--surface2');
     root.removeProperty('--surface3');
     root.removeProperty('--border');
+    root.removeProperty('--border2');
   }
 
   const metaTheme = document.querySelector('meta[name="theme-color"]');
