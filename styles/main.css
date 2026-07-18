@@ -1083,13 +1083,35 @@ button, a, [role="button"] {
 .score-reset:active { color: var(--text2); }
 
 /* ===== ARENA HEADER ===== */
+/* Banner "arena" — mesmo tratamento do handoff oficial de design: uma
+   faixa com borda sólida no accent e um fundo dividido ao meio nas cores
+   reais dos dois times sorteados (--vsbanner-c1/c2, setados no JS junto
+   com o card), bem sutil (14% opacidade) atrás do texto. */
 .arena-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
-  padding: 0 2px;
+  padding: 10px 14px;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--accent2);
+  border-radius: var(--radius-lg);
 }
+.arena-header::before {
+  content: '';
+  position: absolute; inset: 0;
+  display: flex;
+  pointer-events: none;
+  opacity: 0.14;
+  z-index: 0;
+}
+.arena-header::before {
+  background: linear-gradient(90deg,
+    var(--vsbanner-c1, var(--p1)) 0%, var(--vsbanner-c1, var(--p1)) 50%,
+    var(--vsbanner-c2, var(--p2)) 50%, var(--vsbanner-c2, var(--p2)) 100%);
+}
+.arena-header > * { position: relative; z-index: 1; }
 
 .ah-player {
   display: flex; flex-direction: column; align-items: flex-start;
@@ -1219,29 +1241,23 @@ button, a, [role="button"] {
    --card-ink (luminância, calculado no JS) garante texto legível em
    cima de qualquer cor, clara ou escura. */
 .card {
-  background:
-    radial-gradient(ellipse 130% 90% at 15% -10%,
-      color-mix(in srgb, var(--team-color, var(--accent)) 88%, white 12%) 0%,
-      var(--team-color, var(--accent)) 55%);
-  border: 1px solid color-mix(in srgb, var(--card-ink, var(--border)) 22%, var(--border) 78%);
+  background: var(--card-bg, var(--team-color, var(--accent)));
+  /* Borda sólida de 2px na cor 1 do clube — tratamento do handoff oficial
+     de design, mais crua/crispa que o filete sutil que tínhamos antes. */
+  border: 2px solid var(--team-color, var(--accent));
   border-radius: var(--radius-lg);
   position: relative;
   overflow: hidden;
   transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
   animation: cardIn 0.4s cubic-bezier(0.34,1.4,0.64,1);
-  box-shadow: 0 6px 24px rgba(0,0,0,0.55), inset 0 0 0 1px color-mix(in srgb, var(--card-ink, white) 14%, transparent);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.55);
 }
 
 /* Faixa tricolor com as cores oficiais do clube — primária/secundária/
    terciária em blocos sólidos, tipo trim de kit. Times bicolores (sem c3)
    repetem a 2ª cor no último terço em vez de deixar uma banda "morta". */
 .card-stripe {
-  position: absolute; top: 0; left: 0; right: 0;
-  height: 4px;
-  background: linear-gradient(90deg,
-    var(--team-color, var(--accent)) 0%, var(--team-color, var(--accent)) 33%,
-    var(--team-color2, var(--team-color, var(--accent))) 33%, var(--team-color2, var(--team-color, var(--accent))) 66%,
-    var(--team-color3, var(--team-color2, var(--team-color, var(--accent)))) 66%, var(--team-color3, var(--team-color2, var(--team-color, var(--accent)))) 100%);
+  display: none;
 }
 
 .card-glow {

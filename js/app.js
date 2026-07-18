@@ -1338,19 +1338,38 @@ function renderCard(num, team, owner) {
   if (!card) return;
 
   // Cores oficiais do clube (primária/secundária/terciária) — dá vida ao
-  // gradiente do card. Quando não há 2ª/3ª cor, repete a primária.
+  // card. Quando não há 2ª/3ª cor, repete a primária.
   const color2 = team.c2 || color;
   card.style.setProperty('--team-color',  color);
   card.style.setProperty('--team-color2', color2);
   card.style.setProperty('--team-color3', team.c3 || color2 || color);
-  // O card agora é preenchido com a cor de verdade do clube (não só um
-  // filete) — --card-ink escolhe texto claro ou escuro conforme a
-  // luminância, pra funcionar em qualquer time (Real Madrid branco,
-  // Bayern vermelho, Juventus preto...).
-  card.style.setProperty('--card-ink', pickInk(color));
+  // Mesma regra do handoff oficial de design: quando a 2ª cor do clube é
+  // clara (luminância simples > 0.6 — ex.: Arsenal, Liverpool, PSG, que
+  // têm branco como cor 2), o card vira branco sólido com borda na cor 1,
+  // em vez de um bloco cheio da cor 1. Dá variedade real entre os cards
+  // (nem todo sorteio vira "bloco colorido") e é fiel ao visual de
+  // referência. Luminância SIMPLES (mesma fórmula do handoff, sem
+  // correção gama) só pra essa classificação — o --card-ink em si segue
+  // via pickInk (WCAG), mais preciso pra decidir o texto de verdade.
+  const simpleLum = (hex) => {
+    const h = (hex || '').replace('#', '');
+    const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+    const hexNum = parseInt(full, 16);
+    if (Number.isNaN(hexNum)) return 0.5;
+    return (0.299*((hexNum>>16)&255) + 0.587*((hexNum>>8)&255) + 0.114*(hexNum&255)) / 255;
+  };
+  const lightSecondary = simpleLum(color2) > 0.6;
+  const cardBg = lightSecondary ? '#ffffff' : color;
+  card.style.setProperty('--card-bg',  cardBg);
+  card.style.setProperty('--card-ink', pickInk(cardBg));
   card.style.animation = 'none';
   void card.offsetWidth; // reflow
   card.style.animation = 'cardIn 0.45s cubic-bezier(0.34,1.3,0.64,1) forwards';
+
+  // Banner do topo da Arena — mesmo tratamento do handoff: fundo dividido
+  // nas cores reais dos dois times sorteados.
+  const arenaHeader = document.getElementById('arenaHeader');
+  if (arenaHeader) arenaHeader.style.setProperty(`--vsbanner-c${num}`, color);
 
   // O placar grande (P1/P2) passa a brilhar na cor REAL do time sorteado
   // em vez do --p1/--p2 genérico do tema — o "0" já denuncia quem é quem
