@@ -385,7 +385,7 @@ html[data-theme="realmadrid"] .card { border-color: rgba(244,244,244,.24); box-s
 html[data-theme="realmadrid"] .btn-enter,
 html[data-theme="realmadrid"] .btn-draw,
 html[data-theme="realmadrid"] .btn-save {
-  background: linear-gradient(135deg, #ffffff 0%, var(--accent2) 100%);
+  background: #ffffff;
   color: #10131f;
 }
 
@@ -466,7 +466,7 @@ html[data-theme="meutime"] .card {
 html[data-theme="meutime"] .btn-enter,
 html[data-theme="meutime"] .btn-draw,
 html[data-theme="meutime"] .btn-save {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+  background: var(--accent);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -521,6 +521,25 @@ body {
   -moz-osx-font-smoothing: grayscale;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   background: radial-gradient(ellipse 80% 40% at 50% 0%, color-mix(in srgb, var(--accent) 6%, transparent) 0%, transparent 70%), var(--bg);
+}
+
+/* Barcelona (Time do Coração) — fundo dividido em cor sólida, sem
+   gradiente/blend: duas metades reais via clip-path, uma pra cada cor
+   oficial do clube (--split-c1/--split-c2, setadas no JS). */
+body.meutime-split::before,
+body.meutime-split::after {
+  content: '';
+  position: fixed; inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+body.meutime-split::before {
+  background: var(--split-c1, var(--bg));
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+body.meutime-split::after {
+  background: var(--split-c2, var(--bg));
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
 }
 
 
@@ -679,7 +698,7 @@ button, a, [role="button"] {
 
 .splash-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  background: var(--accent);
   animation: splash-fill 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
@@ -1083,13 +1102,40 @@ button, a, [role="button"] {
 .score-reset:active { color: var(--text2); }
 
 /* ===== ARENA HEADER ===== */
+/* Banner "arena" — mesmo tratamento do handoff oficial de design: uma
+   faixa com borda sólida no accent e um fundo dividido ao meio nas cores
+   reais dos dois times sorteados (--vsbanner-c1/c2, setados no JS junto
+   com o card), bem sutil (14% opacidade) atrás do texto. */
 .arena-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
-  padding: 0 2px;
+  padding: 10px 14px;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--accent2);
+  border-radius: var(--radius-lg);
 }
+/* Fundo dividido em cor sólida (sem gradiente) — duas metades reais via
+   clip-path, uma pra cada time sorteado, em vez de um blend entre elas. */
+.arena-header::before,
+.arena-header::after {
+  content: '';
+  position: absolute; inset: 0;
+  pointer-events: none;
+  opacity: 0.14;
+  z-index: 0;
+}
+.arena-header::before {
+  background: var(--vsbanner-c1, var(--p1));
+  clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+}
+.arena-header::after {
+  background: var(--vsbanner-c2, var(--p2));
+  clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
+}
+.arena-header > * { position: relative; z-index: 1; }
 
 .ah-player {
   display: flex; flex-direction: column; align-items: flex-start;
@@ -1153,7 +1199,7 @@ button, a, [role="button"] {
 .btn-draw {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   width: 100%; padding: 17px 16px;
-  background: linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 55%, black) 100%);
+  background: var(--accent);
   border: none;
   border-radius: var(--radius-lg);
   color: var(--accent-ink, #fff);
@@ -1219,29 +1265,23 @@ button, a, [role="button"] {
    --card-ink (luminância, calculado no JS) garante texto legível em
    cima de qualquer cor, clara ou escura. */
 .card {
-  background:
-    radial-gradient(ellipse 130% 90% at 15% -10%,
-      color-mix(in srgb, var(--team-color, var(--accent)) 88%, white 12%) 0%,
-      var(--team-color, var(--accent)) 55%);
-  border: 1px solid color-mix(in srgb, var(--card-ink, var(--border)) 22%, var(--border) 78%);
+  background: var(--card-bg, var(--team-color, var(--accent)));
+  /* Borda sólida de 2px na cor 1 do clube — tratamento do handoff oficial
+     de design, mais crua/crispa que o filete sutil que tínhamos antes. */
+  border: 2px solid var(--team-color, var(--accent));
   border-radius: var(--radius-lg);
   position: relative;
   overflow: hidden;
   transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
   animation: cardIn 0.4s cubic-bezier(0.34,1.4,0.64,1);
-  box-shadow: 0 6px 24px rgba(0,0,0,0.55), inset 0 0 0 1px color-mix(in srgb, var(--card-ink, white) 14%, transparent);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.55);
 }
 
 /* Faixa tricolor com as cores oficiais do clube — primária/secundária/
    terciária em blocos sólidos, tipo trim de kit. Times bicolores (sem c3)
    repetem a 2ª cor no último terço em vez de deixar uma banda "morta". */
 .card-stripe {
-  position: absolute; top: 0; left: 0; right: 0;
-  height: 4px;
-  background: linear-gradient(90deg,
-    var(--team-color, var(--accent)) 0%, var(--team-color, var(--accent)) 33%,
-    var(--team-color2, var(--team-color, var(--accent))) 33%, var(--team-color2, var(--team-color, var(--accent))) 66%,
-    var(--team-color3, var(--team-color2, var(--team-color, var(--accent)))) 66%, var(--team-color3, var(--team-color2, var(--team-color, var(--accent)))) 100%);
+  display: none;
 }
 
 .card-glow {
@@ -1290,11 +1330,11 @@ button, a, [role="button"] {
 
 /* Contraste forte: quem sorteou fica óbvio de olhar — badge cheia na cor do jogador */
 .owner-badge.owner-p1 {
-  background: linear-gradient(135deg, var(--p1) 0%, #a00020 100%);
+  background: var(--p1);
   box-shadow: 0 2px 10px color-mix(in srgb, var(--p1) 40%, transparent);
 }
 .owner-badge.owner-p2 {
-  background: linear-gradient(135deg, var(--p2) 0%, #005e78 100%);
+  background: var(--p2);
   box-shadow: 0 2px 10px color-mix(in srgb, var(--p2) 40%, transparent);
 }
 
@@ -1335,26 +1375,19 @@ button, a, [role="button"] {
   text-shadow: 0 0 14px color-mix(in srgb, var(--accent2) 55%, transparent);
 }
 
-/* Hero (85+) — acabamento metálico/foil com as cores REAIS do clube
-   (primária → secundária → terciária), referência às cartas "Hero" do
-   Ultimate Team só que com a identidade de cada time em vez de um dourado genérico. */
+/* Hero (85+) — cor sólida do clube (primária) com um glow pulsante,
+   referência às cartas "Hero" do Ultimate Team, sem gradiente/foil. */
 .ovr-num.ovr-hero {
-  background: linear-gradient(100deg,
-    var(--team-color, #ffd84d) 0%,
-    var(--team-color3, var(--team-color2, #fff6cf)) 42%,
-    var(--team-color2, #ffd84d) 68%,
-    var(--team-color, #ffd84d) 100%);
-  background-size: 220% 100%;
-  -webkit-background-clip: text; background-clip: text; color: transparent;
+  color: var(--team-color, #ffd84d);
   filter: drop-shadow(0 0 10px color-mix(in srgb, var(--team-color, #ffd84d) 55%, transparent));
-  animation: heroFoilShift 3.5s ease-in-out infinite;
+  animation: heroGlowPulse 3.5s ease-in-out infinite;
 }
-@keyframes heroFoilShift {
-  0%, 100% { background-position: 0% 50%; }
-  50%      { background-position: 100% 50%; }
+@keyframes heroGlowPulse {
+  0%, 100% { filter: drop-shadow(0 0 6px color-mix(in srgb, var(--team-color, #ffd84d) 40%, transparent)); }
+  50%      { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--team-color, #ffd84d) 75%, transparent)); }
 }
 .ovr-badge.ovr-badge-hero {
-  background: linear-gradient(160deg, #0f4a2c 0%, #062616 100%);
+  background: #0a3a22;
   border-color: color-mix(in srgb, var(--team-color, #3cdc8c) 45%, rgba(60,220,140,0.4) 55%);
   box-shadow: 0 0 16px color-mix(in srgb, var(--team-color, rgba(30,200,120,0.28)) 35%, rgba(30,200,120,0.28) 65%),
               inset 0 0 0 1px rgba(255,216,77,0.15);
@@ -2127,7 +2160,7 @@ button, a, [role="button"] {
   position: absolute;
   top: 10px; left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  background: var(--gold);
   color: var(--gold-ink, #1a1400);
   font-family: var(--font-head);
   font-weight: 900;
@@ -2576,7 +2609,7 @@ footer {
 }
 .comp-pick-card {
   display: flex; align-items: center; gap: 14px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--cp-accent) 20%, var(--surface) 80%) 0%, var(--surface) 70%);
+  background: color-mix(in srgb, var(--cp-accent) 14%, var(--surface) 86%);
   border: 1px solid color-mix(in srgb, var(--cp-accent) 42%, var(--border) 58%);
   border-radius: var(--radius-lg);
   padding: 14px 16px;
@@ -2724,13 +2757,13 @@ body.ucl-mode .topbar {
 /* Botão de entrada na home — sempre com a cara clássica de Champions
    (gateway antes de escolher a competição no seletor) */
 .btn-enter.btn-ucl {
-  background: linear-gradient(135deg, #051636 0%, #0d2260 100%);
+  background: #0a1d4d;
   color: #f0c040;
   border: 1px solid rgba(201,168,76,0.5);
   animation: ucl-pulse-gold 2.8s ease-in-out infinite;
 }
 .btn-enter.btn-ucl:active {
-  background: linear-gradient(135deg, #0d2260 0%, #1a3590 100%);
+  background: #142a6e;
 }
 
 /* Badge da competição ativa no header da arena — cor dinâmica */
