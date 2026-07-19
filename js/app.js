@@ -664,12 +664,15 @@ function computeOverrideTheme(team) {
   if (!ov) return null;
 
   if (ov.special === 'split') {
-    // Barcelona: fundo dividido diagonal nas 2 cores oficiais — única
-    // exceção com gradiente no motor de tema, por pedido explícito.
+    // Barcelona: fundo dividido diagonal nas 2 cores oficiais — cor
+    // sólida dos dois lados (sem gradiente/blend), via clip-path em CSS
+    // (ver body.meutime-split em main.css). --bg fica com a cor 1 como
+    // fallback sólido pra quem só lê essa variável (meta theme-color etc.).
     const destInk = contrastRatio(team.c, '#FFFFFF') >= contrastRatio(team.c2 || team.c, '#FFFFFF') ? team.c : (team.c2 || team.c);
     return {
-      bg: `linear-gradient(135deg, ${team.c} 50%, ${team.c2 || team.c} 50%)`,
-      isGradientBg: true,
+      bg: team.c,
+      isSplitBg: true,
+      splitC1: team.c, splitC2: team.c2 || team.c,
       destaque: '#FFFFFF', destaqueInk: destInk, bgInk: '#ffffff',
     };
   }
@@ -728,10 +731,10 @@ function applyThemeAndFont() {
     // fórmula — nenhum time fica sem tema.
     const override = team ? computeOverrideTheme(team) : null;
 
-    let bg, destaque, destaqueInk, bgInk, isGradientBg = false;
+    let bg, destaque, destaqueInk, bgInk, isSplitBg = false;
     if (override) {
       ({ bg, destaque, destaqueInk, bgInk } = override);
-      isGradientBg = !!override.isGradientBg;
+      isSplitBg = !!override.isSplitBg;
     } else {
       const categoria = classifyClubColor(c);
       if (categoria === 'clara-neutra') {
@@ -753,20 +756,25 @@ function applyThemeAndFont() {
     root.setProperty('--text',        bgInk);        // texto sobre o fundo do app — crítico pra times com fundo branco (Real Madrid, Tottenham, Fulham...)
 
     root.setProperty('--bg', bg);
-    if (!isGradientBg) {
+    if (!isSplitBg) {
       root.setProperty('--surface',  mixHex('#0d0d11', c, 0.14));
       root.setProperty('--surface2', mixHex('#131318', destaque, 0.14));
       root.setProperty('--surface3', mixHex('#1a1a22', destaque, 0.13));
       root.setProperty('--border',   mixHex('#24242e', destaque, 0.42));
       root.setProperty('--border2',  mixHex('#242440', destaque, 0.42));
+      document.body.classList.remove('meutime-split');
     } else {
-      // Barcelona: fundo já é o gradiente das 2 cores — superfícies ficam
+      // Barcelona: fundo é dividido em cor sólida (sem gradiente) via
+      // clip-path — ver body.meutime-split em main.css. Superfícies ficam
       // num preto neutro sóbrio por cima, sem competir com o split.
       root.setProperty('--surface',  'rgba(5,5,8,0.82)');
       root.setProperty('--surface2', 'rgba(5,5,8,0.9)');
       root.setProperty('--surface3', 'rgba(5,5,8,0.96)');
       root.setProperty('--border',   'rgba(255,255,255,0.16)');
       root.setProperty('--border2',  'rgba(255,255,255,0.24)');
+      root.setProperty('--split-c1', override.splitC1);
+      root.setProperty('--split-c2', override.splitC2);
+      document.body.classList.add('meutime-split');
     }
 
     root.setProperty('--gold',      destaque);
@@ -788,6 +796,7 @@ function applyThemeAndFont() {
     root.removeProperty('--surface3');
     root.removeProperty('--border');
     root.removeProperty('--border2');
+    document.body.classList.remove('meutime-split');
   }
 
   const metaTheme = document.querySelector('meta[name="theme-color"]');
@@ -828,11 +837,9 @@ function renderThemeGrid() {
   if (!grid) return;
   const favTeam = teams.find(t => t.n === cfg.favoriteTeam);
   grid.innerHTML = THEMES.map(t => {
-    // O swatch de "Time do Coração" já mostra as cores oficiais reais
-    // (primária→secundária) do time favorito escolhido, não um fallback genérico.
-    const dot = (t.id === 'meutime' && favTeam && favTeam.c)
-      ? `linear-gradient(135deg, ${favTeam.c}, ${favTeam.c2 || t.bg})`
-      : `linear-gradient(135deg, ${t.accent}, ${t.bg})`;
+    // O swatch de "Time do Coração" já mostra a cor oficial real
+    // (primária) do time favorito escolhido, não um fallback genérico.
+    const dot = (t.id === 'meutime' && favTeam && favTeam.c) ? favTeam.c : t.accent;
     return `
     <button type="button" class="theme-swatch${cfg.theme === t.id ? ' active' : ''}" onclick="selectTheme('${t.id}')">
       <span class="theme-swatch-dot" style="background:${dot};"></span>
@@ -1529,7 +1536,7 @@ function _finishReveal(t1, t2, c1, c2) {
 
   const flash = document.getElementById('flashOverlay');
   if (flash) {
-    flash.style.background = favTeam ? 'radial-gradient(circle, #ffe680, #f0c040)' : '#fff';
+    flash.style.background = favTeam ? '#f0c040' : '#fff';
     flash.style.opacity = favTeam ? '0.22' : '0.09';
     setTimeout(() => { flash.style.opacity = '0'; flash.style.background = '#fff'; }, 200);
   }
