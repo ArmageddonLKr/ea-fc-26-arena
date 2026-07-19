@@ -484,6 +484,217 @@ function pickInk(bgHex) {
   return withWhite >= withDark ? '#ffffff' : '#12131d';
 }
 
+// HSL de uma cor hex — usado só pra classificar a cor primária do clube no
+// motor "Time do Coração" (categoria clara-neutra/clara-saturada/escura,
+// ver classifyClubColor) quando o time não tem instrução literal cadastrada.
+function hexToHsl(hex) {
+  const h = (hex || '#000000').replace('#', '');
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const num = parseInt(full, 16);
+  const r = ((num >> 16) & 255) / 255, g = ((num >> 8) & 255) / 255, b = (num & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let hh = 0, s = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: hh = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: hh = (b - r) / d + 2; break;
+      case b: hh = (r - g) / d + 4; break;
+    }
+    hh /= 6;
+  }
+  return { h: hh * 360, s: s * 100, l: l * 100 };
+}
+
+// Classifica a cor primária do clube em 3 categorias — 100% a partir do
+// HSL, sem lista de exceções por nome de time:
+//   A) clara-neutra   → L>=80% e S<=40% (branco, prata, cinza claro)
+//   B) clara-saturada → L>=55% e S>40%  (amarelo, verde-limão, laranja claro)
+//   C) escura/forte   → qualquer outra (vermelho, azul, preto, roxo...)
+// Usado como fallback pra qualquer time futuro que não esteja na tabela
+// literal MEUTIME_OVERRIDES abaixo — garante que nenhum time novo fique
+// sem tema.
+function classifyClubColor(hex) {
+  const { s, l } = hexToHsl(hex);
+  if (l >= 80 && s <= 40) return 'clara-neutra';
+  if (l >= 55 && s > 40) return 'clara-saturada';
+  return 'escura-forte';
+}
+
+function contrastRatio(hexA, hexB) {
+  const l1 = relLuminance(hexA), l2 = relLuminance(hexB);
+  const hi = Math.max(l1, l2), lo = Math.min(l1, l2);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/* ===== TIME DO CORAÇÃO — instruções literais por time =====
+ * Tabela com uma entrada por time (os 90 do banco), curada à mão e
+ * validada contra contraste WCAG AA (4.5:1) pra fundo↔texto e
+ * destaque↔texto — substitui a fórmula automática por HSL (só usada
+ * como fallback pra time futuro fora dessa lista).
+ * bg: ['tint', corKey, ratio, baseHexOpcional] | ['solid', corKey] | ['black'] | ['dark-red']
+ * destaque/dInk/bInk: 'c' | 'c2' | 'white' | 'black' | 'w' | 'k' | hex literal */
+const MEUTIME_BASE_DARK = '#08060f';
+const MEUTIME_OVERRIDES = {
+  'Bayern München':      { bg: ['tint','c',0.18], destaque:'c2', dInk:'w', bInk:'w' },
+  'Bayer Leverkusen':    { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Borussia Dortmund':   { bg: ['tint','c',0.10,'#000000'], destaque:'c', dInk:'k', bInk:'w' },
+  'Eintracht Frankfurt': { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Stuttgart':           { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'RB Leipzig':          { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  // destaque = c2 (branco) — dInk corrigido pra escuro (a tabela de
+  // referência trazia 'w', o que deixava o texto do botão invisível:
+  // branco sobre branco)
+  "M'gladbach":          { bg: ['black'],         destaque:'c2', dInk:'k', bInk:'w' },
+  'Wolfsburg':           { bg: ['tint','c',0.18], destaque:'c',  dInk:'k', bInk:'w' },
+  'Mainz 05':            { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Augsburg':            { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'FC Köln':             { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+
+  'Al Nassr':            { bg: ['tint','c',0.18], destaque:'c',  dInk:'k', bInk:'w' },
+  'Al-Hilal':            { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Al-Ahli':             { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Al-Ittihad':          { bg: ['tint','c',0.18], destaque:'c',  dInk:'k', bInk:'w' },
+
+  'Boca Juniors':        { bg: ['tint','c',0.18], destaque:'c2', dInk:'k', bInk:'w' },
+  'Estudiantes':         { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'River Plate':         { bg: ['solid','white'], destaque:'c2', dInk:'w', bInk:'k' },
+  'Racing Club':         { bg: ['tint','c',0.18], destaque:'#3E7FA8', dInk:'w', bInk:'w' },
+  'Rosario Central':     { bg: ['tint','c',0.18], destaque:'c2', dInk:'k', bInk:'w' },
+
+  'Barcelona':           { special:'split' },
+  // Real Madrid: branco + azul-claro por pedido explícito — a tabela de
+  // referência trazia dourado (#FEBE10) aqui, trocado pra manter a
+  // identidade que já vale no resto do app (teams.json, tema estático).
+  'Real Madrid':         { bg: ['solid','white'], destaque:'#4FA8E0', dInk:'k', bInk:'k' },
+  'Atlético Madrid':     { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Athletic Bilbao':     { bg: ['tint','c',0.18], destaque:'c',  dInk:'k', bInk:'w' },
+  'Real Betis':          { bg: ['tint','c',0.18], destaque:'c',  dInk:'k', bInk:'w' },
+  'Real Sociedad':       { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Celta Vigo':          { bg: ['tint','c',0.18], destaque:'#4A90C2', dInk:'k', bInk:'w' },
+  'Osasuna':             { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Villarreal CF':       { bg: ['tint','c2',0.18], destaque:'c2', dInk:'w', bInk:'w' },
+  'Mallorca':            { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Sevilla FC':          { bg: ['solid','white'], destaque:'c2', dInk:'w', bInk:'k' },
+  'Valencia CF':         { bg: ['solid','white'], destaque:'c2', dInk:'k', bInk:'k' },
+  'Alavés':              { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Elche':               { bg: ['tint','c',0.18], destaque:'c',  dInk:'k', bInk:'w' },
+
+  'Inter Miami':         { bg: ['tint','c',0.18], destaque:'c',  dInk:'k', bInk:'w' },
+  'LAFC':                { bg: ['black'],         destaque:'c2', dInk:'k', bInk:'w' },
+  'Whitecaps FC':        { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'LA Galaxy':           { bg: ['tint','c',0.18], destaque:'c2', dInk:'k', bInk:'w' },
+  'Orlando City':        { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Chicago Fire':        { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+
+  'PSG':                 { bg: ['tint','c',0.18], destaque:'c2', dInk:'w', bInk:'w' },
+  'Marseille':           { bg: ['tint','c',0.18], destaque:'c',  dInk:'k', bInk:'w' },
+  'AS Monaco':           { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Lille OSC':           { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Lyon':                { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+
+  'PSV Eindhoven':       { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Feyenoord':           { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Ajax':                { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'AZ Alkmaar':          { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+
+  'Arsenal':             { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Liverpool':           { bg: ['dark-red'],      destaque:'white', dInk:'c', bInk:'w' },
+  'Man City':            { bg: ['tint','c',0.18], destaque:'#2E7BB8', dInk:'w', bInk:'w' },
+  'Aston Villa':         { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Chelsea':             { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Man Utd':             { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Newcastle':           { bg: ['black'],         destaque:'white', dInk:'k', bInk:'w' },
+  'Brentford':           { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Brighton':            { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Tottenham':           { bg: ['solid','white'], destaque:'c2', dInk:'w', bInk:'k' },
+  'Bournemouth':         { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Fulham':              { bg: ['solid','white'], destaque:'black', dInk:'w', bInk:'k' },
+  'Nottm Forest':        { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Crystal Palace':      { bg: ['tint','c',0.18], destaque:'c2', dInk:'w', bInk:'w' },
+  'Everton':             { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Sunderland':          { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'West Ham':            { bg: ['tint','c',0.18], destaque:'c2', dInk:'k', bInk:'w' },
+  'Leeds United':        { bg: ['solid','#f2f0ea'], destaque:'#C9A200', dInk:'k', bInk:'k' },
+  'Burnley':             { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Wolves':              { bg: ['tint','c',0.18], destaque:'c',  dInk:'k', bInk:'w' },
+
+  'Inter Milan':         { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Milan':               { bg: ['tint','c',0.18], destaque:'c',  dInk:'k', bInk:'w' },
+  'Napoli':              { bg: ['tint','c',0.18], destaque:'c',  dInk:'k', bInk:'w' },
+  'Juventus':            { bg: ['black'],         destaque:'white', dInk:'k', bInk:'w' },
+  'Roma':                { bg: ['tint','c',0.18], destaque:'c2', dInk:'k', bInk:'w' },
+  'Atalanta':            { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Lazio':               { bg: ['tint','c',0.18], destaque:'#3E8FB0', dInk:'k', bInk:'w' },
+  'Bologna':             { bg: ['tint','c',0.18], destaque:'c2', dInk:'w', bInk:'w' },
+  'Como':                { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Fiorentina':          { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Sassuolo':            { bg: ['tint','c',0.18], destaque:'c',  dInk:'k', bInk:'w' },
+  'Torino':              { bg: ['tint','c',0.18], destaque:'c2', dInk:'k', bInk:'w' },
+  'Cagliari':            { bg: ['tint','c',0.18], destaque:'c2', dInk:'w', bInk:'w' },
+  'Udinese':             { bg: ['black'],         destaque:'white', dInk:'k', bInk:'w' },
+
+  'Benfica':             { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Sporting CP':         { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Porto':               { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+  'Braga':               { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
+
+  'Galatasaray':         { bg: ['tint','c',0.18], destaque:'c2', dInk:'k', bInk:'w' },
+  'Fenerbahçe':          { bg: ['tint','c',0.18], destaque:'c',  dInk:'k', bInk:'w' },
+  'Beşiktaş':            { bg: ['black'],         destaque:'white', dInk:'k', bInk:'w' },
+};
+
+function resolveOverrideColor(key, team) {
+  if (key === 'c') return team.c;
+  if (key === 'c2') return team.c2 || team.c;
+  if (key === 'white') return '#FFFFFF';
+  if (key === 'black') return '#000000';
+  if (key === 'w') return '#ffffff';
+  if (key === 'k') return '#12131d';
+  return key; // hex literal
+}
+
+// Retorna {bg,isGradientBg,destaque,destaqueInk,bgInk} pra um time cadastrado
+// em MEUTIME_OVERRIDES, ou null se o time não estiver na lista literal
+// (cai na fórmula automática por HSL em applyThemeAndFont).
+function computeOverrideTheme(team) {
+  const ov = MEUTIME_OVERRIDES[team.n];
+  if (!ov) return null;
+
+  if (ov.special === 'split') {
+    // Barcelona: fundo dividido diagonal nas 2 cores oficiais — única
+    // exceção com gradiente no motor de tema, por pedido explícito.
+    const destInk = contrastRatio(team.c, '#FFFFFF') >= contrastRatio(team.c2 || team.c, '#FFFFFF') ? team.c : (team.c2 || team.c);
+    return {
+      bg: `linear-gradient(135deg, ${team.c} 50%, ${team.c2 || team.c} 50%)`,
+      isGradientBg: true,
+      destaque: '#FFFFFF', destaqueInk: destInk, bgInk: '#ffffff',
+    };
+  }
+
+  const [mode, ...args] = ov.bg;
+  let bg;
+  if (mode === 'tint') {
+    const [colorKey, ratio, baseOverride] = args;
+    bg = mixHex(baseOverride || MEUTIME_BASE_DARK, resolveOverrideColor(colorKey, team), ratio);
+  } else if (mode === 'solid') {
+    bg = resolveOverrideColor(args[0], team);
+  } else if (mode === 'black') {
+    bg = '#000000';
+  } else if (mode === 'dark-red') {
+    bg = mixHex('#0a0303', team.c, 0.55);
+  }
+
+  return {
+    bg, isGradientBg: false,
+    destaque: resolveOverrideColor(ov.destaque, team),
+    destaqueInk: resolveOverrideColor(ov.dInk, team),
+    bgInk: resolveOverrideColor(ov.bInk, team),
+  };
+}
+
 /* Pinta o app inteiro com a identidade da competição UEFA ativa. As cores
    de cada competição (Champions/Europa/Conference) vivem em CSS —
    body.ucl-mode[data-comp="uel"/"uecl"] — então aqui só liga o atributo;
@@ -507,49 +718,67 @@ function applyThemeAndFont() {
   const root = document.documentElement.style;
   if (id === 'meutime') {
     const team = teams.find(t => t.n === cfg.favoriteTeam);
-    const accent  = team && team.c  ? team.c  : '#8b5cf6';
-    // Usa a 2ª/3ª cor OFICIAL do clube (c2/c3) quando existem — só cai pro
-    // clareamento sintético se um time não tiver cor secundária cadastrada.
-    const accent2 = team && team.c2 ? team.c2 : lightenHex(accent, 0.35);
-    const accent3 = team && (team.c3 || team.c2) ? (team.c3 || team.c2) : accent2;
-    root.setProperty('--accent',      accent);
-    root.setProperty('--accent2',     accent2);
-    root.setProperty('--accent3',     accent3);
-    root.setProperty('--p1',          accent);
-    root.setProperty('--accent-ink',  pickInk(accent));
+    const c  = team && team.c  ? team.c  : '#8b5cf6';
+    const c2 = team && team.c2 ? team.c2 : lightenHex(c, 0.35);
+    const c3 = team && team.c3 ? team.c3 : c2;
 
-    // Cor-fonte do tingimento de fundo: se a cor PRIMÁRIA do clube for
-    // branco puro (Real Madrid, Tottenham, Leeds, Sevilla...), tingir o
-    // fundo com branco é invisível — usa a secundária nesse caso. Mesma
-    // regra do handoff de design (heartColor).
-    const bgTint = accent.toUpperCase() === '#FFFFFF' ? (accent2 || accent) : accent;
+    // Se o time estiver na tabela literal MEUTIME_OVERRIDES (curada à mão,
+    // validada contra contraste WCAG), ela SUBSTITUI a fórmula automática
+    // por HSL abaixo. Times fora da lista (cadastrados no futuro) caem na
+    // fórmula — nenhum time fica sem tema.
+    const override = team ? computeOverrideTheme(team) : null;
 
-    // O fundo deixa de ser um preto neutro e passa a ser "preto tingido"
-    // com a cor real do clube — é isso que faz o tema parecer a
-    // identidade do time e não o roxo/preto padrão genérico. Bases e
-    // proporções alinhadas ao token set oficial (colors_and_type.css).
-    root.setProperty('--bg',       mixHex('#06060a', bgTint, 0.12));
-    root.setProperty('--surface',  mixHex('#0c0c14', bgTint, 0.08));
-    root.setProperty('--surface2', mixHex('#111120', bgTint, 0.08));
-    root.setProperty('--surface3', mixHex('#16162a', bgTint, 0.08));
-    root.setProperty('--border',   mixHex('#1a1a2e', bgTint, 0.20));
-    root.setProperty('--border2',  mixHex('#242440', bgTint, 0.30));
+    let bg, destaque, destaqueInk, bgInk, isGradientBg = false;
+    if (override) {
+      ({ bg, destaque, destaqueInk, bgInk } = override);
+      isGradientBg = !!override.isGradientBg;
+    } else {
+      const categoria = classifyClubColor(c);
+      if (categoria === 'clara-neutra') {
+        bg = c;
+        destaque = team && team.c2 ? team.c2 : c3;
+      } else {
+        bg = mixHex(MEUTIME_BASE_DARK, c, 0.10);
+        destaque = c;
+      }
+      destaqueInk = pickInk(destaque);
+      bgInk = pickInk(bg);
+    }
 
-    // "Pinta tudo": até os badges/textos dourados (fav-badge, toasts,
-    // campeão do torneio...) passam a usar a cor do clube. Clareada pra
-    // manter o acabamento "metal precioso" em vez de virar um tom escuro
-    // sem graça quando a 2ª/3ª cor do time é escura.
-    const goldTint  = lightenHex(accent2, 0.3);
-    const gold2Tint = lightenHex(accent3, 0.3);
-    root.setProperty('--gold',      goldTint);
-    root.setProperty('--gold2',     gold2Tint);
-    root.setProperty('--gold-ink',  pickInk(goldTint));
+    root.setProperty('--accent',      destaque);
+    root.setProperty('--accent2',     c2);
+    root.setProperty('--accent3',     c3);
+    root.setProperty('--p1',          destaque);
+    root.setProperty('--accent-ink',  destaqueInk); // texto sobre o destaque (toast, pills, botões)
+    root.setProperty('--text',        bgInk);        // texto sobre o fundo do app — crítico pra times com fundo branco (Real Madrid, Tottenham, Fulham...)
+
+    root.setProperty('--bg', bg);
+    if (!isGradientBg) {
+      root.setProperty('--surface',  mixHex('#0d0d11', c, 0.14));
+      root.setProperty('--surface2', mixHex('#131318', destaque, 0.14));
+      root.setProperty('--surface3', mixHex('#1a1a22', destaque, 0.13));
+      root.setProperty('--border',   mixHex('#24242e', destaque, 0.42));
+      root.setProperty('--border2',  mixHex('#242440', destaque, 0.42));
+    } else {
+      // Barcelona: fundo já é o gradiente das 2 cores — superfícies ficam
+      // num preto neutro sóbrio por cima, sem competir com o split.
+      root.setProperty('--surface',  'rgba(5,5,8,0.82)');
+      root.setProperty('--surface2', 'rgba(5,5,8,0.9)');
+      root.setProperty('--surface3', 'rgba(5,5,8,0.96)');
+      root.setProperty('--border',   'rgba(255,255,255,0.16)');
+      root.setProperty('--border2',  'rgba(255,255,255,0.24)');
+    }
+
+    root.setProperty('--gold',      destaque);
+    root.setProperty('--gold2',     c3);
+    root.setProperty('--gold-ink',  destaqueInk);
   } else {
     root.removeProperty('--accent');
     root.removeProperty('--accent2');
     root.removeProperty('--accent3');
     root.removeProperty('--p1');
     root.removeProperty('--accent-ink');
+    root.removeProperty('--text');
     root.removeProperty('--gold');
     root.removeProperty('--gold2');
     root.removeProperty('--gold-ink');
