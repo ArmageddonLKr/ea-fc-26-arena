@@ -601,7 +601,11 @@ const MEUTIME_OVERRIDES = {
   'AZ Alkmaar':          { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
 
   'Arsenal':             { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
-  'Liverpool':           { bg: ['dark-red'],      destaque:'white', dInk:'c', bInk:'w' },
+  // "Vermelho e dourado" — identidade do clube (escudo, letreiro do Kop,
+  // faixa do troféu europeu) vai além do vermelho+branco do uniforme.
+  // Destaque usa o mesmo dourado do tema fixo "liverpool" (--gold:#f6eb61)
+  // em vez de branco puro, com o vermelho do clube como texto por cima.
+  'Liverpool':           { bg: ['dark-red'],      destaque:'#F6EB61', dInk:'c', bInk:'w' },
   'Man City':            { bg: ['tint','c',0.18], destaque:'#2E7BB8', dInk:'w', bInk:'w' },
   'Aston Villa':         { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
   'Chelsea':             { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
@@ -696,6 +700,23 @@ function computeOverrideTheme(team) {
     destaqueInk: resolveOverrideColor(ov.dInk, team),
     bgInk: resolveOverrideColor(ov.bInk, team),
   };
+}
+
+/* ===== IDENTIDADE DE COR POR TIME (motor do Time do Coração, generalizado) =====
+ * computeOverrideTheme() já funciona pra qualquer time (não só o favorito
+ * salvo em Config) — só faltava usá-lo fora do tema de fundo. Isso aqui
+ * expõe só o par accent/ink pra pintar UI de UM time específico que está
+ * em campo (toast de revelação, vitória), sem depender de ele ser o
+ * favorito. Nunca usado na UI compartilhada entre os dois jogadores ao
+ * mesmo tempo (botão de sortear, tab bar) — essa continua no tema pessoal
+ * do Config, pra não ter dois times brigando pela mesma cor de botão. */
+function getTeamAccent(team) {
+  if (!team) return null;
+  const override = computeOverrideTheme(team);
+  if (override) return { accent: override.destaque, accentInk: override.destaqueInk };
+  const c = team.c || '#8b5cf6';
+  const accent = classifyClubColor(c) === 'clara-neutra' ? (team.c2 || lightenHex(c, 0.35)) : c;
+  return { accent, accentInk: pickInk(accent) };
 }
 
 /* Pinta o app inteiro com a identidade da competição UEFA ativa. As cores
@@ -1665,9 +1686,10 @@ function _finishReveal(t1, t2, c1, c2) {
   const favTeam = !cfg.favoriteTeam ? null
     : (t1.n === cfg.favoriteTeam ? t1 : (t2.n === cfg.favoriteTeam ? t2 : null));
 
+  const favAccent = favTeam ? getTeamAccent(favTeam) : null;
   const flash = document.getElementById('flashOverlay');
   if (flash) {
-    flash.style.background = favTeam ? '#f0c040' : '#fff';
+    flash.style.background = favAccent ? favAccent.accent : '#fff';
     flash.style.opacity = favTeam ? '0.22' : '0.09';
     setTimeout(() => { flash.style.opacity = '0'; flash.style.background = '#fff'; }, 200);
   }
@@ -1675,8 +1697,8 @@ function _finishReveal(t1, t2, c1, c2) {
   if (favTeam) {
     SFX.favReveal();
     if (navigator.vibrate) navigator.vibrate([30, 40, 30, 40, 90]);
-    launchConfetti([favTeam.c || '#f0c040', '#ffd700', '#ffffff'], 90);
-    showToast(`⭐ ${favTeam.n} entrou em campo!`);
+    launchConfetti([favTeam.c || '#f0c040', favTeam.c2 || '#ffd700', favAccent.accent], 90);
+    showToast(`⭐ ${favTeam.n} entrou em campo!`, 'ok', favAccent);
   } else {
     uclMode ? SFX.revealUCL() : SFX.reveal();
   }
@@ -1911,7 +1933,7 @@ function finishMatchAndSave() {
     });
     localStorage.setItem(SK.history, JSON.stringify(hist.slice(0,200)));
 
-    showVictory(winner, t1, t2, score.a, score.b);
+    showVictory(winner, winTeam, t1, t2, score.a, score.b);
   } else {
     // Empate
     const hist = JSON.parse(localStorage.getItem(SK.history)||'[]');
@@ -1932,10 +1954,18 @@ function finishMatchAndSave() {
 }
 
 /* ===== VITÓRIA ===== */
-function showVictory(winner, t1, t2, s1, s2) {
+function showVictory(winner, winTeam, t1, t2, s1, s2) {
   const ov = document.getElementById('victoryOverlay');
-  document.getElementById('victoryPlayerName').textContent = `🏆 ${winner}`;
+  const nameEl = document.getElementById('victoryPlayerName');
+  nameEl.textContent = `🏆 ${winner}`;
   document.getElementById('victoryScore').textContent = `${s1} × ${s2}`;
+
+  // Cor real do time vencedor — nada de dourado fixo genérico. O brilho de
+  // fundo (--accent, ver #victoryOverlay::before em main.css) e o nome do
+  // vencedor assumem a identidade do clube que decidiu a partida.
+  const winAccent = getTeamAccent(winTeam);
+  ov.style.setProperty('--accent', winAccent.accent);
+  nameEl.style.color = winAccent.accent;
 
   const badge1 = makeBadge(t1.n, t1.c);
   const badge2 = makeBadge(t2.n, t2.c);
@@ -1950,7 +1980,7 @@ function showVictory(winner, t1, t2, s1, s2) {
 
   ov.style.display = 'flex';
   ov.style.animation = 'fadeIn 0.4s ease';
-  launchConfetti();
+  launchConfetti([winTeam.c || '#f0c040', winTeam.c2 || winAccent.accent, winAccent.accent]);
   SFX.victory();
   if (navigator.vibrate) navigator.vibrate([60,80,60,80,120]);
 }
@@ -2406,11 +2436,23 @@ function switchTab(tab) {
 
 /* ===== TOAST ===== */
 let _toastTimer;
-function showToast(msg, type='ok') {
+// teamAccent opcional ({accent, accentInk} de getTeamAccent) — pinta o
+// toast na cor real de UM time específico (revelação, vitória) em vez do
+// dourado/tema genérico. Sem ele, cai no visual padrão de sempre.
+function showToast(msg, type='ok', teamAccent=null) {
   const t = document.getElementById('toast');
   if(!t) return;
   t.textContent = msg;
   t.className = `toast show${type==='warn'?' warn':''}`;
+  if (teamAccent) {
+    t.style.borderColor = teamAccent.accent;
+    t.style.color       = teamAccent.accentInk;
+    t.style.background  = `color-mix(in srgb, ${teamAccent.accent} 26%, var(--surface3))`;
+  } else {
+    t.style.borderColor = '';
+    t.style.color       = '';
+    t.style.background  = '';
+  }
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => { t.className='toast'; }, 2800);
 }
