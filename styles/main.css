@@ -2132,6 +2132,56 @@ button, a, [role="button"] {
 }
 
 /* =====================================================
+   SUSPENSE DO SORTEIO — spin cosmético antes do reveal assentar.
+   O resultado real já foi decidido (crypto) no clique; isso aqui só troca
+   escudos/nomes "decoy" na tela até travar no time de verdade.
+   ===================================================== */
+@keyframes spinCardPulse {
+  0%, 100% { filter: brightness(1) saturate(1); }
+  50%      { filter: brightness(1.16) saturate(1.2); }
+}
+@keyframes spinLogoFlicker {
+  0%   { opacity: 0.3; transform: scale(0.9); }
+  45%  { opacity: 1;   transform: scale(1.05); }
+  100% { opacity: 1;   transform: scale(1); }
+}
+.card.card-spinning {
+  animation: spinCardPulse 0.5s ease-in-out infinite;
+  cursor: pointer;
+}
+.card.card-spinning .team-logo-wrap img {
+  animation: spinLogoFlicker 0.22s ease-out;
+}
+.card.card-spinning .team-name,
+.card.card-spinning .team-league-tag {
+  opacity: 0.75;
+}
+@media (prefers-reduced-motion: reduce) {
+  .card.card-spinning,
+  .card.card-spinning .team-logo-wrap img {
+    animation: none;
+  }
+}
+
+/* Selo temporário de clássico — reaproveita o "VS" central em vez de
+   inventar um badge novo; some sozinho de volta pro "VS" normal. */
+@keyframes classicoPulse {
+  0%, 100% { text-shadow: 0 0 8px color-mix(in srgb, var(--gold) 60%, transparent); }
+  50%      { text-shadow: 0 0 18px color-mix(in srgb, var(--gold) 90%, transparent); }
+}
+.vs-separator.vs-classico .vs-label {
+  color: var(--gold);
+  letter-spacing: 3px;
+  animation: classicoPulse 0.7s ease-in-out infinite;
+}
+.vs-separator.vs-classico .vs-line {
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .vs-separator.vs-classico .vs-label { animation: none; }
+}
+
+/* =====================================================
    REVELAÇÃO DO SORTEIO — sweep de luz instantâneo, sem espera
    ===================================================== */
 @keyframes revealSweep {

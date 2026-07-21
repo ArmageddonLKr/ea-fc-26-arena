@@ -601,7 +601,11 @@ const MEUTIME_OVERRIDES = {
   'AZ Alkmaar':          { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
 
   'Arsenal':             { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
-  'Liverpool':           { bg: ['dark-red'],      destaque:'white', dInk:'c', bInk:'w' },
+  // "Vermelho e dourado" — identidade do clube (escudo, letreiro do Kop,
+  // faixa do troféu europeu) vai além do vermelho+branco do uniforme.
+  // Destaque usa o mesmo dourado do tema fixo "liverpool" (--gold:#f6eb61)
+  // em vez de branco puro, com o vermelho do clube como texto por cima.
+  'Liverpool':           { bg: ['dark-red'],      destaque:'#F6EB61', dInk:'c', bInk:'w' },
   'Man City':            { bg: ['tint','c',0.18], destaque:'#2E7BB8', dInk:'w', bInk:'w' },
   'Aston Villa':         { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
   'Chelsea':             { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
@@ -696,6 +700,23 @@ function computeOverrideTheme(team) {
     destaqueInk: resolveOverrideColor(ov.dInk, team),
     bgInk: resolveOverrideColor(ov.bInk, team),
   };
+}
+
+/* ===== IDENTIDADE DE COR POR TIME (motor do Time do Coração, generalizado) =====
+ * computeOverrideTheme() já funciona pra qualquer time (não só o favorito
+ * salvo em Config) — só faltava usá-lo fora do tema de fundo. Isso aqui
+ * expõe só o par accent/ink pra pintar UI de UM time específico que está
+ * em campo (toast de revelação, vitória), sem depender de ele ser o
+ * favorito. Nunca usado na UI compartilhada entre os dois jogadores ao
+ * mesmo tempo (botão de sortear, tab bar) — essa continua no tema pessoal
+ * do Config, pra não ter dois times brigando pela mesma cor de botão. */
+function getTeamAccent(team) {
+  if (!team) return null;
+  const override = computeOverrideTheme(team);
+  if (override) return { accent: override.destaque, accentInk: override.destaqueInk };
+  const c = team.c || '#8b5cf6';
+  const accent = classifyClubColor(c) === 'clara-neutra' ? (team.c2 || lightenHex(c, 0.35)) : c;
+  return { accent, accentInk: pickInk(accent) };
 }
 
 /* Pinta o app inteiro com a identidade da competição UEFA ativa. As cores
@@ -1507,18 +1528,149 @@ function startDraft() {
   roundCount++;
 
   if (navigator.vibrate) navigator.vibrate([18]);
-  _suspenseReveal(t1, t2);
+  _suspenseReveal(t1, t2, base);
 }
 
-/* Revelação instantânea: o par já foi calculado no ato do clique, então o
-   time entra em campo na hora — zero espera entre o sorteio e a exibição.
-   O impacto visual vem do reveal-sweep (brilho) e do cardIn (entrada com
-   leve "bounce"), ambos decorativos e não bloqueiam nada. */
-function _suspenseReveal(t1, t2) {
+/* ===== CLÁSSICOS CURADOS =====
+ * Confrontos com peso histórico real — curado à mão, não gerado, cobrindo
+ * só rivalidades que de fato existem na base de 90 clubes. */
+const CLASSIC_RIVALRIES = [
+  { teams: ['Real Madrid', 'Barcelona'],             label: 'EL CLÁSICO' },
+  { teams: ['Boca Juniors', 'River Plate'],          label: 'SUPERCLÁSICO' },
+  { teams: ['Inter Milan', 'Milan'],                 label: 'DERBY DELLA MADONNINA' },
+  { teams: ['Roma', 'Lazio'],                        label: 'DERBY DELLA CAPITALE' },
+  { teams: ['Liverpool', 'Everton'],                 label: 'MERSEYSIDE DERBY' },
+  { teams: ['Man City', 'Man Utd'],                  label: 'MANCHESTER DERBY' },
+  { teams: ['Arsenal', 'Tottenham'],                 label: 'NORTH LONDON DERBY' },
+  { teams: ['Galatasaray', 'Fenerbahçe'],            label: 'KITA YAKA DERBİSİ' },
+  { teams: ['Benfica', 'Sporting CP'],               label: 'CLÁSSICO DE LISBOA' },
+  { teams: ['Porto', 'Benfica'],                     label: 'O CLÁSSICO' },
+  { teams: ['PSG', 'Marseille'],                      label: 'LE CLASSIQUE' },
+  { teams: ['Bayern München', 'Borussia Dortmund'],  label: 'DER KLASSIKER' },
+];
+
+function detectClassico(t1, t2) {
+  return CLASSIC_RIVALRIES.find(r =>
+    (r.teams[0] === t1.n && r.teams[1] === t2.n) ||
+    (r.teams[0] === t2.n && r.teams[1] === t1.n)
+  ) || null;
+}
+
+function showClassicoBadge(entry) {
+  const label = document.querySelector('.vs-label');
+  const sep   = document.querySelector('.vs-separator');
+  if (label && label.dataset.original == null) label.dataset.original = label.textContent;
+  if (label) label.textContent = `🔥 ${entry.label}`;
+  if (sep) sep.classList.add('vs-classico');
+}
+
+function hideClassicoBadge() {
+  const label = document.querySelector('.vs-label');
+  const sep   = document.querySelector('.vs-separator');
+  if (label && label.dataset.original != null) {
+    label.textContent = label.dataset.original;
+    delete label.dataset.original;
+  }
+  if (sep) sep.classList.remove('vs-classico');
+}
+
+/* ===== SUSPENSE DO SORTEIO =====
+ * O par (t1/t2) já foi decidido via crypto/fairPick no clique — o spin
+ * abaixo é 100% cosmético: troca "decoys" com Math.random (nunca reabre o
+ * sorteio de verdade) até travar exatamente no resultado que já estava
+ * decidido. Duração cresce com o tamanho do pool (pool maior = spin mais
+ * longo, reforçando "quanto maior o pool, mais chance de qualquer um").
+ * Dá pra pular tocando/clicando em qualquer um dos dois cards. */
+let _spinToken = 0;
+
+function _stopSpin(c1, c2) {
+  [c1, c2].forEach(c => { if (c) c.classList.remove('card-spinning'); });
+}
+
+function renderSpinFrame(card, team) {
+  if (!card || !team) return;
+  const num = card.id === 'c2' ? 2 : 1;
+  renderLogoInto(document.getElementById(`logoWrap${num}`), team);
+  const nameEl   = document.getElementById(`name${num}`);
+  const leagueEl = document.getElementById(`league${num}`);
+  if (nameEl)   nameEl.textContent   = team.n;
+  if (leagueEl) leagueEl.textContent = team.league || '';
+  card.style.setProperty('--team-color', team.c || '#8b5cf6');
+}
+
+function _suspenseReveal(t1, t2, basePool) {
   const c1 = document.getElementById('c1');
   const c2 = document.getElementById('c2');
-  [c1, c2].forEach(c => { if (c) c.classList.remove('card-spinning', 'card-locked', 'reveal-sweep'); });
-  _finishReveal(t1, t2, c1, c2);
+  const token = ++_spinToken;
+
+  [c1, c2].forEach(c => { if (c) c.classList.remove('reveal-sweep'); });
+  _stopSpin(c1, c2);
+  hideClassicoBadge();
+
+  const classico = detectClassico(t1, t2);
+  if (classico) showClassicoBadge(classico);
+
+  const favTeam = !cfg.favoriteTeam ? null
+    : (t1.n === cfg.favoriteTeam ? t1 : (t2.n === cfg.favoriteTeam ? t2 : null));
+
+  const source   = (basePool && basePool.length) ? basePool : teams;
+  const decoyPool = source.filter(t => t.n !== t1.n && t.n !== t2.n);
+  const duration  = Math.max(550, Math.min(2200, 520 + source.length * 11));
+
+  [c1, c2].forEach(c => { if (c) { c.classList.add('card-spinning'); c.title = 'Toque pra pular'; } });
+
+  let skipped = false;
+  const onSkip = () => { skipped = true; };
+  if (c1) c1.addEventListener('click', onSkip, { once: true });
+  if (c2) c2.addEventListener('click', onSkip, { once: true });
+
+  const start = performance.now();
+  const lastSwap = { 1: -Infinity, 2: -Infinity };
+
+  function frame(now) {
+    if (token !== _spinToken) return; // outro sorteio assumiu no meio do caminho
+    const elapsed  = now - start;
+    const progress = Math.min(1, elapsed / duration);
+
+    if (skipped || progress >= 1) { settle(); return; }
+
+    // desaceleração tipo caça-níquel: intervalo entre trocas cresce de
+    // ~55ms (rápido) até ~265ms (quase parando) conforme progress→1
+    const eased    = 1 - Math.pow(1 - progress, 3);
+    const interval = 55 + eased * 210;
+
+    [[1, t1, c1], [2, t2, c2]].forEach(([num, real, card]) => {
+      if (elapsed - lastSwap[num] < interval) return;
+      lastSwap[num] = elapsed;
+
+      // "Hesitação": se o time favorito É o resultado real daquele card,
+      // ele pode piscar como decoy perto do fim antes de travar de vez —
+      // puro efeito de tensão, o resultado já estava decidido desde o
+      // clique (não influencia o sorteio, só o que aparece no spin).
+      let decoy;
+      if (favTeam && real.n === favTeam.n && progress > 0.72 && progress < 0.9 && Math.random() < 0.4) {
+        decoy = favTeam;
+      } else if (decoyPool.length) {
+        decoy = decoyPool[Math.floor(Math.random() * decoyPool.length)];
+      } else {
+        decoy = real;
+      }
+      renderSpinFrame(card, decoy);
+      SFX.tick(progress);
+    });
+
+    requestAnimationFrame(frame);
+  }
+
+  function settle() {
+    if (c1) { c1.removeEventListener('click', onSkip); c1.removeAttribute('title'); }
+    if (c2) { c2.removeEventListener('click', onSkip); c2.removeAttribute('title'); }
+    _stopSpin(c1, c2);
+    _finishReveal(t1, t2, c1, c2);
+    if (classico) setTimeout(() => { if (token === _spinToken) hideClassicoBadge(); }, 1400);
+  }
+
+  requestAnimationFrame(frame);
 }
 
 /* Reveal final: injeta dados reais, dispara sweep de luz e som de impacto —
@@ -1534,9 +1686,10 @@ function _finishReveal(t1, t2, c1, c2) {
   const favTeam = !cfg.favoriteTeam ? null
     : (t1.n === cfg.favoriteTeam ? t1 : (t2.n === cfg.favoriteTeam ? t2 : null));
 
+  const favAccent = favTeam ? getTeamAccent(favTeam) : null;
   const flash = document.getElementById('flashOverlay');
   if (flash) {
-    flash.style.background = favTeam ? '#f0c040' : '#fff';
+    flash.style.background = favAccent ? favAccent.accent : '#fff';
     flash.style.opacity = favTeam ? '0.22' : '0.09';
     setTimeout(() => { flash.style.opacity = '0'; flash.style.background = '#fff'; }, 200);
   }
@@ -1544,8 +1697,8 @@ function _finishReveal(t1, t2, c1, c2) {
   if (favTeam) {
     SFX.favReveal();
     if (navigator.vibrate) navigator.vibrate([30, 40, 30, 40, 90]);
-    launchConfetti([favTeam.c || '#f0c040', '#ffd700', '#ffffff'], 90);
-    showToast(`⭐ ${favTeam.n} entrou em campo!`);
+    launchConfetti([favTeam.c || '#f0c040', favTeam.c2 || '#ffd700', favAccent.accent], 90);
+    showToast(`⭐ ${favTeam.n} entrou em campo!`, 'ok', favAccent);
   } else {
     uclMode ? SFX.revealUCL() : SFX.reveal();
   }
@@ -1780,7 +1933,7 @@ function finishMatchAndSave() {
     });
     localStorage.setItem(SK.history, JSON.stringify(hist.slice(0,200)));
 
-    showVictory(winner, t1, t2, score.a, score.b);
+    showVictory(winner, winTeam, t1, t2, score.a, score.b);
   } else {
     // Empate
     const hist = JSON.parse(localStorage.getItem(SK.history)||'[]');
@@ -1801,10 +1954,18 @@ function finishMatchAndSave() {
 }
 
 /* ===== VITÓRIA ===== */
-function showVictory(winner, t1, t2, s1, s2) {
+function showVictory(winner, winTeam, t1, t2, s1, s2) {
   const ov = document.getElementById('victoryOverlay');
-  document.getElementById('victoryPlayerName').textContent = `🏆 ${winner}`;
+  const nameEl = document.getElementById('victoryPlayerName');
+  nameEl.textContent = `🏆 ${winner}`;
   document.getElementById('victoryScore').textContent = `${s1} × ${s2}`;
+
+  // Cor real do time vencedor — nada de dourado fixo genérico. O brilho de
+  // fundo (--accent, ver #victoryOverlay::before em main.css) e o nome do
+  // vencedor assumem a identidade do clube que decidiu a partida.
+  const winAccent = getTeamAccent(winTeam);
+  ov.style.setProperty('--accent', winAccent.accent);
+  nameEl.style.color = winAccent.accent;
 
   const badge1 = makeBadge(t1.n, t1.c);
   const badge2 = makeBadge(t2.n, t2.c);
@@ -1819,7 +1980,7 @@ function showVictory(winner, t1, t2, s1, s2) {
 
   ov.style.display = 'flex';
   ov.style.animation = 'fadeIn 0.4s ease';
-  launchConfetti();
+  launchConfetti([winTeam.c || '#f0c040', winTeam.c2 || winAccent.accent, winAccent.accent]);
   SFX.victory();
   if (navigator.vibrate) navigator.vibrate([60,80,60,80,120]);
 }
@@ -2275,11 +2436,23 @@ function switchTab(tab) {
 
 /* ===== TOAST ===== */
 let _toastTimer;
-function showToast(msg, type='ok') {
+// teamAccent opcional ({accent, accentInk} de getTeamAccent) — pinta o
+// toast na cor real de UM time específico (revelação, vitória) em vez do
+// dourado/tema genérico. Sem ele, cai no visual padrão de sempre.
+function showToast(msg, type='ok', teamAccent=null) {
   const t = document.getElementById('toast');
   if(!t) return;
   t.textContent = msg;
   t.className = `toast show${type==='warn'?' warn':''}`;
+  if (teamAccent) {
+    t.style.borderColor = teamAccent.accent;
+    t.style.color       = teamAccent.accentInk;
+    t.style.background  = `color-mix(in srgb, ${teamAccent.accent} 26%, var(--surface3))`;
+  } else {
+    t.style.borderColor = '';
+    t.style.color       = '';
+    t.style.background  = '';
+  }
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => { t.className='toast'; }, 2800);
 }
