@@ -267,15 +267,85 @@
   --p1:#ffd700; --p2:#e8e8e8;
   --gold:#ffd700; --gold2:#fff2a8; --green:#22c55e;
 }
-/* Inspirado no Real Madrid — branco imponente sobre azul-marinho quase preto, trim azul claro */
+/* Real Madrid — tema "vitrine": paleta clara e limpa (não a atmosfera
+   cósmica escura de antes), azul-marinho e dourado do escudo como cor
+   estrutural, nome do clube discreto no rodapé em vez de escudo gigante
+   de fundo (ver THEME_FOOTER_BRAND em app.js). */
 [data-theme="realmadrid"] {
-  --bg:#050912; --surface:#0a1120; --surface2:#0e1830; --surface3:#152140;
-  --border:#1c2a4a; --border2:#28396a;
-  --text:#ffffff; --text2:#c9d3ea; --muted:#6f7ba0;
-  --accent:#f4f4f4; --accent2:#4fa8e0; --accent-ink:#10131f;
-  --p1:#4fa8e0; --p2:#1e3a6e;
-  --gold:#4fa8e0; --gold2:#82c4ee; --gold-ink:#10131f; --green:#22c55e;
+  --bg:#f5f7fb; --surface:#ffffff; --surface2:#eef1f8; --surface3:#e3e9f6;
+  --border:#dbe1ef; --border2:#c7d2e8;
+  --text:#152452; --text2:#4a5578; --muted:#8992ac;
+  --accent:#16265e; --accent2:#f0c040; --accent-ink:#ffffff;
+  --p1:#16265e; --p2:#f0c040;
+  --gold:#f0c040; --gold2:#ffd968; --gold-ink:#16265e; --green:#0b9e5a;
+  --shadow-card: 0 4px 18px rgba(20,30,80,0.12);
 }
+/* Barcelona — tema "vitrine" de takeover total: fundo dividido nas 2 cores
+   oficiais (blau/grana, mesmas de teams.json), dourado do escudo (c3) como
+   destaque, marca própria no topo em vez de "FC 26 Arena" (ver
+   THEME_TOPBAR_BRAND/THEME_FOOTER_BRAND em app.js). --p1/--p2 usam um
+   vermelho/azul mais vivos que o fundo, só pra identidade de jogador (o
+   mesmo papel que já cumprem em qualquer outro tema). */
+[data-theme="barcelona"] {
+  --bg:#0d1b4a; --surface:#101f4f; --surface2:#152657; --surface3:#1c3066;
+  --border:#2a3c74; --border2:#3a4d8a;
+  --text:#f5f2ff; --text2:#c9c4e8; --muted:#8a86b8;
+  --accent:#a50044; --accent2:#004d98; --accent-ink:#edbb00;
+  --p1:#ff3b57; --p2:#3ea0ff;
+  --gold:#edbb00; --gold2:#ffd84d; --gold-ink:#1a1030; --green:#22c55e;
+  --split-c1:#004d98; --split-c2:#a50044;
+  --shadow-card: 0 4px 18px rgba(10,15,50,0.35);
+}
+html[data-theme="barcelona"] body::before,
+html[data-theme="barcelona"] body::after {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+}
+html[data-theme="barcelona"] body::before {
+  background: var(--split-c1);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+html[data-theme="barcelona"] body::after {
+  background: var(--split-c2);
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+html[data-theme="barcelona"] .tab-bar {
+  background: linear-gradient(90deg, var(--split-c2) 50%, var(--split-c1) 50%);
+  border-top-color: color-mix(in srgb, var(--gold) 35%, transparent);
+}
+html[data-theme="barcelona"] .tab-item { color: rgba(255,255,255,0.72); }
+html[data-theme="barcelona"] .tab-item.active { color: var(--gold); }
+html[data-theme="barcelona"] .tab-item.active svg { filter: drop-shadow(0 0 6px color-mix(in srgb, var(--gold) 60%, transparent)); }
+html[data-theme="barcelona"] .tab-item::before { background: var(--gold); }
+html[data-theme="barcelona"] .topbar-btn { border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); }
+/* Botão de sorteio dividido na cor dos dois jogadores (P1/P2), não do
+   clube — reforça o "duelo" antes mesmo de sortear. */
+html[data-theme="barcelona"] .btn-draw {
+  background: linear-gradient(90deg, var(--p1) 50%, var(--p2) 50%);
+  color: var(--gold-ink);
+}
+/* Slots de jogador ganham um tingido sutil na própria cor (P1/P2), não só
+   a linha de topo — reforça o "lado vermelho / lado azul" já na Home. */
+html[data-theme="barcelona"] #p1Slot {
+  background: color-mix(in srgb, var(--p1) 16%, var(--surface));
+  border-color: color-mix(in srgb, var(--p1) 42%, transparent);
+}
+html[data-theme="barcelona"] #p2Slot {
+  background: color-mix(in srgb, var(--p2) 16%, var(--surface));
+  border-color: color-mix(in srgb, var(--p2) 42%, transparent);
+}
+/* Botões secundários da Home viram sólidos nas 2 cores do clube — no
+   resto dos temas eles são um outline sutil (ver .btn-secondary-*). */
+html[data-theme="barcelona"] .btn-secondary-p2 {
+  background: var(--split-c1);
+  color: var(--gold);
+  border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+}
+html[data-theme="barcelona"] .btn-secondary-neutral {
+  background: color-mix(in srgb, var(--split-c2) 80%, black 12%);
+  color: var(--gold);
+  border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+}
+
 /* Inspirado no Liverpool — vermelho de Anfield com trim dourado do escudo */
 [data-theme="liverpool"] {
   --bg:#0a0303; --surface:#170707; --surface2:#210a0a; --surface3:#2e0d0d;
@@ -349,45 +419,33 @@ html[data-theme="pretoDourado"] .tab-item.active { color: var(--gold); }
 html[data-theme="pretoDourado"] .tab-item.active svg { filter: drop-shadow(0 0 7px rgba(233,193,77,.65)); }
 html[data-theme="pretoDourado"] .card { box-shadow: 0 0 0 1px rgba(233,193,77,.10), 0 14px 44px rgba(0,0,0,.7); }
 
-/* ---- Real Madrid — "Los Blancos": galáxia branco-e-azul + facho de holofote no Bernabéu ---- */
-html[data-theme="realmadrid"] body {
-  background:
-    radial-gradient(ellipse 65% 40% at 50% -4%, rgba(244,244,244,0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 35% at 15% 100%, rgba(79,168,224,0.10) 0%, transparent 65%),
-    var(--bg);
-}
+/* ---- Real Madrid — vitrine clara: listras diagonais discretas em azul-
+   marinho e dourado nos cantos, sem partícula/holofote (isso era do
+   conceito escuro antigo — a paleta agora é clara, chapada, "vitrine"). */
+html[data-theme="realmadrid"] body::before,
 html[data-theme="realmadrid"] body::after {
-  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
-  background-image:
-    radial-gradient(1.5px 1.5px at 14% 10%, rgba(255,255,255,.8), transparent),
-    radial-gradient(1.1px 1.1px at 30% 22%, rgba(79,168,224,.65), transparent),
-    radial-gradient(1.6px 1.6px at 48% 6%,  rgba(255,255,255,.7), transparent),
-    radial-gradient(1.1px 1.1px at 64% 18%, rgba(79,168,224,.55), transparent),
-    radial-gradient(1.5px 1.5px at 80% 12%, rgba(255,255,255,.75), transparent),
-    radial-gradient(1.1px 1.1px at 92% 26%, rgba(79,168,224,.5),  transparent),
-    radial-gradient(1.1px 1.1px at 8%  42%, rgba(255,255,255,.5), transparent),
-    radial-gradient(1.5px 1.5px at 56% 34%, rgba(79,168,224,.55), transparent),
-    radial-gradient(1.1px 1.1px at 86% 44%, rgba(255,255,255,.5), transparent);
-  animation: theme-drift 4s ease-in-out infinite alternate;
-}
-html[data-theme="realmadrid"] body::before {
-  content: ''; position: fixed; top: -20%; left: -10%; width: 60%; height: 140%;
+  content: '';
+  position: fixed;
+  width: 240px; height: 240px;
   z-index: 0; pointer-events: none;
-  background: linear-gradient(100deg, transparent 40%, rgba(244,244,244,.05) 48%, rgba(79,168,224,.08) 52%, transparent 60%);
-  animation: theme-beam-sweep 9s ease-in-out infinite;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.55;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 220'%3E%3Cline x1='220' y1='0' x2='40' y2='220' stroke='%2316265e' stroke-width='14' stroke-linecap='round'/%3E%3Cline x1='188' y1='0' x2='8' y2='220' stroke='%23f0c040' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E");
 }
-html[data-theme="realmadrid"] .topbar { border-bottom-color: rgba(79,168,224,.32); }
-html[data-theme="realmadrid"] .tab-bar { border-top-color: rgba(79,168,224,.28); }
-html[data-theme="realmadrid"] .tab-item.active { color: var(--accent2); }
-html[data-theme="realmadrid"] .tab-item.active svg { filter: drop-shadow(0 0 7px rgba(79,168,224,.6)); }
-html[data-theme="realmadrid"] .card { border-color: rgba(244,244,244,.24); box-shadow: 0 0 0 1px rgba(79,168,224,.12), 0 14px 44px rgba(0,0,0,.6); }
-/* Botão branco+azul precisa de texto escuro — o branco puro do accent quebraria em cima de #fff */
-html[data-theme="realmadrid"] .btn-enter,
-html[data-theme="realmadrid"] .btn-draw,
-html[data-theme="realmadrid"] .btn-save {
-  background: #ffffff;
-  color: #10131f;
+html[data-theme="realmadrid"] body::before { top: -24px; right: -24px; }
+html[data-theme="realmadrid"] body::after  { bottom: -24px; left: -24px; transform: rotate(180deg); }
+html[data-theme="realmadrid"] .tab-bar {
+  background: var(--accent);
+  border-top-color: color-mix(in srgb, var(--gold) 35%, transparent);
 }
+html[data-theme="realmadrid"] .tab-item { color: rgba(255,255,255,0.7); }
+html[data-theme="realmadrid"] .tab-item.active { color: var(--gold); }
+html[data-theme="realmadrid"] .tab-item.active svg { filter: drop-shadow(0 0 6px color-mix(in srgb, var(--gold) 60%, transparent)); }
+html[data-theme="realmadrid"] .tab-item::before { background: var(--gold); }
+/* Borda dos slots de jogador sempre na cor do time (P1/P2), não só no
+   foco — reforça a identidade "vitrine" mesmo com os campos vazios. */
+html[data-theme="realmadrid"] .player-slot { border-color: var(--slot-color, var(--border)); }
 
 /* ---- Liverpool — "Anfield": brasas subindo do Kop, vermelho quente ---- */
 html[data-theme="liverpool"] body {
@@ -415,6 +473,26 @@ html[data-theme="liverpool"] .tab-bar { border-top-color: rgba(200,16,46,.4); }
 html[data-theme="liverpool"] .tab-item.active { color: var(--gold); }
 html[data-theme="liverpool"] .tab-item.active svg { filter: drop-shadow(0 0 7px rgba(246,235,97,.6)); }
 html[data-theme="liverpool"] .card { box-shadow: 0 0 0 1px rgba(246,235,97,.10), 0 14px 44px rgba(80,0,10,.55); }
+/* Botões secundários da Home viram sólidos (Picks & Bans mais escuro,
+   Modo Torneio num vermelho médio) em vez do outline sutil padrão. */
+html[data-theme="liverpool"] .btn-secondary-p2 {
+  background: var(--surface3);
+  color: var(--gold);
+  border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+}
+html[data-theme="liverpool"] .btn-secondary-neutral {
+  background: color-mix(in srgb, var(--accent) 70%, var(--surface3) 30%);
+  color: var(--gold);
+  border: 1px solid color-mix(in srgb, var(--gold) 25%, transparent);
+}
+/* A wordmark é desenhada no roxo padrão do app — vira vermelho/dourado
+   pra combinar com o resto do tema, em vez de destoar. */
+html[data-theme="liverpool"] .topbar-wordmark {
+  /* Zera a cor original (brightness 0 = silhueta preta) e recolore de
+     forma previsível pro vermelho do clube — girar só o matiz (hue-rotate)
+     dá resultado inconsistente quando a arte-fonte tem mais de uma cor. */
+  filter: brightness(0) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%);
+}
 
 /* ---- Time do Coração — a atmosfera inteira segue --accent/--accent2/
    --accent3, que o JS injeta com as cores OFICIAIS reais (c/c2/c3) de
@@ -471,8 +549,6 @@ html[data-theme="meutime"] .btn-save {
 
 @media (prefers-reduced-motion: reduce) {
   html[data-theme="pretoDourado"] body::after,
-  html[data-theme="realmadrid"] body::after,
-  html[data-theme="realmadrid"] body::before,
   html[data-theme="liverpool"] body::after,
   html[data-theme="meutime"] body::after,
   html[data-theme="meutime"] body::before {
@@ -523,9 +599,9 @@ body {
   background: radial-gradient(ellipse 80% 40% at 50% 0%, color-mix(in srgb, var(--accent) 6%, transparent) 0%, transparent 70%), var(--bg);
 }
 
-/* Barcelona (Time do Coração) — fundo dividido em cor sólida, sem
-   gradiente/blend: duas metades reais via clip-path, uma pra cada cor
-   oficial do clube (--split-c1/--split-c2, setadas no JS). */
+/* Barcelona e Boca Juniors (Time do Coração) — fundo dividido em cor
+   sólida, sem gradiente/blend: duas metades reais via clip-path, uma pra
+   cada cor oficial do clube (--split-c1/--split-c2, setadas no JS). */
 body.meutime-split::before,
 body.meutime-split::after {
   content: '';
@@ -540,6 +616,25 @@ body.meutime-split::before {
 body.meutime-split::after {
   background: var(--split-c2, var(--bg));
   clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+
+/* River Plate (Time do Coração) — faixa vermelha diagonal sólida sobre
+   fundo branco, igual ao uniforme real (sash de ombro a quadril), em vez
+   de reduzir o clube a um "fundo tingido" genérico. Mesma técnica do
+   split acima (clip-path, cor sólida, sem gradiente). */
+body.meutime-sash::before,
+body.meutime-sash::after {
+  content: '';
+  position: fixed; inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+body.meutime-sash::before {
+  background: var(--sash-base, var(--bg));
+}
+body.meutime-sash::after {
+  background: var(--sash-color, var(--accent));
+  clip-path: polygon(68% 0%, 100% 0%, 42% 100%, 10% 100%);
 }
 
 
@@ -751,6 +846,45 @@ button, a, [role="button"] {
   letter-spacing: 2px;
 }
 
+/* A wordmark é desenhada em traço claro pra ficar legível sobre fundo
+   escuro — nos temas de fundo claro (Gelo, Ouro Premium, Real Madrid) ela
+   fica lavada sem isso, então vira silhueta escura. */
+html[data-theme="gelo"] .topbar-wordmark,
+html[data-theme="ouroPremium"] .topbar-wordmark,
+html[data-theme="realmadrid"] .topbar-wordmark {
+  filter: brightness(0);
+  opacity: 0.85;
+}
+
+/* Marca temática do topo — substitui a wordmark "FC 26 Arena" pelo nome
+   do clube nos temas "vitrine" de takeover total (ver THEME_TOPBAR_BRAND
+   em app.js). Ícone hexagonal dividido nas 2 cores oficiais, sem gradiente
+   de verdade (hard-stop no meio do linear-gradient = duas metades sólidas). */
+.topbar-brand-themed {
+  display: flex; align-items: center; gap: 10px;
+}
+.topbar-brand-icon {
+  width: 34px; height: 34px; flex-shrink: 0;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  background: linear-gradient(135deg, var(--split-c1, var(--accent)) 50%, var(--split-c2, var(--accent2)) 50%);
+}
+.topbar-brand-text { display: flex; flex-direction: column; line-height: 1.05; }
+.topbar-brand-name {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 1.02rem;
+  letter-spacing: 1px;
+  color: var(--gold);
+}
+.topbar-brand-sub {
+  font-family: var(--font-head);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent2);
+}
+
 .topbar-btn {
   display: flex; align-items: center; gap: 5px;
   background: var(--accent);
@@ -866,6 +1000,7 @@ button, a, [role="button"] {
 
 /* ===== LOBBY / HOME ===== */
 .lobby-subtitle {
+  display: flex; align-items: center; gap: 12px; justify-content: center;
   font-family: var(--font-head);
   font-size: 0.6rem;
   font-weight: 700;
@@ -873,6 +1008,12 @@ button, a, [role="button"] {
   text-transform: uppercase;
   color: var(--muted);
   text-align: center;
+}
+.lobby-subtitle::before, .lobby-subtitle::after {
+  content: '';
+  flex: 1; max-width: 46px; height: 1px;
+  background: currentColor;
+  opacity: 0.35;
 }
 
 .player-slots {
@@ -990,6 +1131,20 @@ button, a, [role="button"] {
 }
 
 .btn-enter:active { opacity: 0.82; transform: scale(0.982); }
+
+/* Variante "outline" na cor do P2 — Picks & Bans, mesmo tratamento sutil
+   em todos os temas por padrão (temas de clube podem forçar sólido). */
+.btn-secondary-p2 {
+  background: color-mix(in srgb, var(--p2) 8%, transparent);
+  color: var(--p2);
+  border: 1px solid color-mix(in srgb, var(--p2) 22%, transparent);
+}
+/* Variante neutra — Modo Torneio, na cor de superfície do tema. */
+.btn-secondary-neutral {
+  background: var(--surface2);
+  color: var(--text2);
+  border: 1px solid var(--border2);
+}
 
 /* ===== SCORE PANEL ===== */
 .score-panel {
@@ -1260,10 +1415,8 @@ button, a, [role="button"] {
 
 /* ===== TEAM CARD ===== */
 /* Card na cor SÓLIDA e oficial do clube — sem degradê entre duas cores,
-   igual camisa/uniforme. Um leve brilho radial no canto (mesmo tom, só
-   uma pitada de luz) dá profundidade sem virar gradiente de verdade.
-   --card-ink (luminância, calculado no JS) garante texto legível em
-   cima de qualquer cor, clara ou escura. */
+   igual camisa/uniforme. --card-ink (luminância, calculado no JS) garante
+   texto legível em cima de qualquer cor, clara ou escura. */
 .card {
   background: var(--card-bg, var(--team-color, var(--accent)));
   /* Borda sólida de 2px na cor 1 do clube — tratamento do handoff oficial
@@ -1284,15 +1437,11 @@ button, a, [role="button"] {
   display: none;
 }
 
+/* Brilho radial misturando cor 1 e cor 2 do clube — desligado: qualquer
+   blend entre as duas cores dilui a identidade sólida e oficial do card
+   (mesmo princípio que já matou o .card-stripe acima). */
 .card-glow {
-  position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
-  width: 260px; height: 130px;
-  background: radial-gradient(ellipse,
-    var(--team-color, var(--accent)) 0%,
-    color-mix(in srgb, var(--team-color2, var(--team-color, var(--accent))) 65%, transparent) 55%,
-    transparent 75%);
-  opacity: 0.18;
-  pointer-events: none;
+  display: none;
 }
 
 .card::after {
@@ -1412,6 +1561,13 @@ button, a, [role="button"] {
   padding: 6px;
 }
 
+/* Escudo "vestindo" o card — desliza e cresce até o tamanho final em vez
+   de só aparecer pronto. Dispara sozinho: cada sorteio cria uma <img> nova
+   (ver renderLogoInto), então a animação sempre roda de novo. */
+@keyframes crestSlideIn {
+  from { transform: translateY(-14px) scale(0.85); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
 .team-logo-wrap img {
   width: 100%; height: 100%;
   object-fit: contain;
@@ -1419,6 +1575,10 @@ button, a, [role="button"] {
   filter: drop-shadow(0 2px 6px rgba(0,0,0,0.55));
   image-rendering: -webkit-optimize-contrast;
   image-rendering: high-quality;
+  animation: crestSlideIn 0.38s cubic-bezier(0.34,1.4,0.64,1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .team-logo-wrap img { animation: none; }
 }
 
 .logo-fallback { font-size: 2rem; opacity: 0.5; }
@@ -1474,11 +1634,21 @@ button, a, [role="button"] {
 
 .star-icon { font-size: 0.62rem; opacity: 0.75; }
 
+/* Entra com leve atraso depois do nome do time — tipo apresentação de
+   escalação — em vez de surgir junto com o resto do card de uma vez
+   (o atraso em si é setado inline no JS, ver renderCard). */
+@keyframes starReveal {
+  from { transform: translateY(6px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
 .star-names {
   font-family: var(--font-body);
   font-size: 0.72rem;
   color: color-mix(in srgb, var(--card-ink, var(--text2)) 78%, transparent);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+@media (prefers-reduced-motion: reduce) {
+  .star-names { animation: none !important; }
 }
 
 /* ===== STATS ===== */
@@ -2325,14 +2495,40 @@ button, a, [role="button"] {
 /* ===== FOOTER ===== */
 footer {
   font-family: var(--font-head);
-  font-size: 0.65rem;
-  letter-spacing: 3px;
   text-transform: uppercase;
   color: var(--muted);
   text-align: center;
   padding: 20px 0 0;
   opacity: 0.4;
 }
+.footer-brand-row {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-bottom: 4px;
+}
+.footer-line { flex: 0 0 32px; height: 1px; background: currentColor; opacity: 0.35; }
+#footerBrand { font-size: 0.65rem; font-weight: 700; letter-spacing: 3px; }
+#footerSub { font-size: 0.58rem; letter-spacing: 2px; }
+.footer-tagline-row {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-bottom: 6px;
+}
+#footerTagline { font-size: 0.58rem; font-weight: 700; letter-spacing: 2px; }
+
+/* Liverpool ganha um lockup de marca próprio (grande, na cor do clube) em
+   cima do rodapé padrão — "You'll Never Walk Alone" é peso demais pro
+   footer discreto genérico, então o "FC 26 Arena" original continua
+   embaixo (ver keepDefault em THEME_FOOTER, app.js). */
+html[data-theme="liverpool"] #footerBrand {
+  font-size: 2.1rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: var(--accent);
+}
+html[data-theme="liverpool"] .footer-brand-row .footer-line,
+html[data-theme="liverpool"] .footer-tagline-row .footer-line {
+  background: var(--gold);
+}
+html[data-theme="liverpool"] #footerTagline { color: var(--gold); }
 
 /* ===== VICTORY OVERLAY ===== */
 #victoryOverlay {
@@ -2814,6 +3010,17 @@ body.ucl-mode .topbar {
 }
 .btn-enter.btn-ucl:active {
   background: #142a6e;
+}
+/* Liverpool inverte o padrão navy+dourado do botão UEFA — dourado sólido
+   com texto/ícone vermelho, pra não competir com o vermelho já dominante
+   no resto da Home. */
+html[data-theme="liverpool"] .btn-enter.btn-ucl {
+  background: var(--gold);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+html[data-theme="liverpool"] .btn-enter.btn-ucl:active {
+  background: var(--gold2);
 }
 
 /* Badge da competição ativa no header da arena — cor dinâmica */

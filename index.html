@@ -257,8 +257,15 @@
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-left">
-      <img src="./assets/logo-wordmark.svg" alt="FC 26 Arena" style="height:32px;width:auto;"
+      <img src="./assets/logo-wordmark.svg" alt="FC 26 Arena" class="topbar-wordmark" id="topbarWordmark" style="height:32px;width:auto;"
            onerror="this.outerHTML='<span class=\'topbar-logo\'>FC26</span>'">
+      <div class="topbar-brand-themed" id="topbarBrandThemed" style="display:none;">
+        <span class="topbar-brand-icon" aria-hidden="true"></span>
+        <div class="topbar-brand-text">
+          <span class="topbar-brand-name" id="topbarBrandName"></span>
+          <span class="topbar-brand-sub">Arena</span>
+        </div>
+      </div>
     </div>
     <a href="./admin.html" class="topbar-btn">
       <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
@@ -289,14 +296,10 @@
 
     <div style="display:flex;flex-direction:column;gap:8px;">
       <button class="btn-enter" onclick="bootArena()">⚡ Batalha Rápida</button>
-      <button class="btn-enter"
-        style="background:rgba(0,180,216,0.08);color:var(--p2);border:1px solid rgba(0,180,216,0.22);"
-        onclick="openBanMenu()">
+      <button class="btn-enter btn-secondary-p2" onclick="openBanMenu()">
         ✂ Picks &amp; Bans
       </button>
-      <button class="btn-enter"
-        style="background:var(--surface2);color:var(--text2);border:1px solid var(--border2);"
-        onclick="openTournamentMenu()">
+      <button class="btn-enter btn-secondary-neutral" onclick="openTournamentMenu()">
         🏆 Modo Torneio
       </button>
       <button class="btn-enter btn-ucl" onclick="openCompPicker('arena')">
@@ -577,7 +580,11 @@
     </button>
   </div>
 
-  <footer>FC 26 Arena · Competitive Engine · 2026</footer>
+  <footer>
+    <div class="footer-brand-row"><span class="footer-line"></span><span id="footerBrand">FC 26 Arena</span><span class="footer-line"></span></div>
+    <div class="footer-tagline-row" id="footerTaglineRow" style="display:none;"><span class="footer-line"></span><span id="footerTagline"></span><span class="footer-line"></span></div>
+    <div id="footerSub">Competitive Engine · 2026</div>
+  </footer>
 
 </div><!-- /app -->
 
