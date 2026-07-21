@@ -1260,10 +1260,8 @@ button, a, [role="button"] {
 
 /* ===== TEAM CARD ===== */
 /* Card na cor SÓLIDA e oficial do clube — sem degradê entre duas cores,
-   igual camisa/uniforme. Um leve brilho radial no canto (mesmo tom, só
-   uma pitada de luz) dá profundidade sem virar gradiente de verdade.
-   --card-ink (luminância, calculado no JS) garante texto legível em
-   cima de qualquer cor, clara ou escura. */
+   igual camisa/uniforme. --card-ink (luminância, calculado no JS) garante
+   texto legível em cima de qualquer cor, clara ou escura. */
 .card {
   background: var(--card-bg, var(--team-color, var(--accent)));
   /* Borda sólida de 2px na cor 1 do clube — tratamento do handoff oficial
@@ -1284,15 +1282,11 @@ button, a, [role="button"] {
   display: none;
 }
 
+/* Brilho radial misturando cor 1 e cor 2 do clube — desligado: qualquer
+   blend entre as duas cores dilui a identidade sólida e oficial do card
+   (mesmo princípio que já matou o .card-stripe acima). */
 .card-glow {
-  position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
-  width: 260px; height: 130px;
-  background: radial-gradient(ellipse,
-    var(--team-color, var(--accent)) 0%,
-    color-mix(in srgb, var(--team-color2, var(--team-color, var(--accent))) 65%, transparent) 55%,
-    transparent 75%);
-  opacity: 0.18;
-  pointer-events: none;
+  display: none;
 }
 
 .card::after {
