@@ -257,7 +257,7 @@
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-left">
-      <img src="./assets/logo-wordmark.svg" alt="FC 26 Arena" style="height:32px;width:auto;"
+      <img src="./assets/logo-wordmark.svg" alt="FC 26 Arena" class="topbar-wordmark" style="height:32px;width:auto;"
            onerror="this.outerHTML='<span class=\'topbar-logo\'>FC26</span>'">
     </div>
     <a href="./admin.html" class="topbar-btn">
@@ -290,7 +290,7 @@
     <div style="display:flex;flex-direction:column;gap:8px;">
       <button class="btn-enter" onclick="bootArena()">⚡ Batalha Rápida</button>
       <button class="btn-enter"
-        style="background:rgba(0,180,216,0.08);color:var(--p2);border:1px solid rgba(0,180,216,0.22);"
+        style="background:color-mix(in srgb, var(--p2) 8%, transparent);color:var(--p2);border:1px solid color-mix(in srgb, var(--p2) 22%, transparent);"
         onclick="openBanMenu()">
         ✂ Picks &amp; Bans
       </button>
@@ -577,7 +577,10 @@
     </button>
   </div>
 
-  <footer>FC 26 Arena · Competitive Engine · 2026</footer>
+  <footer>
+    <div class="footer-brand-row"><span class="footer-line"></span><span id="footerBrand">FC 26 Arena</span><span class="footer-line"></span></div>
+    <div id="footerSub">Competitive Engine · 2026</div>
+  </footer>
 
 </div><!-- /app -->
 

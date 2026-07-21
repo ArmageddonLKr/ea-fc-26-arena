@@ -867,14 +867,24 @@ function applyThemeAndFont() {
 // Escudo + nome gigantes atrás de tudo, tipo pôster de estádio — só nos
 // temas realmente ligados a um clube específico (Real Madrid, Liverpool
 // e Time do Coração, este com o time favorito escolhido pelo usuário).
+// Nome do clube exibido no rodapé (linhas divisórias + texto), no lugar do
+// "FC 26 Arena" padrão — usado pelos temas "vitrine" (marca fixa do clube,
+// sem escudo gigante de fundo). Real Madrid foi o primeiro; outros temas de
+// clube fixos podem entrar aqui depois.
+const THEME_FOOTER_BRAND = { realmadrid: 'Real Madrid' };
+
 function updateThemeWatermark(id) {
   const el = document.getElementById('themeWatermark');
+  const brandEl = document.getElementById('footerBrand');
+  if (brandEl) brandEl.textContent = THEME_FOOTER_BRAND[id] || 'FC 26 Arena';
   if (!el) return;
   const img  = document.getElementById('themeWatermarkImg');
   const text = document.getElementById('themeWatermarkText');
 
+  // Real Madrid não usa mais o escudo gigante de fundo — vira tema
+  // "vitrine" (paleta clara + nome discreto no rodapé, ver
+  // THEME_FOOTER_BRAND acima), então sai da lista de watermark.
   const watermarkTeam = id === 'meutime'   ? teams.find(t => t.n === cfg.favoriteTeam)
-                      : id === 'realmadrid' ? teams.find(t => t.n === 'Real Madrid')
                       : id === 'liverpool'  ? teams.find(t => t.n === 'Liverpool')
                       : null;
 
