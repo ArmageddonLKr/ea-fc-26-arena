@@ -865,21 +865,38 @@ function applyThemeAndFont() {
   updateThemeWatermark(id);
 }
 
-// Nome do clube exibido no rodapé (linhas divisórias + texto), no lugar do
-// "FC 26 Arena" padrão — usado pelos temas "vitrine" (marca fixa do clube,
-// sem escudo gigante de fundo atrás). Real Madrid foi o primeiro.
-const THEME_FOOTER_BRAND = { realmadrid: 'Real Madrid', barcelona: 'FC Barcelona' };
+// Marca do clube no rodapé, no lugar do "FC 26 Arena" padrão — usada pelos
+// temas "vitrine" (fundo/identidade próprios do clube, sem escudo gigante
+// atrás). `tagline` é opcional (frase/hino do clube, ganha uma linha
+// própria); `keepDefault` mantém "FC 26 Arena · Competitive Engine · 2026"
+// como legenda embaixo, pra quando a marca do clube é um acréscimo, não
+// uma substituição total (caso do Liverpool, com "You'll Never Walk Alone").
+const THEME_FOOTER = {
+  realmadrid: { name: 'Real Madrid' },
+  barcelona:  { name: 'FC Barcelona' },
+  liverpool:  { name: 'Liverpool', tagline: "You'll Never Walk Alone", keepDefault: true },
+};
 
 // Takeover total da marca do topo (ícone + nome), no lugar da wordmark
 // "FC 26 Arena" — só pros temas de clube que assumem a identidade inteira
-// do app (Real Madrid manteve a wordmark, só recolorida; Barcelona troca
-// de vez, ver .topbar-brand-themed em main.css).
+// do app (Real Madrid e Liverpool mantêm a wordmark, só recolorida;
+// Barcelona troca de vez, ver .topbar-brand-themed em main.css).
 const THEME_TOPBAR_BRAND = { barcelona: 'FC Barcelona' };
 
 function updateThemeWatermark(id) {
   const el = document.getElementById('themeWatermark');
-  const brandEl = document.getElementById('footerBrand');
-  if (brandEl) brandEl.textContent = THEME_FOOTER_BRAND[id] || 'FC 26 Arena';
+  const footer = THEME_FOOTER[id];
+
+  const brandEl    = document.getElementById('footerBrand');
+  const taglineRow = document.getElementById('footerTaglineRow');
+  const taglineEl  = document.getElementById('footerTagline');
+  const subEl      = document.getElementById('footerSub');
+  if (brandEl) brandEl.textContent = footer ? footer.name : 'FC 26 Arena';
+  if (taglineRow) taglineRow.style.display = footer && footer.tagline ? 'flex' : 'none';
+  if (taglineEl && footer && footer.tagline) taglineEl.textContent = footer.tagline;
+  if (subEl) subEl.textContent = footer && footer.keepDefault
+    ? 'FC 26 Arena · Competitive Engine · 2026'
+    : 'Competitive Engine · 2026';
 
   const wordmarkEl = document.getElementById('topbarWordmark');
   const themedEl   = document.getElementById('topbarBrandThemed');
@@ -895,12 +912,10 @@ function updateThemeWatermark(id) {
   const img  = document.getElementById('themeWatermarkImg');
   const text = document.getElementById('themeWatermarkText');
 
-  // Real Madrid e Barcelona não usam mais o escudo gigante de fundo —
-  // viram tema "vitrine" (paleta própria + marca discreta, ver
-  // THEME_FOOTER_BRAND/THEME_TOPBAR_BRAND acima), então saem da lista.
-  const watermarkTeam = id === 'meutime'   ? teams.find(t => t.n === cfg.favoriteTeam)
-                      : id === 'liverpool'  ? teams.find(t => t.n === 'Liverpool')
-                      : null;
+  // Real Madrid, Barcelona e Liverpool não usam mais o escudo gigante de
+  // fundo — viram tema "vitrine" (paleta própria + marca no rodapé/topo,
+  // ver THEME_FOOTER/THEME_TOPBAR_BRAND acima), então saem da lista.
+  const watermarkTeam = id === 'meutime' ? teams.find(t => t.n === cfg.favoriteTeam) : null;
 
   if (watermarkTeam) {
     const url = getLogoUrl(watermarkTeam);

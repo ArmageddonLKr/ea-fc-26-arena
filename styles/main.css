@@ -473,6 +473,26 @@ html[data-theme="liverpool"] .tab-bar { border-top-color: rgba(200,16,46,.4); }
 html[data-theme="liverpool"] .tab-item.active { color: var(--gold); }
 html[data-theme="liverpool"] .tab-item.active svg { filter: drop-shadow(0 0 7px rgba(246,235,97,.6)); }
 html[data-theme="liverpool"] .card { box-shadow: 0 0 0 1px rgba(246,235,97,.10), 0 14px 44px rgba(80,0,10,.55); }
+/* Botões secundários da Home viram sólidos (Picks & Bans mais escuro,
+   Modo Torneio num vermelho médio) em vez do outline sutil padrão. */
+html[data-theme="liverpool"] .btn-secondary-p2 {
+  background: var(--surface3);
+  color: var(--gold);
+  border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+}
+html[data-theme="liverpool"] .btn-secondary-neutral {
+  background: color-mix(in srgb, var(--accent) 70%, var(--surface3) 30%);
+  color: var(--gold);
+  border: 1px solid color-mix(in srgb, var(--gold) 25%, transparent);
+}
+/* A wordmark é desenhada no roxo padrão do app — vira vermelho/dourado
+   pra combinar com o resto do tema, em vez de destoar. */
+html[data-theme="liverpool"] .topbar-wordmark {
+  /* Zera a cor original (brightness 0 = silhueta preta) e recolore de
+     forma previsível pro vermelho do clube — girar só o matiz (hue-rotate)
+     dá resultado inconsistente quando a arte-fonte tem mais de uma cor. */
+  filter: brightness(0) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%);
+}
 
 /* ---- Time do Coração — a atmosfera inteira segue --accent/--accent2/
    --accent3, que o JS injeta com as cores OFICIAIS reais (c/c2/c3) de
@@ -980,6 +1000,7 @@ html[data-theme="realmadrid"] .topbar-wordmark {
 
 /* ===== LOBBY / HOME ===== */
 .lobby-subtitle {
+  display: flex; align-items: center; gap: 12px; justify-content: center;
   font-family: var(--font-head);
   font-size: 0.6rem;
   font-weight: 700;
@@ -987,6 +1008,12 @@ html[data-theme="realmadrid"] .topbar-wordmark {
   text-transform: uppercase;
   color: var(--muted);
   text-align: center;
+}
+.lobby-subtitle::before, .lobby-subtitle::after {
+  content: '';
+  flex: 1; max-width: 46px; height: 1px;
+  background: currentColor;
+  opacity: 0.35;
 }
 
 .player-slots {
@@ -2481,6 +2508,27 @@ footer {
 .footer-line { flex: 0 0 32px; height: 1px; background: currentColor; opacity: 0.35; }
 #footerBrand { font-size: 0.65rem; font-weight: 700; letter-spacing: 3px; }
 #footerSub { font-size: 0.58rem; letter-spacing: 2px; }
+.footer-tagline-row {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-bottom: 6px;
+}
+#footerTagline { font-size: 0.58rem; font-weight: 700; letter-spacing: 2px; }
+
+/* Liverpool ganha um lockup de marca próprio (grande, na cor do clube) em
+   cima do rodapé padrão — "You'll Never Walk Alone" é peso demais pro
+   footer discreto genérico, então o "FC 26 Arena" original continua
+   embaixo (ver keepDefault em THEME_FOOTER, app.js). */
+html[data-theme="liverpool"] #footerBrand {
+  font-size: 2.1rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: var(--accent);
+}
+html[data-theme="liverpool"] .footer-brand-row .footer-line,
+html[data-theme="liverpool"] .footer-tagline-row .footer-line {
+  background: var(--gold);
+}
+html[data-theme="liverpool"] #footerTagline { color: var(--gold); }
 
 /* ===== VICTORY OVERLAY ===== */
 #victoryOverlay {
@@ -2962,6 +3010,17 @@ body.ucl-mode .topbar {
 }
 .btn-enter.btn-ucl:active {
   background: #142a6e;
+}
+/* Liverpool inverte o padrão navy+dourado do botão UEFA — dourado sólido
+   com texto/ícone vermelho, pra não competir com o vermelho já dominante
+   no resto da Home. */
+html[data-theme="liverpool"] .btn-enter.btn-ucl {
+  background: var(--gold);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+html[data-theme="liverpool"] .btn-enter.btn-ucl:active {
+  background: var(--gold2);
 }
 
 /* Badge da competição ativa no header da arena — cor dinâmica */
