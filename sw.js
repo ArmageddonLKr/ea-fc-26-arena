@@ -1,15 +1,11 @@
-const CACHE = 'eafc26-v27';
+const CACHE = 'eafc26-v28';
 const ASSETS = [
   './',
   './index.html',
   './admin.html',
   './manifest.json',
   './styles/main.css',
-  './js/teams.js',
   './js/app.js',
-  './js/admin.js',
-  './js/stats.js',
-  './js/tournament.js',
   './teams.json',
   './assets/logo.svg',
   './assets/fonts/rajdhani-500.woff2',
