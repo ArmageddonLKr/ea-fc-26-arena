@@ -558,9 +558,13 @@ const MEUTIME_OVERRIDES = {
   'Al-Ahli':             { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
   'Al-Ittihad':          { bg: ['tint','c',0.18], destaque:'c',  dInk:'k', bInk:'w' },
 
-  'Boca Juniors':        { bg: ['tint','c',0.18], destaque:'c2', dInk:'k', bInk:'w' },
+  // Metade-metade azul/amarelo — igual ao tratamento do Barcelona, reaproveita
+  // o mesmo split diagonal em vez de um tingido genérico.
+  'Boca Juniors':        { special: 'split' },
   'Estudiantes':         { bg: ['tint','c',0.18], destaque:'c',  dInk:'w', bInk:'w' },
-  'River Plate':         { bg: ['solid','white'], destaque:'c2', dInk:'w', bInk:'k' },
+  // Faixa vermelha diagonal sobre branco — o uniforme mais reconhecível do
+  // futebol argentino, não dá pra reduzir a um "tingido genérico".
+  'River Plate':         { special: 'sash' },
   'Racing Club':         { bg: ['tint','c',0.18], destaque:'#3E7FA8', dInk:'w', bInk:'w' },
   'Rosario Central':     { bg: ['tint','c',0.18], destaque:'c2', dInk:'k', bInk:'w' },
 
@@ -681,6 +685,22 @@ function computeOverrideTheme(team) {
     };
   }
 
+  if (ov.special === 'sash') {
+    // Boca e River jogam com padrão de camisa que uma tinta genérica não
+    // captura (faixa amarela do Boca, faixa vermelha diagonal do River) —
+    // fundo sólido na cor 1 (base do uniforme) com uma faixa diagonal
+    // sólida na cor 2 cruzando a tela, sem gradiente (ver body.meutime-sash
+    // em main.css).
+    const base = team.c || '#ffffff';
+    const sash = team.c2 || team.c;
+    return {
+      bg: base,
+      isSashBg: true,
+      sashBase: base, sashColor: sash,
+      destaque: sash, destaqueInk: pickInk(sash), bgInk: pickInk(base),
+    };
+  }
+
   const [mode, ...args] = ov.bg;
   let bg;
   if (mode === 'tint') {
@@ -752,10 +772,11 @@ function applyThemeAndFont() {
     // fórmula — nenhum time fica sem tema.
     const override = team ? computeOverrideTheme(team) : null;
 
-    let bg, destaque, destaqueInk, bgInk, isSplitBg = false;
+    let bg, destaque, destaqueInk, bgInk, isSplitBg = false, isSashBg = false;
     if (override) {
       ({ bg, destaque, destaqueInk, bgInk } = override);
       isSplitBg = !!override.isSplitBg;
+      isSashBg  = !!override.isSashBg;
     } else {
       const categoria = classifyClubColor(c);
       if (categoria === 'clara-neutra') {
@@ -777,15 +798,15 @@ function applyThemeAndFont() {
     root.setProperty('--text',        bgInk);        // texto sobre o fundo do app — crítico pra times com fundo branco (Real Madrid, Tottenham, Fulham...)
 
     root.setProperty('--bg', bg);
-    if (!isSplitBg) {
+    if (!isSplitBg && !isSashBg) {
       root.setProperty('--surface',  mixHex('#0d0d11', c, 0.14));
       root.setProperty('--surface2', mixHex('#131318', destaque, 0.14));
       root.setProperty('--surface3', mixHex('#1a1a22', destaque, 0.13));
       root.setProperty('--border',   mixHex('#24242e', destaque, 0.42));
       root.setProperty('--border2',  mixHex('#242440', destaque, 0.42));
-      document.body.classList.remove('meutime-split');
-    } else {
-      // Barcelona: fundo é dividido em cor sólida (sem gradiente) via
+      document.body.classList.remove('meutime-split', 'meutime-sash');
+    } else if (isSplitBg) {
+      // Barcelona/Boca: fundo é dividido em cor sólida (sem gradiente) via
       // clip-path — ver body.meutime-split em main.css. Superfícies ficam
       // num preto neutro sóbrio por cima, sem competir com o split.
       root.setProperty('--surface',  'rgba(5,5,8,0.82)');
@@ -796,6 +817,20 @@ function applyThemeAndFont() {
       root.setProperty('--split-c1', override.splitC1);
       root.setProperty('--split-c2', override.splitC2);
       document.body.classList.add('meutime-split');
+      document.body.classList.remove('meutime-sash');
+    } else {
+      // River: faixa diagonal sólida sobre o fundo base — ver
+      // body.meutime-sash em main.css. Mesmo tratamento neutro de
+      // superfícies do split, pra não competir com a faixa.
+      root.setProperty('--surface',  'rgba(5,5,8,0.82)');
+      root.setProperty('--surface2', 'rgba(5,5,8,0.9)');
+      root.setProperty('--surface3', 'rgba(5,5,8,0.96)');
+      root.setProperty('--border',   'rgba(255,255,255,0.16)');
+      root.setProperty('--border2',  'rgba(255,255,255,0.24)');
+      root.setProperty('--sash-base',  override.sashBase);
+      root.setProperty('--sash-color', override.sashColor);
+      document.body.classList.add('meutime-sash');
+      document.body.classList.remove('meutime-split');
     }
 
     root.setProperty('--gold',      destaque);
@@ -817,7 +852,7 @@ function applyThemeAndFont() {
     root.removeProperty('--surface3');
     root.removeProperty('--border');
     root.removeProperty('--border2');
-    document.body.classList.remove('meutime-split');
+    document.body.classList.remove('meutime-split', 'meutime-sash');
   }
 
   const metaTheme = document.querySelector('meta[name="theme-color"]');
@@ -1014,6 +1049,16 @@ function setFavoriteTeam(name) {
 /* ===== HELPERS DE COR / LOGO ===== */
 function getOVR(t) {
   return t.ovr != null ? t.ovr : Math.round((t.a + t.m + t.d) / 3);
+}
+
+// Padrão de vibração por peso do confronto — mesmos cortes de tier do
+// badge de OVR (Base <75 · Gold 75-79 · Elite 80-84 · Hero 85+), do mais
+// discreto ao mais forte.
+function vibrationForOVR(ovr) {
+  if (ovr >= 85) return [35, 45, 35, 45, 70];
+  if (ovr >= 80) return [25, 35, 25, 35];
+  if (ovr >= 75) return [20, 30, 20];
+  return [15];
 }
 
 function getLogoUrl(t) {
@@ -1701,6 +1746,10 @@ function _finishReveal(t1, t2, c1, c2) {
     showToast(`⭐ ${favTeam.n} entrou em campo!`, 'ok', favAccent);
   } else {
     uclMode ? SFX.revealUCL() : SFX.reveal();
+    // Vibração com peso — o confronto mais forte dos dois times define o
+    // "punch" tátil, reforçando a hierarquia de OVR que já existe nas
+    // barras de stat e nos tiers de badge (Base/Gold/Elite/Hero).
+    if (navigator.vibrate) navigator.vibrate(vibrationForOVR(Math.max(getOVR(t1), getOVR(t2))));
   }
 
   setTimeout(() => {
@@ -1823,9 +1872,15 @@ function renderCard(num, team, owner) {
   const nameEl = document.getElementById(`name${num}`);
   if (nameEl) nameEl.textContent = team.n;
 
-  // Estrela
+  // Estrela — entra com um leve atraso depois do nome, tipo apresentação
+  // de escalação, em vez de aparecer junto com o resto do card de uma vez.
   const starEl = document.getElementById(`star${num}`);
-  if (starEl) starEl.textContent = team.s || '—';
+  if (starEl) {
+    starEl.textContent = team.s || '—';
+    starEl.style.animation = 'none';
+    void starEl.offsetWidth;
+    starEl.style.animation = 'starReveal 0.32s ease-out 0.18s both';
+  }
 
   // Stats — anima as barras
   const pct = v => `${Math.round(Math.max(0, Math.min(100, ((v-60)/39)*100)))}%`;
