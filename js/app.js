@@ -426,6 +426,7 @@ const THEMES = [
   { id: 'ouroPremium', label: 'Ouro Premium',    bg: '#f7f6f2', accent: '#febe10' },
   { id: 'pretoDourado',label: 'Preto & Dourado', bg: '#000000', accent: '#e9c14d' },
   { id: 'realmadrid',  label: 'Real Madrid',     bg: '#050912', accent: '#f4f4f4' },
+  { id: 'barcelona',   label: 'Barcelona',       bg: '#0d1b4a', accent: '#edbb00' },
   { id: 'liverpool',   label: 'Liverpool',       bg: '#0a0303', accent: '#c8102e' },
   { id: 'meutime',     label: 'Time do Coração', bg: '#060608', accent: '#8b5cf6' },
 ];
@@ -864,26 +865,39 @@ function applyThemeAndFont() {
   updateThemeWatermark(id);
 }
 
-// Escudo + nome gigantes atrás de tudo, tipo pôster de estádio — só nos
-// temas realmente ligados a um clube específico (Real Madrid, Liverpool
-// e Time do Coração, este com o time favorito escolhido pelo usuário).
 // Nome do clube exibido no rodapé (linhas divisórias + texto), no lugar do
 // "FC 26 Arena" padrão — usado pelos temas "vitrine" (marca fixa do clube,
-// sem escudo gigante de fundo). Real Madrid foi o primeiro; outros temas de
-// clube fixos podem entrar aqui depois.
-const THEME_FOOTER_BRAND = { realmadrid: 'Real Madrid' };
+// sem escudo gigante de fundo atrás). Real Madrid foi o primeiro.
+const THEME_FOOTER_BRAND = { realmadrid: 'Real Madrid', barcelona: 'FC Barcelona' };
+
+// Takeover total da marca do topo (ícone + nome), no lugar da wordmark
+// "FC 26 Arena" — só pros temas de clube que assumem a identidade inteira
+// do app (Real Madrid manteve a wordmark, só recolorida; Barcelona troca
+// de vez, ver .topbar-brand-themed em main.css).
+const THEME_TOPBAR_BRAND = { barcelona: 'FC Barcelona' };
 
 function updateThemeWatermark(id) {
   const el = document.getElementById('themeWatermark');
   const brandEl = document.getElementById('footerBrand');
   if (brandEl) brandEl.textContent = THEME_FOOTER_BRAND[id] || 'FC 26 Arena';
+
+  const wordmarkEl = document.getElementById('topbarWordmark');
+  const themedEl   = document.getElementById('topbarBrandThemed');
+  const topbarBrand = THEME_TOPBAR_BRAND[id];
+  if (wordmarkEl) wordmarkEl.style.display = topbarBrand ? 'none' : '';
+  if (themedEl)   themedEl.style.display   = topbarBrand ? 'flex' : 'none';
+  if (topbarBrand) {
+    const nameEl = document.getElementById('topbarBrandName');
+    if (nameEl) nameEl.textContent = topbarBrand.toUpperCase();
+  }
+
   if (!el) return;
   const img  = document.getElementById('themeWatermarkImg');
   const text = document.getElementById('themeWatermarkText');
 
-  // Real Madrid não usa mais o escudo gigante de fundo — vira tema
-  // "vitrine" (paleta clara + nome discreto no rodapé, ver
-  // THEME_FOOTER_BRAND acima), então sai da lista de watermark.
+  // Real Madrid e Barcelona não usam mais o escudo gigante de fundo —
+  // viram tema "vitrine" (paleta própria + marca discreta, ver
+  // THEME_FOOTER_BRAND/THEME_TOPBAR_BRAND acima), então saem da lista.
   const watermarkTeam = id === 'meutime'   ? teams.find(t => t.n === cfg.favoriteTeam)
                       : id === 'liverpool'  ? teams.find(t => t.n === 'Liverpool')
                       : null;

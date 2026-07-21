@@ -280,6 +280,72 @@
   --gold:#f0c040; --gold2:#ffd968; --gold-ink:#16265e; --green:#0b9e5a;
   --shadow-card: 0 4px 18px rgba(20,30,80,0.12);
 }
+/* Barcelona — tema "vitrine" de takeover total: fundo dividido nas 2 cores
+   oficiais (blau/grana, mesmas de teams.json), dourado do escudo (c3) como
+   destaque, marca própria no topo em vez de "FC 26 Arena" (ver
+   THEME_TOPBAR_BRAND/THEME_FOOTER_BRAND em app.js). --p1/--p2 usam um
+   vermelho/azul mais vivos que o fundo, só pra identidade de jogador (o
+   mesmo papel que já cumprem em qualquer outro tema). */
+[data-theme="barcelona"] {
+  --bg:#0d1b4a; --surface:#101f4f; --surface2:#152657; --surface3:#1c3066;
+  --border:#2a3c74; --border2:#3a4d8a;
+  --text:#f5f2ff; --text2:#c9c4e8; --muted:#8a86b8;
+  --accent:#a50044; --accent2:#004d98; --accent-ink:#edbb00;
+  --p1:#ff3b57; --p2:#3ea0ff;
+  --gold:#edbb00; --gold2:#ffd84d; --gold-ink:#1a1030; --green:#22c55e;
+  --split-c1:#004d98; --split-c2:#a50044;
+  --shadow-card: 0 4px 18px rgba(10,15,50,0.35);
+}
+html[data-theme="barcelona"] body::before,
+html[data-theme="barcelona"] body::after {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+}
+html[data-theme="barcelona"] body::before {
+  background: var(--split-c1);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+html[data-theme="barcelona"] body::after {
+  background: var(--split-c2);
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+html[data-theme="barcelona"] .tab-bar {
+  background: linear-gradient(90deg, var(--split-c2) 50%, var(--split-c1) 50%);
+  border-top-color: color-mix(in srgb, var(--gold) 35%, transparent);
+}
+html[data-theme="barcelona"] .tab-item { color: rgba(255,255,255,0.72); }
+html[data-theme="barcelona"] .tab-item.active { color: var(--gold); }
+html[data-theme="barcelona"] .tab-item.active svg { filter: drop-shadow(0 0 6px color-mix(in srgb, var(--gold) 60%, transparent)); }
+html[data-theme="barcelona"] .tab-item::before { background: var(--gold); }
+html[data-theme="barcelona"] .topbar-btn { border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); }
+/* Botão de sorteio dividido na cor dos dois jogadores (P1/P2), não do
+   clube — reforça o "duelo" antes mesmo de sortear. */
+html[data-theme="barcelona"] .btn-draw {
+  background: linear-gradient(90deg, var(--p1) 50%, var(--p2) 50%);
+  color: var(--gold-ink);
+}
+/* Slots de jogador ganham um tingido sutil na própria cor (P1/P2), não só
+   a linha de topo — reforça o "lado vermelho / lado azul" já na Home. */
+html[data-theme="barcelona"] #p1Slot {
+  background: color-mix(in srgb, var(--p1) 16%, var(--surface));
+  border-color: color-mix(in srgb, var(--p1) 42%, transparent);
+}
+html[data-theme="barcelona"] #p2Slot {
+  background: color-mix(in srgb, var(--p2) 16%, var(--surface));
+  border-color: color-mix(in srgb, var(--p2) 42%, transparent);
+}
+/* Botões secundários da Home viram sólidos nas 2 cores do clube — no
+   resto dos temas eles são um outline sutil (ver .btn-secondary-*). */
+html[data-theme="barcelona"] .btn-secondary-p2 {
+  background: var(--split-c1);
+  color: var(--gold);
+  border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+}
+html[data-theme="barcelona"] .btn-secondary-neutral {
+  background: color-mix(in srgb, var(--split-c2) 80%, black 12%);
+  color: var(--gold);
+  border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+}
+
 /* Inspirado no Liverpool — vermelho de Anfield com trim dourado do escudo */
 [data-theme="liverpool"] {
   --bg:#0a0303; --surface:#170707; --surface2:#210a0a; --surface3:#2e0d0d;
@@ -770,6 +836,35 @@ html[data-theme="realmadrid"] .topbar-wordmark {
   opacity: 0.85;
 }
 
+/* Marca temática do topo — substitui a wordmark "FC 26 Arena" pelo nome
+   do clube nos temas "vitrine" de takeover total (ver THEME_TOPBAR_BRAND
+   em app.js). Ícone hexagonal dividido nas 2 cores oficiais, sem gradiente
+   de verdade (hard-stop no meio do linear-gradient = duas metades sólidas). */
+.topbar-brand-themed {
+  display: flex; align-items: center; gap: 10px;
+}
+.topbar-brand-icon {
+  width: 34px; height: 34px; flex-shrink: 0;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  background: linear-gradient(135deg, var(--split-c1, var(--accent)) 50%, var(--split-c2, var(--accent2)) 50%);
+}
+.topbar-brand-text { display: flex; flex-direction: column; line-height: 1.05; }
+.topbar-brand-name {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 1.02rem;
+  letter-spacing: 1px;
+  color: var(--gold);
+}
+.topbar-brand-sub {
+  font-family: var(--font-head);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent2);
+}
+
 .topbar-btn {
   display: flex; align-items: center; gap: 5px;
   background: var(--accent);
@@ -1009,6 +1104,20 @@ html[data-theme="realmadrid"] .topbar-wordmark {
 }
 
 .btn-enter:active { opacity: 0.82; transform: scale(0.982); }
+
+/* Variante "outline" na cor do P2 — Picks & Bans, mesmo tratamento sutil
+   em todos os temas por padrão (temas de clube podem forçar sólido). */
+.btn-secondary-p2 {
+  background: color-mix(in srgb, var(--p2) 8%, transparent);
+  color: var(--p2);
+  border: 1px solid color-mix(in srgb, var(--p2) 22%, transparent);
+}
+/* Variante neutra — Modo Torneio, na cor de superfície do tema. */
+.btn-secondary-neutral {
+  background: var(--surface2);
+  color: var(--text2);
+  border: 1px solid var(--border2);
+}
 
 /* ===== SCORE PANEL ===== */
 .score-panel {
