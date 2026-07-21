@@ -1507,18 +1507,149 @@ function startDraft() {
   roundCount++;
 
   if (navigator.vibrate) navigator.vibrate([18]);
-  _suspenseReveal(t1, t2);
+  _suspenseReveal(t1, t2, base);
 }
 
-/* Revelação instantânea: o par já foi calculado no ato do clique, então o
-   time entra em campo na hora — zero espera entre o sorteio e a exibição.
-   O impacto visual vem do reveal-sweep (brilho) e do cardIn (entrada com
-   leve "bounce"), ambos decorativos e não bloqueiam nada. */
-function _suspenseReveal(t1, t2) {
+/* ===== CLÁSSICOS CURADOS =====
+ * Confrontos com peso histórico real — curado à mão, não gerado, cobrindo
+ * só rivalidades que de fato existem na base de 90 clubes. */
+const CLASSIC_RIVALRIES = [
+  { teams: ['Real Madrid', 'Barcelona'],             label: 'EL CLÁSICO' },
+  { teams: ['Boca Juniors', 'River Plate'],          label: 'SUPERCLÁSICO' },
+  { teams: ['Inter Milan', 'Milan'],                 label: 'DERBY DELLA MADONNINA' },
+  { teams: ['Roma', 'Lazio'],                        label: 'DERBY DELLA CAPITALE' },
+  { teams: ['Liverpool', 'Everton'],                 label: 'MERSEYSIDE DERBY' },
+  { teams: ['Man City', 'Man Utd'],                  label: 'MANCHESTER DERBY' },
+  { teams: ['Arsenal', 'Tottenham'],                 label: 'NORTH LONDON DERBY' },
+  { teams: ['Galatasaray', 'Fenerbahçe'],            label: 'KITA YAKA DERBİSİ' },
+  { teams: ['Benfica', 'Sporting CP'],               label: 'CLÁSSICO DE LISBOA' },
+  { teams: ['Porto', 'Benfica'],                     label: 'O CLÁSSICO' },
+  { teams: ['PSG', 'Marseille'],                      label: 'LE CLASSIQUE' },
+  { teams: ['Bayern München', 'Borussia Dortmund'],  label: 'DER KLASSIKER' },
+];
+
+function detectClassico(t1, t2) {
+  return CLASSIC_RIVALRIES.find(r =>
+    (r.teams[0] === t1.n && r.teams[1] === t2.n) ||
+    (r.teams[0] === t2.n && r.teams[1] === t1.n)
+  ) || null;
+}
+
+function showClassicoBadge(entry) {
+  const label = document.querySelector('.vs-label');
+  const sep   = document.querySelector('.vs-separator');
+  if (label && label.dataset.original == null) label.dataset.original = label.textContent;
+  if (label) label.textContent = `🔥 ${entry.label}`;
+  if (sep) sep.classList.add('vs-classico');
+}
+
+function hideClassicoBadge() {
+  const label = document.querySelector('.vs-label');
+  const sep   = document.querySelector('.vs-separator');
+  if (label && label.dataset.original != null) {
+    label.textContent = label.dataset.original;
+    delete label.dataset.original;
+  }
+  if (sep) sep.classList.remove('vs-classico');
+}
+
+/* ===== SUSPENSE DO SORTEIO =====
+ * O par (t1/t2) já foi decidido via crypto/fairPick no clique — o spin
+ * abaixo é 100% cosmético: troca "decoys" com Math.random (nunca reabre o
+ * sorteio de verdade) até travar exatamente no resultado que já estava
+ * decidido. Duração cresce com o tamanho do pool (pool maior = spin mais
+ * longo, reforçando "quanto maior o pool, mais chance de qualquer um").
+ * Dá pra pular tocando/clicando em qualquer um dos dois cards. */
+let _spinToken = 0;
+
+function _stopSpin(c1, c2) {
+  [c1, c2].forEach(c => { if (c) c.classList.remove('card-spinning'); });
+}
+
+function renderSpinFrame(card, team) {
+  if (!card || !team) return;
+  const num = card.id === 'c2' ? 2 : 1;
+  renderLogoInto(document.getElementById(`logoWrap${num}`), team);
+  const nameEl   = document.getElementById(`name${num}`);
+  const leagueEl = document.getElementById(`league${num}`);
+  if (nameEl)   nameEl.textContent   = team.n;
+  if (leagueEl) leagueEl.textContent = team.league || '';
+  card.style.setProperty('--team-color', team.c || '#8b5cf6');
+}
+
+function _suspenseReveal(t1, t2, basePool) {
   const c1 = document.getElementById('c1');
   const c2 = document.getElementById('c2');
-  [c1, c2].forEach(c => { if (c) c.classList.remove('card-spinning', 'card-locked', 'reveal-sweep'); });
-  _finishReveal(t1, t2, c1, c2);
+  const token = ++_spinToken;
+
+  [c1, c2].forEach(c => { if (c) c.classList.remove('reveal-sweep'); });
+  _stopSpin(c1, c2);
+  hideClassicoBadge();
+
+  const classico = detectClassico(t1, t2);
+  if (classico) showClassicoBadge(classico);
+
+  const favTeam = !cfg.favoriteTeam ? null
+    : (t1.n === cfg.favoriteTeam ? t1 : (t2.n === cfg.favoriteTeam ? t2 : null));
+
+  const source   = (basePool && basePool.length) ? basePool : teams;
+  const decoyPool = source.filter(t => t.n !== t1.n && t.n !== t2.n);
+  const duration  = Math.max(550, Math.min(2200, 520 + source.length * 11));
+
+  [c1, c2].forEach(c => { if (c) { c.classList.add('card-spinning'); c.title = 'Toque pra pular'; } });
+
+  let skipped = false;
+  const onSkip = () => { skipped = true; };
+  if (c1) c1.addEventListener('click', onSkip, { once: true });
+  if (c2) c2.addEventListener('click', onSkip, { once: true });
+
+  const start = performance.now();
+  const lastSwap = { 1: -Infinity, 2: -Infinity };
+
+  function frame(now) {
+    if (token !== _spinToken) return; // outro sorteio assumiu no meio do caminho
+    const elapsed  = now - start;
+    const progress = Math.min(1, elapsed / duration);
+
+    if (skipped || progress >= 1) { settle(); return; }
+
+    // desaceleração tipo caça-níquel: intervalo entre trocas cresce de
+    // ~55ms (rápido) até ~265ms (quase parando) conforme progress→1
+    const eased    = 1 - Math.pow(1 - progress, 3);
+    const interval = 55 + eased * 210;
+
+    [[1, t1, c1], [2, t2, c2]].forEach(([num, real, card]) => {
+      if (elapsed - lastSwap[num] < interval) return;
+      lastSwap[num] = elapsed;
+
+      // "Hesitação": se o time favorito É o resultado real daquele card,
+      // ele pode piscar como decoy perto do fim antes de travar de vez —
+      // puro efeito de tensão, o resultado já estava decidido desde o
+      // clique (não influencia o sorteio, só o que aparece no spin).
+      let decoy;
+      if (favTeam && real.n === favTeam.n && progress > 0.72 && progress < 0.9 && Math.random() < 0.4) {
+        decoy = favTeam;
+      } else if (decoyPool.length) {
+        decoy = decoyPool[Math.floor(Math.random() * decoyPool.length)];
+      } else {
+        decoy = real;
+      }
+      renderSpinFrame(card, decoy);
+      SFX.tick(progress);
+    });
+
+    requestAnimationFrame(frame);
+  }
+
+  function settle() {
+    if (c1) { c1.removeEventListener('click', onSkip); c1.removeAttribute('title'); }
+    if (c2) { c2.removeEventListener('click', onSkip); c2.removeAttribute('title'); }
+    _stopSpin(c1, c2);
+    _finishReveal(t1, t2, c1, c2);
+    if (classico) setTimeout(() => { if (token === _spinToken) hideClassicoBadge(); }, 1400);
+  }
+
+  requestAnimationFrame(frame);
 }
 
 /* Reveal final: injeta dados reais, dispara sweep de luz e som de impacto —
