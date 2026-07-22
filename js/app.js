@@ -157,11 +157,14 @@ const SFX = (() => {
       fire(cached('tick', buildTick), a.currentTime + 0.01, rate);
     },
 
-    // Slam único pesado: engrenagem trancando com eco industrial — largura estéreo
-    reveal() {
+    // Slam único pesado: engrenagem trancando com eco industrial — largura
+    // estéreo. weight/echo variam por tier de OVR (ver soundWeightForOVR) —
+    // um Hero 85+ bate mais grave e ressoa mais que um Base, reforçando a
+    // mesma hierarquia que já existe nas barras de stat e na vibração.
+    reveal(weight = 1.0, echo = 1.0) {
       const a = ctx(); if (!a) return;
       if (a.state === 'suspended') a.resume().catch(() => {});
-      const buf = cached('impact:1:1', () => buildImpact(1.0, 1.0));
+      const buf = cached(`impact:${weight}:${echo}`, () => buildImpact(weight, echo));
       const t0  = a.currentTime + 0.04;
       fire(buf, t0,        null, 0);
       fire(buf, t0 + 0.008, 1.0, -0.45);
@@ -219,7 +222,8 @@ const SFX = (() => {
     prewarm() {
       if (!ctx()) return;
       cached('tick', buildTick);
-      ['1:1','0.65:0','1.05:0.7','1.35:1','0.50:0','0.72:0','0.94:0','1.3:1','0.55:0.2','1.15:0.9']
+      ['1:1','0.65:0','1.05:0.7','1.35:1','0.50:0','0.72:0','0.94:0','1.3:1','0.55:0.2','1.15:0.9',
+       '0.75:0.3','0.95:0.6','1.15:0.85','1.4:1']
         .forEach(k => cached(`impact:${k}`, () => {
           const [w, e] = k.split(':').map(Number);
           return buildImpact(w, e);
@@ -1100,6 +1104,16 @@ function vibrationForOVR(ovr) {
   return [15];
 }
 
+// Peso/eco do impacto sonoro do reveal — mesmos cortes de tier acima, do
+// mais seco (Base) ao mais épico/grave (Hero), reforçando a hierarquia que
+// já existe nas barras de stat e na vibração.
+function soundWeightForOVR(ovr) {
+  if (ovr >= 85) return { weight: 1.4,  echo: 1.0 };
+  if (ovr >= 80) return { weight: 1.15, echo: 0.85 };
+  if (ovr >= 75) return { weight: 0.95, echo: 0.6 };
+  return { weight: 0.75, echo: 0.3 };
+}
+
 function getLogoUrl(t) {
   if (t && t.logo && t.logo !== '' && t.logo !== null) return t.logo;
   if (t && t.logoId) return `./assets/logos/${t.logoId}`;
@@ -1784,11 +1798,17 @@ function _finishReveal(t1, t2, c1, c2) {
     launchConfetti([favTeam.c || '#f0c040', favTeam.c2 || '#ffd700', favAccent.accent], 90);
     showToast(`⭐ ${favTeam.n} entrou em campo!`, 'ok', favAccent);
   } else {
-    uclMode ? SFX.revealUCL() : SFX.reveal();
-    // Vibração com peso — o confronto mais forte dos dois times define o
-    // "punch" tátil, reforçando a hierarquia de OVR que já existe nas
-    // barras de stat e nos tiers de badge (Base/Gold/Elite/Hero).
-    if (navigator.vibrate) navigator.vibrate(vibrationForOVR(Math.max(getOVR(t1), getOVR(t2))));
+    // Som e vibração com peso — o confronto mais forte dos dois times
+    // define o "punch" tátil/sonoro, reforçando a hierarquia de OVR que já
+    // existe nas barras de stat e nos tiers de badge (Base/Gold/Elite/Hero).
+    const topOVR = Math.max(getOVR(t1), getOVR(t2));
+    if (uclMode) {
+      SFX.revealUCL();
+    } else {
+      const { weight, echo } = soundWeightForOVR(topOVR);
+      SFX.reveal(weight, echo);
+    }
+    if (navigator.vibrate) navigator.vibrate(vibrationForOVR(topOVR));
   }
 
   setTimeout(() => {
