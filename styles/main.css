@@ -494,6 +494,69 @@ html[data-theme="liverpool"] .topbar-wordmark {
   filter: brightness(0) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%);
 }
 
+/* ---- Bayern de Munique — vermelho+azul do escudo, "raios" elétricos
+   cruzando o fundo em vez do campo de partículas padrão. Nome do clube
+   fixo no topo (.theme-title-bar), não no rodapé — ver THEME_HEADER_BRAND
+   em app.js. */
+[data-theme="bayern"] {
+  --bg:#0a0303; --surface:#170707; --surface2:#210a0a; --surface3:#2e0d0d;
+  --border:#3d1418; --border2:#521a20;
+  --text:#fff5f5; --text2:#e3aeb0; --muted:#946060;
+  --accent:#dc052d; --accent2:#0066b2; --accent-ink:#ffffff;
+  --p1:#e8112d; --p2:#1e6bb8;
+  --gold:#ffffff; --gold2:#f5c5c9; --gold-ink:#0a0303; --green:#22c55e;
+}
+html[data-theme="bayern"] body {
+  background:
+    radial-gradient(ellipse 70% 40% at 100% -6%, rgba(220,5,45,0.22) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 35% at 0% 108%, rgba(0,102,178,0.12) 0%, transparent 65%),
+    var(--bg);
+}
+html[data-theme="bayern"] body::before {
+  content: ''; position: fixed; top: -20%; left: -10%; width: 70%; height: 160%;
+  z-index: 0; pointer-events: none;
+  background: linear-gradient(100deg, transparent 42%, rgba(255,60,80,.12) 48%, rgba(255,255,255,.16) 50%, rgba(255,60,80,.12) 52%, transparent 58%);
+  animation: theme-beam-sweep 8s ease-in-out infinite;
+}
+html[data-theme="bayern"] body::after {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    radial-gradient(1.6px 1.6px at 14% 18%, rgba(255,255,255,.75), transparent),
+    radial-gradient(1.2px 1.2px at 30% 8%,  rgba(220,5,45,.7),    transparent),
+    radial-gradient(1.6px 1.6px at 70% 14%, rgba(255,255,255,.6), transparent),
+    radial-gradient(1.2px 1.2px at 86% 24%, rgba(220,5,45,.6),    transparent),
+    radial-gradient(1.4px 1.4px at 50% 60%, rgba(255,255,255,.4), transparent),
+    radial-gradient(1.2px 1.2px at 20% 75%, rgba(220,5,45,.45),   transparent);
+  animation: theme-drift 4.5s ease-in-out infinite alternate;
+}
+html[data-theme="bayern"] .topbar { border-bottom-color: rgba(220,5,45,.32); }
+html[data-theme="bayern"] .tab-bar { border-top-color: rgba(220,5,45,.35); }
+html[data-theme="bayern"] .tab-item.active { color: var(--accent); }
+html[data-theme="bayern"] .tab-item.active svg { filter: drop-shadow(0 0 7px rgba(220,5,45,.6)); }
+html[data-theme="bayern"] .card { box-shadow: 0 0 0 1px rgba(220,5,45,.10), 0 14px 44px rgba(40,0,5,.6); }
+/* Picks & Bans e Competições UEFA viram brancos sólidos com texto vermelho
+   — o branco do uniforme como "segunda cor de ação", não o navy+dourado
+   padrão do UEFA nem o outline sutil genérico. */
+html[data-theme="bayern"] .btn-enter.btn-ucl {
+  background: #ffffff;
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+html[data-theme="bayern"] .btn-enter.btn-ucl:active { background: #f2dcdc; }
+html[data-theme="bayern"] .btn-secondary-p2 {
+  background: #ffffff;
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+html[data-theme="bayern"] .btn-secondary-neutral {
+  background: color-mix(in srgb, var(--accent) 55%, var(--surface3) 45%);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+html[data-theme="bayern"] .topbar-wordmark {
+  filter: brightness(0) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%);
+}
+
 /* ---- Time do Coração — a atmosfera inteira segue --accent/--accent2/
    --accent3, que o JS injeta com as cores OFICIAIS reais (c/c2/c3) de
    QUALQUER um dos 88 times, não só os 4 clubes com CSS dedicado acima.
@@ -550,6 +613,8 @@ html[data-theme="meutime"] .btn-save {
 @media (prefers-reduced-motion: reduce) {
   html[data-theme="pretoDourado"] body::after,
   html[data-theme="liverpool"] body::after,
+  html[data-theme="bayern"] body::before,
+  html[data-theme="bayern"] body::after,
   html[data-theme="meutime"] body::after,
   html[data-theme="meutime"] body::before {
     animation: none;
@@ -1014,6 +1079,25 @@ html[data-theme="realmadrid"] .topbar-wordmark {
   flex: 1; max-width: 46px; height: 1px;
   background: currentColor;
   opacity: 0.35;
+}
+
+/* Título fixo do clube, embaixo do topbar — alternativa ao rodapé pros
+   temas "vitrine" que preferem a marca lá em cima (ver THEME_HEADER_BRAND
+   em app.js). Fica visível em qualquer aba, igual o topbar. */
+.theme-title-bar {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 10px 0 14px;
+  font-family: var(--font-head);
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.theme-title-line {
+  flex: 1; max-width: 70px; height: 1px;
+  background: currentColor;
+  opacity: 0.4;
 }
 
 .player-slots {
