@@ -432,6 +432,7 @@ const THEMES = [
   { id: 'realmadrid',  label: 'Real Madrid',     bg: '#050912', accent: '#f4f4f4' },
   { id: 'barcelona',   label: 'Barcelona',       bg: '#0d1b4a', accent: '#edbb00' },
   { id: 'liverpool',   label: 'Liverpool',       bg: '#0a0303', accent: '#c8102e' },
+  { id: 'bayern',      label: 'Bayern de Munique', bg: '#0a0303', accent: '#dc052d' },
   { id: 'meutime',     label: 'Time do Coração', bg: '#060608', accent: '#8b5cf6' },
 ];
 
@@ -887,6 +888,11 @@ const THEME_FOOTER = {
 // Barcelona troca de vez, ver .topbar-brand-themed em main.css).
 const THEME_TOPBAR_BRAND = { barcelona: 'FC Barcelona' };
 
+// Terceira opção de "vitrine": nome do clube fixo embaixo do topbar (visível
+// em qualquer aba), em vez do rodapé ou de tomar conta do topo inteiro —
+// caso do Bayern, ver .theme-title-bar em main.css.
+const THEME_HEADER_BRAND = { bayern: 'Bayer de Munique' };
+
 function updateThemeWatermark(id) {
   const el = document.getElementById('themeWatermark');
   const footer = THEME_FOOTER[id];
@@ -911,6 +917,12 @@ function updateThemeWatermark(id) {
     const nameEl = document.getElementById('topbarBrandName');
     if (nameEl) nameEl.textContent = topbarBrand.toUpperCase();
   }
+
+  const titleBar  = document.getElementById('themeTitleBar');
+  const titleText = document.getElementById('themeTitleText');
+  const headerBrand = THEME_HEADER_BRAND[id];
+  if (titleBar) titleBar.style.display = headerBrand ? 'flex' : 'none';
+  if (titleText && headerBrand) titleText.textContent = headerBrand;
 
   if (!el) return;
   const img  = document.getElementById('themeWatermarkImg');
